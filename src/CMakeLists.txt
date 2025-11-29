@@ -13,28 +13,8 @@ set(MQTT_LIBS
 
 # -------------------------- 1. 收集src目录源文件 --------------------------
 set(SRC_FILES
-    #testDemo/ModelTest.cpp
-    testDemo/mqttReceiveTest.cpp
-    #testDemo/main.cpp
-    service/ai_recognize.cc
-    service/ResultSaver.cpp
-    service/MqttClient.cpp
-    service/ResultSender.cpp
-    service/CameraManager.cpp
-    service/VideoRecorder.cpp
-    service/AIModelService.cpp
-    utils/FileUtils.cpp
-    utils/yolo8/postprocess.cc
-    utils/yolo8/yolov8.cc
-    utils/base64/base64.cpp
-    utils/SegmentManager.cpp
-    utils/Imageprocess/ImageProcessor.cpp
-    utils/FrameUtils/FrameUtils.cpp
-    utils/Frameprocess/FrameExtractor.cpp
-    dao/Logger.cpp
-    dao/VideoCapture.cpp
-    dao/VideoStorage.cpp
-
+    testDemo/cameraTest.cpp
+    camera/camera_manager.cpp
 )
 
 # -------------------------- 2. 生成主程序可执行文件 --------------------------
@@ -42,26 +22,27 @@ add_executable(receive ${SRC_FILES})  # 可执行文件名：ai_recognition
 
 # -------------------------- 3. 配置头文件路径 --------------------------
 target_include_directories(receive PUBLIC
-    ${CMAKE_SOURCE_DIR}/include/dao
-    ${CMAKE_SOURCE_DIR}/include/service
-    ${CMAKE_SOURCE_DIR}/include/infrastructure
-    ${CMAKE_SOURCE_DIR}/include/third_party
-    ${PROJECT_SOURCE_DIR}/include/third_party/mqtt
-    ${PROJECT_SOURCE_DIR}/utils
-    ${PROJECT_SOURCE_DIR}/entity
-    ${PROJECT_SOURCE_DIR}/utils/yolo8
-    ${PROJECT_SOURCE_DIR}/utils/Imageprocess
-    ${PROJECT_SOURCE_DIR}/utils/config
-    ${PROJECT_SOURCE_DIR}/utils/base64
-    ${PROJECT_SOURCE_DIR}/utils/Frameprocess
-    ${PROJECT_SOURCE_DIR}/utils/FrameUtils
-    ${STB_INCLUDES}
-    ${LIBJPEG_INCLUDES}
-    ${LIBRKNNRT_INCLUDES}
-    ${LIBRGA_INCLUDES}
-    ${LIBSNDFILE_INCLUDES}
-    ${CMAKE_SOURCE_DIR}/rknn/utils
-    ${OpenCV_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/include/camera
+    # ${CMAKE_SOURCE_DIR}/include/dao
+    # ${CMAKE_SOURCE_DIR}/include/service
+    # ${CMAKE_SOURCE_DIR}/include/infrastructure
+    # ${CMAKE_SOURCE_DIR}/include/third_party
+    # ${PROJECT_SOURCE_DIR}/include/third_party/mqtt
+    # ${PROJECT_SOURCE_DIR}/utils
+    # ${PROJECT_SOURCE_DIR}/entity
+    # ${PROJECT_SOURCE_DIR}/utils/yolo8
+    # ${PROJECT_SOURCE_DIR}/utils/Imageprocess
+    # ${PROJECT_SOURCE_DIR}/utils/config
+    # ${PROJECT_SOURCE_DIR}/utils/base64
+    # ${PROJECT_SOURCE_DIR}/utils/Frameprocess
+    # ${PROJECT_SOURCE_DIR}/utils/FrameUtils
+    # ${STB_INCLUDES}
+    # ${LIBJPEG_INCLUDES}
+    # ${LIBRKNNRT_INCLUDES}
+    # ${LIBRGA_INCLUDES}
+    # ${LIBSNDFILE_INCLUDES}
+    # ${CMAKE_SOURCE_DIR}/rknn/utils
+    # ${OpenCV_INCLUDE_DIRS}
 )
 # link_directories(
 #     ${PROJECT_SOURCE_DIR}/lib  # 告诉编译器从项目 lib 目录找库
@@ -71,10 +52,10 @@ find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 # -------------------------- 4. 链接依赖库 --------------------------
 target_link_libraries(receive PUBLIC
-    fileutils
-    imagedrawing
-    imageutils
-    audioutils
+    # fileutils
+    # imagedrawing
+    # imageutils
+    # audioutils
     ${LIBJPEG}
     ${LIBRKNNRT}
     ${LIBRGA}
@@ -88,8 +69,8 @@ target_link_libraries(receive PUBLIC
     avformat
     
     #mqtt库
-    paho-mqttpp3
-    paho-mqtt3as
+    # paho-mqttpp3
+    # paho-mqtt3as
 
     OpenSSL::Crypto
     Threads::Threads
