@@ -1,1 +1,1 @@
-# allin
+# 文件名小写下划线；类驼峰，第一个大写，CameraManager；变量名cameraManager;类成员变量最后加_，cameraManager_；代码中不要出现具体数字，if( I == 3); 3用const
