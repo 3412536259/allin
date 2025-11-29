@@ -11,6 +11,7 @@ public:
     virtual ~PLCDevice() = default;
     virtual PLCState queryStatus() = 0;
     virtual std::string getId() const = 0;
+    virtual bool operate(const std::string& cmd) = 0;
 };
 
 class PLCManager{
@@ -21,6 +22,7 @@ public:
     bool start();
     PLCInfo getStatus(const std::string& deviceId);
     std::vector<PLCInfo> getAllStatus();
+    bool operate(const std::string& deviceId, const std::string& cmd);
 
 private:
     bool loadConfig();
