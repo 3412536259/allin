@@ -38,6 +38,14 @@ int main() {
                   << std::endl;
     }
 
+    std::cout << "\n--- Test operate(\"Valve1\", \"open\") ---\n";
+    bool op1 = mgr.operate("Valve1", "open");
+    std::cout << "operate result = " << op1 << std::endl;
+
+    auto info = mgr.getStatus("Valve1");
+    std::cout << "After operate, Valve1 state = "
+            << stateToString(info.state) << std::endl;
+
     std::cout << "\n=== PLCManager Test End ===" << std::endl;
     return 0;
 }

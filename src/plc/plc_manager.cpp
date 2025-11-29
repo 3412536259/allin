@@ -63,6 +63,36 @@ std::vector<PLCInfo> PLCManager::getAllStatus(){
     return plcList;
 }
 
+bool PLCManager::operate(const std::string& deviceId, const std::string& cmd){
+    PLCDevice* targetDevice = nullptr;
+
+    for(auto* dev : devices_){
+        if(dev->getId() == deviceId){
+            targetDevice = dev;
+            break;
+        }
+    }
+
+    if(!targetDevice){
+        std::cerr<<"[PLCManager] Device "<<deviceId<<" not found."<<std::endl;
+        return false;
+    }
+
+    bool result = targetDevice->operate(cmd);
+
+    {
+        std::lock_guard<std::mutex> lock(plcMutex_);
+        auto& st = deviceStateTable_[deviceId];
+        st.state = targetDevice->queryStatus();
+    }
+
+    std::cout << "[PLCManager] operate(" << deviceId
+              << ", cmd=" << cmd << ") result=" << (result ? "SUCCESS" : "FAIL")
+              << std::endl;
+
+    return result;
+}
+
 bool PLCManager::loadConfig(){
     std::cout<<"[PLCManager] Loading configuration..."<<std::endl;
     return true;
