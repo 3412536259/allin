@@ -24,6 +24,7 @@ bool PLCManager::start(){
         auto id = dev->getId();
         PLCRuntimeState st;
         st.state = dev->queryStatus();
+        st.type = dev->getType();
 
         std::lock_guard<std::mutex> lock(plcMutex_);
         deviceStateTable_[id] = st;
@@ -40,11 +41,13 @@ PLCInfo PLCManager::getStatus(const std::string& deviceId){
 
     if(deviceStateTable_.count(deviceId) == 0){
         info.state = PLCState::OFFLINE;
+        info.type = "Unknown";
         return info;
     }
 
     auto& st = deviceStateTable_[deviceId];
     info.state = st.state;
+    info.type = st.type;
     return info;
 }
 
@@ -57,13 +60,14 @@ std::vector<PLCInfo> PLCManager::getAllStatus(){
         PLCInfo info;
         info.id = kv.first;
         info.state = kv.second.state;
+        info.type = kv.second.type;
         
         plcList.push_back(info);
     }
     return plcList;
 }
 
-bool PLCManager::operate(const std::string& deviceId, const std::string& cmd){
+OperateResult PLCManager::operate(const std::string& deviceId, const std::string& cmd){
     PLCDevice* targetDevice = nullptr;
 
     for(auto* dev : devices_){
@@ -75,10 +79,10 @@ bool PLCManager::operate(const std::string& deviceId, const std::string& cmd){
 
     if(!targetDevice){
         std::cerr<<"[PLCManager] Device "<<deviceId<<" not found."<<std::endl;
-        return false;
+        return OperateResult::FAILED;
     }
 
-    bool result = targetDevice->operate(cmd);
+    OperateResult result = targetDevice->operate(cmd);
 
     {
         std::lock_guard<std::mutex> lock(plcMutex_);
@@ -86,21 +90,49 @@ bool PLCManager::operate(const std::string& deviceId, const std::string& cmd){
         st.state = targetDevice->queryStatus();
     }
 
+    const char* rstr =
+        (result == OperateResult::SUCCESS) ? "SUCCESS" :
+        (result == OperateResult::TIMEOUT) ? "TIMEOUT" : "FAILED";
+
     std::cout << "[PLCManager] operate(" << deviceId
-              << ", cmd=" << cmd << ") result=" << (result ? "SUCCESS" : "FAIL")
-              << std::endl;
+            << ", cmd=" << cmd << ") result=" << rstr << std::endl;
+
 
     return result;
 }
 
 bool PLCManager::loadConfig(){
     std::cout<<"[PLCManager] Loading configuration..."<<std::endl;
+    // 模拟加载配置
+    PLCConfig cfg1;
+    cfg1.id = "Valve1";
+    cfg1.type = "SolenoidValve";
+    cfg1.serialPort = "/dev/ttyS4";
+    cfg1.baudrate = 9600;
+    cfg1.slaveId = 1;
+    cfg1.regValve = 0x0504;
+    deviceConfigs_.push_back(cfg1);
+    PLCConfig cfg2;
+    cfg2.id = "PumpA";
+    cfg2.type = "Mock";
+    cfg2.serialPort = "COM2";
+    cfg2.baudrate = 115200;
+    cfg2.slaveId = 2;
+    cfg2.regValve = 0x0600;
+    deviceConfigs_.push_back(cfg2);
     return true;
 }
 
 bool PLCManager::registerDevices(){
     std::cout<<"[PLCManager] Registering devices..."<<std::endl;
-    devices_.push_back(new MockPLCDevice("Valve1"));
-    devices_.push_back(new MockPLCDevice("PumpA"));
+    for(const auto& cfg : deviceConfigs_){
+        PLCDevice* dev = PLCDeviceFactory::createDevice(cfg);
+        if(!dev){
+            std::cerr<<"[PLCManager] Unknown device type: "<<cfg.type<<std::endl;
+            return false;
+        }
+        devices_.push_back(dev);
+        std::cout<<"[PLCManager] Registered device: "<<cfg.id<<" type="<<cfg.type<<std::endl;
+    }
     return true;
 }

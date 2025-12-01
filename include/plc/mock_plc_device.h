@@ -1,4 +1,7 @@
 #pragma once
+#include <string>
+#include "plc_info.h"
+#include "iplc_device.h"
 #include "plc_manager.h"
 #include <iostream>
 
@@ -7,6 +10,7 @@ public:
     MockPLCDevice(const std::string& id) : id_(id){}
 
     PLCState queryStatus() override{
+        // 给设备发具体报文查询状态
         return state_;
     }
 
@@ -14,17 +18,21 @@ public:
         return id_;
     }
 
-    bool operate(const std::string& cmd) override{
+    std::string getType() const override{
+        return "Mock";
+    }
+
+    OperateResult operate(const std::string& cmd) override{
         std::cout<<"[MockPLCDevice] Operating command: "<<cmd<<" on device: "<<id_<<std::endl;
 
         if(cmd == "open"){
             state_ = PLCState::ONLINE;
-            return true;
+            return OperateResult::SUCCESS;
         } else if(cmd == "close"){
             state_ = PLCState::OFFLINE;
-            return true;
+            return OperateResult::SUCCESS;
         }
-        return true;
+        return OperateResult::SUCCESS;
     }
 
 private:
