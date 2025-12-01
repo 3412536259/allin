@@ -15,6 +15,9 @@ set(MQTT_LIBS
 set(SRC_FILES
     testDemo/cameraTest.cpp
     camera/camera_manager.cpp
+    camera/camera.cpp
+    camera/dao/video_capture.cpp
+    common/logger/logger.cpp
 )
 
 # -------------------------- 2. 生成主程序可执行文件 --------------------------
@@ -23,6 +26,8 @@ add_executable(receive ${SRC_FILES})  # 可执行文件名：ai_recognition
 # -------------------------- 3. 配置头文件路径 --------------------------
 target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/camera
+    ${CMAKE_SOURCE_DIR}/include/camera/dao
+    ${CMAKE_SOURCE_DIR}/include/common/logger
     # ${CMAKE_SOURCE_DIR}/include/dao
     # ${CMAKE_SOURCE_DIR}/include/service
     # ${CMAKE_SOURCE_DIR}/include/infrastructure
@@ -63,10 +68,10 @@ target_link_libraries(receive PUBLIC
     ${LIBFFTW}
     ${OpenCV_LIBS}
     # FFmpeg 库
-    avutil
-    swscale
-    avcodec
     avformat
+    avcodec
+    swscale
+    avutil
     
     #mqtt库
     # paho-mqttpp3
