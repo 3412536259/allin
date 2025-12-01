@@ -1,0 +1,86 @@
+{
+  "device_config": {
+    "version": "1.0",
+    "description": "设备配置（含PLC直连/网关连接两种类型）",
+    "devices": {
+      "camera": [
+        {
+          "id": "cam_001",
+          "name": "主视觉相机",
+          "url": ""
+        }
+      ],
+
+      "plc_device": [
+        {
+          "id": "plc_dev_001",
+          "name": "进料电磁阀",
+          "type": "solenoid_valve",
+          "connection_type": "direct",  
+          "direct_config": {
+            "serial": {
+              "port": "/dev/ttyUSB0",   
+              "baud_rate": 9600,        
+              "parity": "none",         
+              "stop_bits": 1            
+            },
+            "plc_register": {
+              "address": "0x0001"
+            }
+          }
+        },
+        {
+          "id": "plc_dev_002",
+          "name": "出料电磁阀",
+          "type": "solenoid_valve",
+          "connection_type": "gateway", 
+          "gateway_config": {
+            "gateway_id": "gw_001", 
+            "gateway_ip": "192.168.1.100",
+            "gateway_port": 502,
+            "plc_node_id": 1,
+            "plc_register": {
+              "address": "0x0002"
+            }
+          }
+        }
+      ],
+
+      "sensor": [
+        {
+          "id": "sensor_001",
+          "name": "物料到位传感器",
+          "type": "photoelectric",
+          "serial_config": {
+            "port": "/dev/ttyUSB1",
+            "baud_rate": 19200,
+            "parity": "even",
+            "stop_bits": 1
+          }
+        },
+        {
+          "id": "sensor_002",
+          "name": "温度监测传感器",
+          "type": "thermocouple",
+          "serial_config": {
+            "port": "/dev/ttyUSB1",
+            "baud_rate": 19200,
+            "parity": "even",
+            "stop_bits": 1
+          }
+        }
+      ],
+
+      "gateway": [
+        {
+          "id": "gw_001",
+          "name": "工业智能网关",
+          "model": "Huawei AR502H",
+          "ip": "192.168.1.100",
+          "protocol": "Modbus TCP", 
+          "status": "online" 
+        }
+      ]
+    }
+  }
+}
