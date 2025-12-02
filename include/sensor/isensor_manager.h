@@ -4,6 +4,8 @@
 #include "mock_sensor.h"
 #include "sensor_types.h"
 #include <string>
+#include <optional>
+
 
 class ISensorManager {
 public:
