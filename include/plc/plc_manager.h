@@ -1,12 +1,13 @@
 #pragma once
 
-#include "plc_info.h"
+#include "config_info.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <mutex>
 #include "iplc_device.h"
 #include "plc_device_factory.h"
+
 
 class PLCManager{
 public:

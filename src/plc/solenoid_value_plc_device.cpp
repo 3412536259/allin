@@ -153,10 +153,10 @@ OperateResult SolenoidValvePLCDevice::recvFrame(std::vector<uint8_t>& out, int t
 }
 
 void SolenoidValvePLCDevice::openSerial() {
-    serialFd_ = open(cfg_.serialPort.c_str(), O_RDWR | O_NOCTTY);
+    serialFd_ = open(cfg_.direct.serial.port.c_str(), O_RDWR | O_NOCTTY);
 
     if (serialFd_ < 0) {
-        std::cerr << "[Valve] Failed to open " << cfg_.serialPort << std::endl;
+        std::cerr << "[Valve] Failed to open " << cfg_.direct.serial.port << std::endl;
         return;
     }
 
