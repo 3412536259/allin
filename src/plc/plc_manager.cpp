@@ -10,8 +10,12 @@ PLCManager::~PLCManager(){
     }
 }
 
+void PLCManager::setConfigs(const std::vector<PLCConfig>& cfgs){
+    deviceConfigs_ = cfgs;
+}
+
 bool PLCManager::start(){
-    if(!loadConfig()){
+    if(deviceConfigs_.empty()){
         std::cerr<<"[PLCManager] Failed to load configuration."<<std::endl;
         return false;
     }
