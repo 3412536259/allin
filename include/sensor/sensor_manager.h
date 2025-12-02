@@ -12,8 +12,9 @@
 #include "mock_sensor.h"
 #include "config_info.h"
 #include "config_parser.h"
+#include "isensor_manager.h"
 
-class SensorManager {
+class SensorManager : public ISensorManager {
 public:
     SensorManager();
     ~SensorManager();
