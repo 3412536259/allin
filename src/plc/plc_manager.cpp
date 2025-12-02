@@ -10,12 +10,8 @@ PLCManager::~PLCManager(){
     }
 }
 
-void PLCManager::setConfigs(const std::vector<PLCConfig>& cfgs){
-    deviceConfigs_ = cfgs;
-}
-
 bool PLCManager::start(){
-    if(deviceConfigs_.empty()){
+    if(!loadConfig()){
         std::cerr<<"[PLCManager] Failed to load configuration."<<std::endl;
         return false;
     }
@@ -107,29 +103,19 @@ OperateResult PLCManager::operate(const std::string& deviceId, const std::string
 
 bool PLCManager::loadConfig(){
     std::cout<<"[PLCManager] Loading configuration..."<<std::endl;
-    // 模拟加载配置
-    PLCConfig cfg1;
-    cfg1.id = "Valve1";
-    cfg1.type = "SolenoidValve";
-    cfg1.serialPort = "/dev/ttyS4";
-    cfg1.baudrate = 9600;
-    cfg1.slaveId = 1;
-    cfg1.regValve = 0x0504;
-    deviceConfigs_.push_back(cfg1);
-    PLCConfig cfg2;
-    cfg2.id = "PumpA";
-    cfg2.type = "Mock";
-    cfg2.serialPort = "COM2";
-    cfg2.baudrate = 115200;
-    cfg2.slaveId = 2;
-    cfg2.regValve = 0x0600;
-    deviceConfigs_.push_back(cfg2);
+    ConfigParser parser;
+    if (!parser.loadFromFile("config.json")) {
+        std::cerr << "Failed to load config.json\n";
+        return false;
+    }
+
+    rootConfig_= parser.getConfig();
     return true;
 }
 
 bool PLCManager::registerDevices(){
     std::cout<<"[PLCManager] Registering devices..."<<std::endl;
-    for(const auto& cfg : deviceConfigs_){
+    for(const auto& cfg : rootConfig_.plcDevices){
         PLCDevice* dev = PLCDeviceFactory::createDevice(cfg);
         if(!dev){
             std::cerr<<"[PLCManager] Unknown device type: "<<cfg.type<<std::endl;

@@ -78,16 +78,3 @@ struct DeviceConfigRoot {
     std::vector<SensorConfig> sensors;
     std::vector<GatewayConfig> gateways;
 };
-
-struct PLCConfig{
-    std::string id;
-    std::string name;
-    std::string type;  // solenoid_valve
-    std::string connectionType; // direct / gateway
-
-    bool hasDirect = false;
-    DirectPLCConfig directConfig;
-
-    bool hasGateway = false;
-    GatewayPLCConfig gatewayConfig;
-};

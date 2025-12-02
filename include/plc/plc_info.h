@@ -21,14 +21,3 @@ struct PLCInfo{
     PLCState state;
     std::string type; 
 };
-
-// PLC设备配置结构体
-struct PLCConfig {
-    std::string id;
-    std::string type;        // 设备类型，如"SolenoidValve", "Mock"等
-    std::string serialPort;     // 串口号
-    int baudrate;               // 波特率
-
-    int slaveId;                // Modbus地址 
-    int regValve;        // 控制阀门的寄存器地址
-};

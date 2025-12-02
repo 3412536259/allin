@@ -1,23 +1,25 @@
 #pragma once
 
-#include "config_info.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <mutex>
+#include "config_info.h"
+#include "plc_info.h"
+#include "iplc_manager.h"
 #include "iplc_device.h"
 #include "plc_device_factory.h"
 
 
-class PLCManager{
+class PLCManager : public IPLCManager{
 public:
     PLCManager();
-    ~PLCManager();
+    ~PLCManager() override;
 
-    bool start();
-    PLCInfo getStatus(const std::string& deviceId);
-    std::vector<PLCInfo> getAllStatus();
-    OperateResult operate(const std::string& deviceId, const std::string& cmd);
+    bool start() override;
+    PLCInfo getStatus(const std::string& deviceId) override;
+    std::vector<PLCInfo> getAllStatus() override;
+    OperateResult operate(const std::string& deviceId, const std::string& cmd) override;
 
 private:
     bool loadConfig();
@@ -29,11 +31,13 @@ private:
         std::string type;
     };
 
+    // 完整配置
+    DeviceConfigRoot rootConfig_;
     // 运行态
     std::unordered_map<std::string, PLCRuntimeState> deviceStateTable_;
     // 设备对象
     std::vector<PLCDevice*> devices_;
-    // 解析后的配置
-    std::vector<PLCConfig> deviceConfigs_;
+    // plc的配置
+    std::vector<PLCDeviceConfig> plcConfigs_;
     std::mutex plcMutex_;
 };
