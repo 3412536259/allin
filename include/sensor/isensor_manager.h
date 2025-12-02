@@ -13,3 +13,5 @@ public:
     virtual std::optional<SensorData> getSensorDataRealTime(const std::string& id) = 0;
     virtual std::optional<SensorData> getSensorDataCached(const std::string& id) = 0;
 }; 
+
+#endif // ISENSOR_MANAGER_H
