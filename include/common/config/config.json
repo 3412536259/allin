@@ -54,7 +54,7 @@
           "serial_config": {
             "port": "/dev/ttyUSB1",
             "baud_rate": 19200,
-            "parity": "even",
+            "parity": "none",
             "stop_bits": 1
           }
         },
@@ -65,7 +65,7 @@
           "serial_config": {
             "port": "/dev/ttyUSB1",
             "baud_rate": 19200,
-            "parity": "even",
+            "parity": "none",
             "stop_bits": 1
           }
         }
