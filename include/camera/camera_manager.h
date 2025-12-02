@@ -4,7 +4,7 @@
 #include "camera.h"
 #include <mutex>
 #include <atomic>
-
+#include <vector>
 class CameraManager :public ICameraManager{
 public:    
     CameraManager();
@@ -13,15 +13,17 @@ public:
     void start() override;
     void stop() override;
 
-    CameraStatus  getStatus(int id) override;
-    std::map<int, CameraStatus>  getAllStatus() override;
-    bool getCameraLastKeyFrame(int id, FrameData& out) override;
+    CameraStatus  getStatus(const CameraStaticInfo& info) override;
+    std::vector<CameraStatus>  getAllStatus() override;
+    bool getCameraLastKeyFrame(const CameraStaticInfo& info, FrameData& out) override;
+    std::map<std::string, FrameData> getAllLastKeyFrames() override;
+
 private:
-    bool addCamera(int id, const CameraStaticInfo& info);
-    bool removeCamera(int id);
+    bool addCamera(const CameraStaticInfo& info);
+    bool removeCamera(const CameraStaticInfo& info);
     bool registerDevices();
 private:
-    std::map<int, std::unique_ptr<Camera>> cameras_;
+    std::map<std::string, std::unique_ptr<Camera>> cameras_;
     std::mutex mutex_;
     std::atomic_bool running_ = false;
 };

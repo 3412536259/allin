@@ -1,6 +1,9 @@
 #include "camera_manager.h"
 #include <iostream>
-CameraManager::CameraManager(){}
+CameraManager::CameraManager()
+{
+    start();
+}
 
 CameraManager::~CameraManager()
 {
@@ -14,23 +17,23 @@ bool CameraManager::registerDevices()
 
     // 示例：加载两个摄像头
     CameraStaticInfo info1;
-    info1.camera_id = 1;
+    info1.camera_id = "1";
     info1.rtsp_url = "rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/101";
 
     CameraStaticInfo info2;
-    info2.camera_id = 2;
+    info2.camera_id = "2";
     info2.rtsp_url = "rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/201";
 
-    addCamera(1, info1);
-    addCamera(2, info2);
+    addCamera(info1);
+    addCamera(info2);
 
     return true;
 }
 
 
-bool CameraManager::addCamera(int id, const CameraStaticInfo& info) {
+bool CameraManager::addCamera(const CameraStaticInfo& info) {
     std::lock_guard<std::mutex> lock(mutex_);
-
+    std::string id = info.camera_id;
     if (cameras_.count(id))
         return false;
 
@@ -38,9 +41,9 @@ bool CameraManager::addCamera(int id, const CameraStaticInfo& info) {
     return true;
 }
 
-bool CameraManager::removeCamera(int id) {
+bool CameraManager::removeCamera(const CameraStaticInfo& info) {
     std::lock_guard<std::mutex> lock(mutex_);
-
+    std::string id = info.camera_id;
     if (!cameras_.count(id))
         return false;
 
@@ -84,9 +87,9 @@ void CameraManager::stop()
 }
 
 
-CameraStatus CameraManager::getStatus(int id) {
+CameraStatus CameraManager::getStatus(const CameraStaticInfo& info) {
     std::lock_guard<std::mutex> lock(mutex_);
-
+    std::string id = info.camera_id;
     if (!cameras_.count(id)) {
         CameraStatus st;
         st.online_status = CameraOnlineStatus::OFFLINE;
@@ -96,21 +99,43 @@ CameraStatus CameraManager::getStatus(int id) {
     return cameras_[id]->getStatus();
 }
 
-std::map<int, CameraStatus> CameraManager::getAllStatus() {
+std::vector<CameraStatus> CameraManager::getAllStatus() {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    std::map<int, CameraStatus> result;
+    std::vector<CameraStatus> result;
     for (auto& camera : cameras_) {
-        result[camera.first] = camera.second->getStatus();
+        result.push_back(camera.second->getStatus());
     }
     return result;
 }
 
-bool CameraManager::getCameraLastKeyFrame(int id, FrameData& out) {
+bool CameraManager::getCameraLastKeyFrame(const CameraStaticInfo& info, FrameData& out) {
     std::lock_guard<std::mutex> lock(mutex_);
-
+    std::string id = info.camera_id;
     if (!cameras_.count(id))
         return false;
 
     return cameras_[id]->getLastKeyFrame(out);
+}
+
+std::map<std::string, FrameData> CameraManager::getAllLastKeyFrames()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    std::map<std::string, FrameData> result;
+
+    for (auto& kv : cameras_) {
+        std::string id = kv.first;
+        FrameData frame;
+
+        if (kv.second->getLastKeyFrame(frame)) {
+            result[id] = frame;  // 成功获取则加入 map
+        } else {
+            // 获取失败时可选择加入空帧或跳过
+            std::cerr << "CameraManager: Failed to get keyframe for camera "
+                      << id << std::endl;
+        }
+    }
+
+    return result;
 }

@@ -13,10 +13,16 @@ set(MQTT_LIBS
 
 # -------------------------- 1. 收集src目录源文件 --------------------------
 set(SRC_FILES
-    testDemo/cameraTest.cpp
+    testDemo/deviceTest.cpp
+    device/device_manager.cpp
+    # plc/plc_manager.cpp
+    # plc/solenoid_value_plc_device.cpp
+    sensor/mock_sensor.cpp
+    sensor/sensor_manager.cpp
     camera/camera_manager.cpp
     camera/camera.cpp
     camera/dao/video_capture.cpp
+    ../include/common/config/config_parser.cpp
     common/logger/logger.cpp
 )
 
@@ -25,10 +31,13 @@ add_executable(receive ${SRC_FILES})  # 可执行文件名：ai_recognition
 
 # -------------------------- 3. 配置头文件路径 --------------------------
 target_include_directories(receive PUBLIC
+    ${CMAKE_SOURCE_DIR}/include/device
+    ${CMAKE_SOURCE_DIR}/include/plc
+    ${CMAKE_SOURCE_DIR}/include/sensor
     ${CMAKE_SOURCE_DIR}/include/camera
     ${CMAKE_SOURCE_DIR}/include/camera/dao
     ${CMAKE_SOURCE_DIR}/include/common/logger
-    # ${CMAKE_SOURCE_DIR}/include/dao
+    ${CMAKE_SOURCE_DIR}/include/common/config
     # ${CMAKE_SOURCE_DIR}/include/service
     # ${CMAKE_SOURCE_DIR}/include/infrastructure
     # ${CMAKE_SOURCE_DIR}/include/third_party

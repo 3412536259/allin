@@ -8,6 +8,7 @@ Camera::Camera(CameraStaticInfo cameraStaticInfo)
 {
     std::lock_guard<std::mutex> lock(statusMutex_);
     cameraStatus_.online_status = CameraOnlineStatus::OFFLINE;
+    cameraStatus_.camera_id = cameraStaticInfo_.camera_id;
 }
 Camera::~Camera()
 {

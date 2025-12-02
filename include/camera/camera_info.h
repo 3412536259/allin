@@ -7,7 +7,7 @@ extern "C" {
 #include <libavutil/frame.h>
 }
 struct CameraStaticInfo {
-    int camera_id;
+    std::string camera_id;
     std::string name;
     std::string rtsp_url;
     // bool ptz_supported;
@@ -42,6 +42,7 @@ struct FrameData{
 
 //摄像头实时状态，云端查询状态，盒子上报状态时使用
 struct CameraStatus {
+    std::string camera_id;
     CameraOnlineStatus online_status;
     // std::string status;  // "IDLE", "STREAMING", "ERROR"
     // int error_code;
