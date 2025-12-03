@@ -6,13 +6,9 @@ void printLine() {
 }
 
 int main() {
-    ConfigParser parser;
-    if (!parser.loadFromFile("config.json")) {
-        std::cerr << "Failed to load config.json\n";
-        return -1;
-    }
+    ConfigParser::getInstance().loadFromFile("config.json");
 
-    const auto& cfg = parser.getConfig();
+    const auto& cfg = ConfigParser::getInstance().getConfig();
 
     printLine();
     std::cout << "Config Version: " << cfg.version << "\n";
@@ -30,32 +26,39 @@ int main() {
     }
 
 
-    // ---------------- PLC Devices ----------------
-    std::cout << "PLC Devices (" << cfg.plcDevices.size() << "):\n";
-    for (const auto& plc : cfg.plcDevices) {
-        std::cout << "  ID   : " << plc.id << "\n";
-        std::cout << "  Name : " << plc.name << "\n";
-        std::cout << "  Type : " << plc.type << "\n";
-        std::cout << "  Connection Type: " << plc.connectionType << "\n";
+    // ---------------- PLC 本体列表 plc_list ----------------
+    std::cout << "PLC List (" << cfg.plcs.size() << "):\n";
+    for (const auto& plc : cfg.plcs) {
+        std::cout << "PLC ID   : " << plc.plcId << "\n";
+        std::cout << "Name     : " << plc.name << "\n";
+        std::cout << "Type     : " << plc.connectionType << "\n";
 
-        if (plc.hasDirect) {
-            std::cout << "  --- Direct Config ---\n";
-            std::cout << "      Serial Port : " << plc.directConfig.serial.port << "\n";
-            std::cout << "      Baud Rate   : " << plc.directConfig.serial.baudRate << "\n";
-            std::cout << "      Parity      : " << plc.directConfig.serial.parity << "\n";
-            std::cout << "      Stop Bits   : " << plc.directConfig.serial.stopBits << "\n";
-            std::cout << "      Register    : " << plc.directConfig.plcRegister.address << "\n";
+        if (plc.hasSerial) {
+            std::cout << "  --- Direct (Serial) ---\n";
+            std::cout << "      Port      : " << plc.serialConfig.serial.port << "\n";
+            std::cout << "      BaudRate  : " << plc.serialConfig.serial.baudRate << "\n";
+            std::cout << "      Parity    : " << plc.serialConfig.serial.parity << "\n";
+            std::cout << "      StopBits  : " << plc.serialConfig.serial.stopBits << "\n";
         }
 
         if (plc.hasGateway) {
-            std::cout << "  --- Gateway Config ---\n";
-            std::cout << "      Gateway ID  : " << plc.gatewayConfig.gatewayId << "\n";
-            std::cout << "      IP          : " << plc.gatewayConfig.gatewayIp << "\n";
-            std::cout << "      Port        : " << plc.gatewayConfig.gatewayPort << "\n";
-            std::cout << "      PLC Node ID : " << plc.gatewayConfig.plcNodeId << "\n";
-            std::cout << "      Register    : " << plc.gatewayConfig.plcRegister.address << "\n";
+            std::cout << "  --- Gateway ---\n";
+            std::cout << "      Gateway ID : " << plc.gatewayConfig.gatewayId << "\n";
+            std::cout << "      IP         : " << plc.gatewayConfig.gatewayIp << "\n";
+            std::cout << "      Port       : " << plc.gatewayConfig.gatewayPort << "\n";
         }
 
+        printLine();
+    }
+
+
+    // ---------------- PLC 下挂设备 plc_device ----------------
+    std::cout << "PLC Devices (" << cfg.plcDevices.size() << "):\n";
+    for (const auto& dev : cfg.plcDevices) {
+        std::cout << "  Device ID   : " << dev.id << "\n";
+        std::cout << "  Name        : " << dev.name << "\n";
+        std::cout << "  PLC Owner   : " << dev.plcId << "\n";
+        std::cout << "  Register    : " << dev.registerAddress << "\n";
         printLine();
     }
 

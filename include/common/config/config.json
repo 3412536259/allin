@@ -11,40 +11,44 @@
         }
       ],
 
-      "plc_device": [
+      "plc_list": [
         {
-          "id": "plc_dev_001",
-          "name": "进料电磁阀",
-          "type": "solenoid_valve",
-          "connection_type": "direct",  
-          "direct_config": {
-            "serial": {
-              "port": "/dev/ttyUSB0",   
-              "baud_rate": 9600,        
-              "parity": "none",         
-              "stop_bits": 1            
-            },
-            "plc_register": {
-              "address": "0x0001"
-            }
+          "plc_id": "plc_01",
+          "name": "主控制PLC",
+          "connection_type": "direct",
+          "serial": {
+            "port": "/dev/ttyS4",
+            "baud_rate": 9600,
+            "parity": "none",
+            "stop_bits": 1
           }
         },
         {
-          "id": "plc_dev_002",
-          "name": "出料电磁阀",
-          "type": "solenoid_valve",
-          "connection_type": "gateway", 
-          "gateway_config": {
-            "gateway_id": "gw_001", 
+          "plc_id": "plc_02",
+          "name": "网关PLC",
+          "connection_type": "gateway",
+          "gateway": {
+            "gateway_id": "gw_001",
             "gateway_ip": "192.168.1.100",
-            "gateway_port": 502,
-            "plc_node_id": 1,
-            "plc_register": {
-              "address": "0x0002"
-            }
+            "gateway_port": 502
           }
         }
       ],
+      "plc_device": [
+        {
+          "id": "plc_dev_001",
+          "plc_id": "plc_01",
+          "name": "进料电磁阀",
+          "register": "0x0504"
+        },
+        {
+          "id": "plc_dev_002",
+          "plc_id": "plc_02",
+          "name": "出料电磁阀",
+          "register": "0x0002"
+        }
+      ],
+
 
       "sensor": [
         {

@@ -2,14 +2,14 @@
 #include <string>
 #include <vector>
 
-// -------- Camera --------
+// ---------------- Camera ----------------
 struct CameraConfig {
     std::string id;
     std::string name;
     std::string url;
 };
 
-// -------- Serial --------
+// ---------------- Serial ----------------
 struct SerialConfig {
     std::string port;
     int baudRate = 0;
@@ -17,40 +17,42 @@ struct SerialConfig {
     int stopBits = 1;
 };
 
-// -------- PLC Register --------
-struct PLCRegister {
-    std::string address;
-};
-
-// -------- PLC Direct Config --------
-struct DirectPLCConfig {
+// ---------------- PLC 本体：直连配置 ----------------
+struct PLCDirectConfig {
     SerialConfig serial;
-    PLCRegister plcRegister;
 };
 
-// -------- PLC Gateway Config --------
-struct GatewayPLCConfig {
+// ---------------- PLC 本体：网关配置 ----------------
+struct PLCGatewayBase {
     std::string gatewayId;
     std::string gatewayIp;
     int gatewayPort = 0;
-    int plcNodeId = 0;
-    PLCRegister plcRegister;
 };
 
-// -------- PLC Device --------
-struct PLCDeviceConfig {
-    std::string id;
+// ---------------- PLC 本体结构 ----------------
+struct PLCConfig {
+    std::string plcId;
     std::string name;
-    std::string type;  // solenoid_valve
     std::string connectionType; // direct / gateway
 
-    DirectPLCConfig directConfig;
-    GatewayPLCConfig gatewayConfig;
-    bool hasDirect = false;
+    bool hasSerial = false;
+    PLCDirectConfig serialConfig;
+
     bool hasGateway = false;
+    PLCGatewayBase gatewayConfig;
 };
 
-// -------- Sensor --------
+
+// ---------------- 下挂设备 ----------------
+struct PLCDeviceConfig {
+    std::string id;
+    std::string plcId;   // 归属 PLC！！
+    std::string name;
+    std::string registerAddress;   // "0x0001"
+};
+
+
+// ---------------- Sensor ----------------
 struct SensorConfig {
     std::string id;
     std::string name;
@@ -58,7 +60,7 @@ struct SensorConfig {
     SerialConfig serial;
 };
 
-// -------- Gateway --------
+// ---------------- Gateway (业务网关信息) ----------------
 struct GatewayConfig {
     std::string id;
     std::string name;
@@ -68,12 +70,13 @@ struct GatewayConfig {
     std::string status;
 };
 
-// -------- Root Config --------
+// ---------------- Root ----------------
 struct DeviceConfigRoot {
     std::string version;
     std::string description;
 
     std::vector<CameraConfig> cameras;
+    std::vector<PLCConfig> plcs;            // <-- 新增
     std::vector<PLCDeviceConfig> plcDevices;
     std::vector<SensorConfig> sensors;
     std::vector<GatewayConfig> gateways;

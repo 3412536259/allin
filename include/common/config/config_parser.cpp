@@ -4,8 +4,17 @@
 
 using json = nlohmann::json;
 
+ConfigParser& ConfigParser::getInstance()
+{
+    static ConfigParser instance;
+    return instance;
+}
+
 bool ConfigParser::loadFromFile(const std::string& path)
 {
+    if(isLoaded_) {
+        return true; // 已加载，直接返回
+    }
     std::ifstream ifs(path);
     if (!ifs.is_open()) {
         std::cerr << "[ConfigParser] Failed to open file: " << path << "\n";
@@ -28,10 +37,12 @@ bool ConfigParser::loadFromFile(const std::string& path)
     auto& devs = root["devices"];
 
     parseCameras(devs);
-    parsePLCDevices(devs);
+    parsePLCList(devs);        // ⭐ 新增
+    parsePLCDevices(devs);     // 改写后的
     parseSensors(devs);
     parseGateways(devs);
 
+    isLoaded_ = true;
     return true;
 }
 
@@ -49,49 +60,58 @@ void ConfigParser::parseCameras(const json& j)
     }
 }
 
-// ---------------- PLC Devices ----------------
+// ---------------- PLC 本体：plc_list ----------------
+void ConfigParser::parsePLCList(const json& j)
+{
+    if (!j.contains("plc_list")) return;
+
+    for (auto& item : j["plc_list"]) {
+        PLCConfig p;
+
+        p.plcId = item.value("plc_id", "");
+        p.name = item.value("name", "");
+        p.connectionType = item.value("connection_type", "");
+
+        // direct
+        if (p.connectionType == "direct" && item.contains("serial")) {
+            p.hasSerial = true;
+
+            auto& s = item["serial"];
+            p.serialConfig.serial.port = s.value("port", "");
+            p.serialConfig.serial.baudRate = s.value("baud_rate", 0);
+            p.serialConfig.serial.parity = s.value("parity", "");
+            p.serialConfig.serial.stopBits = s.value("stop_bits", 1);
+        }
+
+        // gateway
+        if (p.connectionType == "gateway" && item.contains("gateway")) {
+            p.hasGateway = true;
+
+            auto& g = item["gateway"];
+            p.gatewayConfig.gatewayId = g.value("gateway_id", "");
+            p.gatewayConfig.gatewayIp = g.value("gateway_ip", "");
+            p.gatewayConfig.gatewayPort = g.value("gateway_port", 0);
+        }
+
+        config_.plcs.push_back(p);
+    }
+}
+
+// ---------------- PLC 下挂设备：plc_device ----------------
 void ConfigParser::parsePLCDevices(const json& j)
 {
     if (!j.contains("plc_device")) return;
 
     for (auto& item : j["plc_device"]) {
-        PLCDeviceConfig cfg;
+        PLCDeviceConfig d;
 
-        cfg.id = item.value("id", "");
-        cfg.name = item.value("name", "");
-        cfg.type = item.value("type", "");
-        cfg.connectionType = item.value("connection_type", "");
+        d.id = item.value("id", "");
+        d.plcId = item.value("plc_id", "");   
+        d.name = item.value("name", "");
 
-        // direct
-        if (cfg.connectionType == "direct" && item.contains("direct_config")) {
-            cfg.hasDirect = true;
+        d.registerAddress = item.value("register", "");  
 
-            auto& d = item["direct_config"];
-
-            cfg.directConfig.serial.port = d["serial"].value("port", "");
-            cfg.directConfig.serial.baudRate = d["serial"].value("baud_rate", 0);
-            cfg.directConfig.serial.parity = d["serial"].value("parity", "");
-            cfg.directConfig.serial.stopBits = d["serial"].value("stop_bits", 1);
-
-            cfg.directConfig.plcRegister.address =
-                d["plc_register"].value("address", "");
-        }
-
-        // gateway
-        if (cfg.connectionType == "gateway" && item.contains("gateway_config")) {
-            cfg.hasGateway = true;
-
-            auto& g = item["gateway_config"];
-
-            cfg.gatewayConfig.gatewayId = g.value("gateway_id", "");
-            cfg.gatewayConfig.gatewayIp = g.value("gateway_ip", "");
-            cfg.gatewayConfig.gatewayPort = g.value("gateway_port", 0);
-            cfg.gatewayConfig.plcNodeId = g.value("plc_node_id", 0);
-            cfg.gatewayConfig.plcRegister.address =
-                g["plc_register"].value("address", "");
-        }
-
-        config_.plcDevices.push_back(cfg);
+        config_.plcDevices.push_back(d);
     }
 }
 
@@ -106,10 +126,11 @@ void ConfigParser::parseSensors(const json& j)
         s.name = item.value("name", "");
         s.type = item.value("type", "");
 
-        s.serial.port = item["serial_config"].value("port", "");
-        s.serial.baudRate = item["serial_config"].value("baud_rate", 0);
-        s.serial.parity = item["serial_config"].value("parity", "");
-        s.serial.stopBits = item["serial_config"].value("stop_bits", 1);
+        auto& sc = item["serial_config"];
+        s.serial.port = sc.value("port", "");
+        s.serial.baudRate = sc.value("baud_rate", 0);
+        s.serial.parity = sc.value("parity", "");
+        s.serial.stopBits = sc.value("stop_bits", 1);
 
         config_.sensors.push_back(s);
     }
