@@ -1,4 +1,5 @@
 #include "camera_manager.h"
+#include "config_parser.h"
 #include <iostream>
 CameraManager::CameraManager()
 {
@@ -14,18 +15,29 @@ CameraManager::~CameraManager()
 bool CameraManager::registerDevices()
 {
     // TODO: 根据你自己的业务从 DB / 配置文件 / 网络拉取列表
+    auto& config = ConfigParser::getInstance().getConfig();
+    
+    for(auto& kv : config.cameras)
+    {
+        CameraStaticInfo info;
+        info.camera_id = kv.id;
+        info.rtsp_url = kv.url;
+        info.name = kv.name;
+        
+        addCamera(info);
+    }
 
-    // 示例：加载两个摄像头
-    CameraStaticInfo info1;
-    info1.camera_id = "1";
-    info1.rtsp_url = "rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/101";
+    // // 示例：加载两个摄像头
+    // CameraStaticInfo info1;
+    // info1.camera_id = "1";
+    // info1.rtsp_url = "rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/101";
 
-    CameraStaticInfo info2;
-    info2.camera_id = "2";
-    info2.rtsp_url = "rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/201";
+    // CameraStaticInfo info2;
+    // info2.camera_id = "2";
+    // info2.rtsp_url = "rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/201";
 
-    addCamera(info1);
-    addCamera(info2);
+    // addCamera(info1);
+    // addCamera(info2);
 
     return true;
 }

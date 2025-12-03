@@ -17,8 +17,8 @@ set(SRC_FILES
     device/device_manager.cpp
     # plc/plc_manager.cpp
     # plc/solenoid_value_plc_device.cpp
-    sensor/mock_sensor.cpp
-    sensor/sensor_manager.cpp
+    # sensor/mock_sensor.cpp
+    # sensor/sensor_manager.cpp
     camera/camera_manager.cpp
     camera/camera.cpp
     camera/dao/video_capture.cpp

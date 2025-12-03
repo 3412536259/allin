@@ -5,9 +5,14 @@
     "devices": {
       "camera": [
         {
-          "id": "cam_001",
-          "name": "主视觉相机",
-          "url": ""
+          "id": "10",
+          "name": "camera1",
+          "url": "rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/101"
+        },
+        {
+          "id": "2",
+          "name": "camera2",
+          "url": "rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/201"
         }
       ],
 

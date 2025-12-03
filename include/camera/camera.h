@@ -24,7 +24,7 @@ private:
     
     FrameData lastKeyFrame_; //关键帧数据缓存
     std::thread pullThread_; //拉流线程，先自己管理线程
-    std::atomic_bool isRunning_; //该摄像头是否运行（拉流存关键帧到缓存）
+    std::atomic_bool isRunning_ = false; //该摄像头是否运行（拉流存关键帧到缓存）
     VideoCapture videoCapture_;    
     std::mutex keyFrameMutex_;
     std::mutex statusMutex_;

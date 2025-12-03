@@ -5,7 +5,7 @@
 DeviceManager::DeviceManager()
 {
     cameraManager_ = std::make_shared<CameraManager>();
-    sensorManager_ = std::make_shared<SensorManager>();
+    // sensorManager_ = std::make_shared<SensorManager>();
 }
 
 DeviceManager::~DeviceManager()
