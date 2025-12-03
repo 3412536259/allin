@@ -1,5 +1,6 @@
 #pragma once
 
+#include "config_info.h"
 #include "plc_info.h"
 #include <string>
 #include "mock_plc_device.h"
