@@ -23,7 +23,6 @@ bool CameraManager::registerDevices()
         info.camera_id = kv.id;
         info.rtsp_url = kv.url;
         info.name = kv.name;
-        
         addCamera(info);
     }
 

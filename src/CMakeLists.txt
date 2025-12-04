@@ -13,7 +13,7 @@ set(MQTT_LIBS
 
 # -------------------------- 1. 收集src目录源文件 --------------------------
 set(SRC_FILES
-    testDemo/deviceTest.cpp
+    testDemo/taskTest.cpp
     device/device_manager.cpp
     # plc/plc_manager.cpp
     # plc/solenoid_value_plc_device.cpp
@@ -24,6 +24,9 @@ set(SRC_FILES
     camera/dao/video_capture.cpp
     ../include/common/config/config_parser.cpp
     common/logger/logger.cpp
+    task/JobScheduler.cpp
+    mqtt/mqtt_command_dispatcher.cpp
+
 )
 
 # -------------------------- 2. 生成主程序可执行文件 --------------------------
@@ -35,9 +38,14 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/plc
     ${CMAKE_SOURCE_DIR}/include/sensor
     ${CMAKE_SOURCE_DIR}/include/camera
+    ${CMAKE_SOURCE_DIR}/include/task
+    ${CMAKE_SOURCE_DIR}/include/mqtt
     ${CMAKE_SOURCE_DIR}/include/camera/dao
+
     ${CMAKE_SOURCE_DIR}/include/common/logger
     ${CMAKE_SOURCE_DIR}/include/common/config
+    ${CMAKE_SOURCE_DIR}/include/common/threads
+    ${CMAKE_SOURCE_DIR}/third_party/mqtt
     # ${CMAKE_SOURCE_DIR}/include/service
     # ${CMAKE_SOURCE_DIR}/include/infrastructure
     # ${CMAKE_SOURCE_DIR}/include/third_party
@@ -83,8 +91,8 @@ target_link_libraries(receive PUBLIC
     avutil
     
     #mqtt库
-    # paho-mqttpp3
-    # paho-mqtt3as
+    paho-mqttpp3
+    paho-mqtt3as
 
     OpenSSL::Crypto
     Threads::Threads
