@@ -26,12 +26,44 @@ std::string getCurrentTimeStr() {
 // --- PLCManager 实现 ---
 
 PLCManager::PLCManager() {
-    // 1. 初始化
-    if(!initialize()){
-        std::cerr << "[PLCManager] Initialization failed.\n";
+    // 1. 从 ConfigParser 单例获取配置数据
+    // 假设 ConfigParser::loadConfig() 已经在程序启动时调用
+    DeviceConfigRoot rootConfig = ConfigParser::getInstance().getConfig();
+
+    // 2. 初始化配置映射和连接器
+    for(const auto& plcConfig : rootConfig.plcs){
+        plcConfigs_[plcConfig.plcId] = plcConfig;
+        
+        std::unique_ptr<PLCConnector> connector;
+
+        if(plcConfig.connectionType == "direct"){
+            connector = std::make_unique<SerialPLCConnector>(plcConfig);
+        }
+        else if(plcConfig.connectionType == "gateway"){
+            // 未来可添加 GatewayPLCConnector 实现
+            std::cerr << "[PLCManager] WARNING: Gateway connection type not implemented yet for PLC ID: " << plcConfig.plcId << "\n";
+            continue; // 跳过未实现的连接类型
+        }
+        else{
+            std::cerr << "[PLCManager] WARNING: Unknown connection type '" << plcConfig.connectionType 
+                      << "' for PLC ID: " << plcConfig.plcId << "\n";
+            continue; // 跳过未知连接类型
+        }
+        plcConnectors_[plcConfig.plcId] = std::move(connector);
     }
 
-    // 2. 尝试连接所有 PLC
+    // 3. 初始化设备配置映射和 PLC-设备关系
+    for(const auto& deviceConfig : rootConfig.plcDevices){
+        deviceConfigs_[deviceConfig.id] = deviceConfig;
+        plcIdToDevices_[deviceConfig.plcId].push_back(deviceConfig);
+    }
+
+    if(plcConfigs_.empty()){
+        std::cerr << "[PLCManager] WARNING: No PLC configurations found in singleton data.\n";
+        // 即使没有 PLC 配置，管理器仍可初始化成功，但功能受限
+    }
+
+    // 4. 尝试连接所有 PLC
     for (auto const& [plcId, connector] : plcConnectors_) {
         connector->connect();
     }
@@ -42,36 +74,6 @@ PLCManager::~PLCManager() {
     for (auto const& [plcId, connector] : plcConnectors_) {
         connector->disconnect();
     }
-}
-
-bool PLCManager::initialize(){
-    ConfigParser parser;
-    const std::string CONFIG_FILE_PATH = "../include/common/config/config.json";
-    if(!parser.loadFromFile(CONFIG_FILE_PATH)){
-        std::cerr << "[PLCManager] Failed to load config from " << CONFIG_FILE_PATH << "\n";
-        return false;
-    }
-
-    DeviceConfigRoot rootConfig = parser.getConfig();
-
-    // 1. 初始化配置映射
-    for(const auto& plcConfig : rootConfig.plcs){
-        plcConfigs_[plcConfig.plcId] = plcConfig;
-        plcConnectors_[plcConfig.plcId] = std::make_unique<MockPLCConnector>(plcConfig);
-    }
-
-    // 2. 初始化设备配置映射和 PLC-设备关系
-    for(const auto& deviceConfig : rootConfig.plcDevices){
-        deviceConfigs_[deviceConfig.id] = deviceConfig;
-        plcIdToDevices_[deviceConfig.plcId].push_back(deviceConfig);
-    }
-
-    if(plcConfigs_.empty()){
-        std::cerr << "[PLCManager] No PLC configurations found.\n";
-        return false;
-    }
-
-    return true;
 }
 
 bool PLCManager::isCacheExpired(std::chrono::steady_clock::time_point cacheTime) {

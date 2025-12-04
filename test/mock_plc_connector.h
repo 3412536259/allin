@@ -2,12 +2,14 @@
 
 #include <string>
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
 #include "config_info.h"
 #include "plc_connector.h"
 
 class MockPLCConnector : public PLCConnector {
 public:
-    MockPLCConnector(const PLCConfig& config) : config_(config) {}
+    explicit MockPLCConnector(const PLCConfig& config) : PLCConnector(config) {}
 
     bool connect() override {
         // 模拟连接逻辑
@@ -42,6 +44,6 @@ public:
     }
 
 private:
-    PLCConfig config_;
     std::string status_ = "DISCONNECTED";
+    std::string mockRegisterValue_;
 };

@@ -14,6 +14,7 @@
 #include "iplc_manager.h"
 #include "plc_connector.h" // 包含 PLCConnector 和 MockPLCConnector
 #include "config_parser.h"
+#include "serial_plc_connector.h"
 #include "mock_plc_connector.h"
 
 // 状态缓存结构体，包含时间戳
@@ -66,9 +67,4 @@ private:
      * @return 实时查询到的状态
      */
     PLCInfo queryAndRefreshStatus(const std::string& plcId);
-    /**
-     * @brief 内部函数：从文件加载配置并初始化内部结构。
-     * @return bool 成功加载返回 true，否则返回 false。
-     */
-    bool initialize();
 };

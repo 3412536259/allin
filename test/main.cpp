@@ -1,8 +1,10 @@
 #include "plc_manager.h"
 #include <iostream>
 #include <vector>
+#include "config_parser.h"
 
 int main() {
+    ConfigParser::getInstance().loadFromFile("../include/common/config/config.json");
     // 1. 初始化 PLC 管理器：管理器内部会加载和解析配置
     // 如果加载失败，PLCManager 内部会打印错误消息，但程序会继续运行（配置为空）。
     // 在实际生产代码中，这里应该捕获异常或检查初始化状态。
