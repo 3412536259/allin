@@ -31,7 +31,13 @@ int main() {
               << ", Device 001 Status: " << (status2.deviceStatuses.empty() ? "N/A" : status2.deviceStatuses[0].status) << std::endl;
 
     std::cout << "\n--- 3. 执行操作 ---\n";
-    OperateResult opResult = manager.operate("plc_dev_001", "OFF");
+    OperateResult opResult = manager.operate("plc_dev_001", "ON");
+    std::cout << "Operate Result: " << (opResult.success ? "Success" : "Failed") 
+              << ". Message: " << opResult.message << std::endl;
+    
+    sleep(2);
+    
+    opResult = manager.operate("plc_dev_001", "OFF");
     std::cout << "Operate Result: " << (opResult.success ? "Success" : "Failed") 
               << ". Message: " << opResult.message << std::endl;
 

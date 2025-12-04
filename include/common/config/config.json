@@ -44,12 +44,14 @@
           "id": "plc_dev_001",
           "plc_id": "plc_01",
           "name": "进料电磁阀",
+          "type": "solenoid_valve",
           "register": "0x0504"
         },
         {
           "id": "plc_dev_002",
           "plc_id": "plc_02",
           "name": "出料电磁阀",
+          "type": "solenoid_valve",
           "register": "0x0002"
         }
       ],

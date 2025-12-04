@@ -63,6 +63,9 @@ PLCManager::PLCManager() {
         // 即使没有 PLC 配置，管理器仍可初始化成功，但功能受限
     }
 
+    // 4. 初始化设备实例
+    initializeDevices();
+
     // 4. 尝试连接所有 PLC
     for (auto const& [plcId, connector] : plcConnectors_) {
         connector->connect();
@@ -74,6 +77,35 @@ PLCManager::~PLCManager() {
     for (auto const& [plcId, connector] : plcConnectors_) {
         connector->disconnect();
     }
+}
+
+void PLCManager::initializeDevices(){
+    std::cout << "[PLCManager] Initializing devices...\n";
+    for(const auto& pair : deviceConfigs_){
+        const PLCDeviceConfig& deviceConfig = pair.second;
+        
+        // 1.找到对应的PLC连接器
+        auto itConnector = plcConnectors_.find(deviceConfig.plcId);
+        if(itConnector == plcConnectors_.end()){
+            std::cerr << "[PLCManager] ERROR: No connector found for device ID: " << deviceConfig.id << "\n";
+            continue;
+        }
+        PLCConnector* connector = itConnector->second.get();
+
+        // 2.根据deviceType创建设备实例
+        std::unique_ptr<IPLCDevice> deviceInstance;
+        if(deviceConfig.deviceType == "solenoid_valve"){
+            deviceInstance = std::make_unique<SolenoidValvePLCDevice>(deviceConfig, connector);
+        }
+        else{
+            std::cerr << "[PLCManager] WARNING: Unknown device type '" << deviceConfig.deviceType 
+                      << "' for device ID: " << deviceConfig.id << "\n";
+            continue;
+        }
+        // 3.存储设备实例（如果需要的话，可以扩展PLCManager以管理设备实例）
+        devices_[deviceConfig.id] = std::move(deviceInstance);
+    }
+    std::cout << "[PLCManager] Device initialization complete. Total devices: " << devices_.size() << "\n";
 }
 
 bool PLCManager::isCacheExpired(std::chrono::steady_clock::time_point cacheTime) {
@@ -170,55 +202,28 @@ std::vector<PLCInfo> PLCManager::getAllStatus() {
 }
 
 OperateResult PLCManager::operate(const std::string& deviceId, const std::string& cmd) {
-    OperateResult result;
-    result.success = false;
-
-    // 1. 查找设备配置
-    auto itDevice = deviceConfigs_.find(deviceId);
-    if (itDevice == deviceConfigs_.end()) {
+    // 1. 查找设备实例
+    auto itDevice = devices_.find(deviceId);
+    if(itDevice == devices_.end()){
+        OperateResult result;
+        result.success = false;
         result.message = "Device ID not found: " + deviceId;
         return result;
     }
-    const PLCDeviceConfig& deviceConfig = itDevice->second;
+    IPLCDevice* device = itDevice->second.get();
 
-    // 2. 查找 PLC 连接器
-    auto itConnector = plcConnectors_.find(deviceConfig.plcId);
-    if (itConnector == plcConnectors_.end()) {
-        result.message = "PLC connector not found for device: " + deviceId;
-        return result;
-    }
-    PLCConnector* connector = itConnector->second.get();
-
-    // 3. 检查 PLC 连接状态
-    if (connector->getConnectionStatus() != "CONNECTED") {
-        result.message = "PLC " + deviceConfig.plcId + " is not connected.";
-        return result;
-    }
-    
-    // 4. 将命令转换为寄存器值 (此处进行简化)
-    std::string value;
-    if (cmd == "ON") {
-        value = "1";
-    } else if (cmd == "OFF") {
-        value = "0";
-    } else {
-        result.message = "Invalid command: " + cmd + ". Must be ON or OFF.";
-        return result;
-    }
-
-    // 5. 执行写入操作
-    if (connector->writeRegister(deviceConfig.registerAddress, value)) {
-        result.success = true;
-        result.message = "Operate successfully: " + deviceId + " set to " + cmd;
-
-        // 【重要】操作成功后，需要立即清空该 PLC 的状态缓存，以保证下次查询是实时结果。
-        {
-            std::lock_guard<std::mutex> lock(cacheMutex_);
-            statusCache_.erase(deviceConfig.plcId);
+    // 2. 执行操作
+    OperateResult result = device->writeControl(cmd);
+    // 3. 操作成功后，立即清空该 PLC 的状态缓存。
+    if (result.success) {
+        // 查找设备配置以获取 PLC ID
+        auto itConfig = deviceConfigs_.find(deviceId);
+        if (itConfig != deviceConfigs_.end()) {
+             std::lock_guard<std::mutex> lock(cacheMutex_);
+             statusCache_.erase(itConfig->second.plcId);
+        } else {
+             std::cerr << "[PLCManager] WARNING: Could not find config for device ID " << deviceId << " to clear cache.\n";
         }
-        
-    } else {
-        result.message = "Failed to write to PLC register for device: " + deviceId;
     }
 
     return result;
