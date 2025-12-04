@@ -108,7 +108,7 @@ void ConfigParser::parsePLCDevices(const json& j)
         d.id = item.value("id", "");
         d.plcId = item.value("plc_id", "");   
         d.name = item.value("name", "");
-
+        d.deviceType = item.value("type", "");
         d.registerAddress = item.value("register", "");  
 
         config_.plcDevices.push_back(d);

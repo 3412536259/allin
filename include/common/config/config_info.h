@@ -48,6 +48,7 @@ struct PLCDeviceConfig {
     std::string id;
     std::string plcId;   // 归属 PLC！！
     std::string name;
+    std::string deviceType; // 设备类型，例如 "solenoid_valve"
     std::string registerAddress;   // "0x0001"
 };
 

@@ -14,7 +14,10 @@
 #include "iplc_manager.h"
 #include "plc_connector.h" // 包含 PLCConnector 和 MockPLCConnector
 #include "config_parser.h"
-#include "mock_plc_connector.h"
+#include "serial_plc_connector.h"
+#include "iplc_device.h"
+#include "base_plc_device.h"
+#include "solenoid_valve_plc_device.h"
 
 // 状态缓存结构体，包含时间戳
 struct PLCStatusCache {
@@ -43,6 +46,9 @@ private:
     // ---------------- PLC 连接器 ----------------
     // <PLC ID, PLC 连接器实例>
     std::map<std::string, std::unique_ptr<PLCConnector>> plcConnectors_; 
+    // ---------------- 设备实例 ----------------
+    // <设备 ID, 设备实例>
+    std::map<std::string, std::unique_ptr<IPLCDevice>> devices_;
 
     // ---------------- 状态缓存 ----------------
     // <PLC ID, 状态缓存>
@@ -67,8 +73,7 @@ private:
      */
     PLCInfo queryAndRefreshStatus(const std::string& plcId);
     /**
-     * @brief 内部函数：从文件加载配置并初始化内部结构。
-     * @return bool 成功加载返回 true，否则返回 false。
+     * @brief 初始化所有设备实例，根据 deviceType 创建对象
      */
-    bool initialize();
+    void initializeDevices();
 };

@@ -1,8 +1,10 @@
 #include "plc_manager.h"
 #include <iostream>
 #include <vector>
+#include "config_parser.h"
 
 int main() {
+    ConfigParser::getInstance().loadFromFile("../include/common/config/config.json");
     // 1. 初始化 PLC 管理器：管理器内部会加载和解析配置
     // 如果加载失败，PLCManager 内部会打印错误消息，但程序会继续运行（配置为空）。
     // 在实际生产代码中，这里应该捕获异常或检查初始化状态。
@@ -29,7 +31,13 @@ int main() {
               << ", Device 001 Status: " << (status2.deviceStatuses.empty() ? "N/A" : status2.deviceStatuses[0].status) << std::endl;
 
     std::cout << "\n--- 3. 执行操作 ---\n";
-    OperateResult opResult = manager.operate("plc_dev_001", "OFF");
+    OperateResult opResult = manager.operate("plc_dev_001", "ON");
+    std::cout << "Operate Result: " << (opResult.success ? "Success" : "Failed") 
+              << ". Message: " << opResult.message << std::endl;
+    
+    sleep(2);
+    
+    opResult = manager.operate("plc_dev_001", "OFF");
     std::cout << "Operate Result: " << (opResult.success ? "Success" : "Failed") 
               << ". Message: " << opResult.message << std::endl;
 

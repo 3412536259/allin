@@ -1,9 +1,11 @@
 #pragma once
 
 #include <string>
+#include "config_info.h"
 
 class PLCConnector {
 public:
+    explicit PLCConnector(const PLCConfig& config) : config_(config) {}
     virtual ~PLCConnector() = default;
 
     /**
@@ -35,4 +37,6 @@ public:
      * @return 操作是否成功
      */
     virtual bool writeRegister(const std::string& registerAddress, const std::string& value) = 0;
+protected:
+    PLCConfig config_;
 };
