@@ -1,36 +1,32 @@
-#include "sensor_manager.h"
 #include <iostream>
-#include <thread>
-#include <chrono>
+#include "sensor_manager.h"
+#include "sensor_types.h" // 确保 SensorStatus 可见
+
+// 辅助函数
+std::string toString(SensorStatus s) {
+    switch (s) {
+        case SensorStatus::NORMAL:   return "NORMAL";
+        case SensorStatus::ABNORMAL: return "ABNORMAL";
+        case SensorStatus::OFFLINE:  return "OFFLINE";
+        default: return "UNKNOWN";
+    }
+}
 
 int main() {
+    ConfigParser::getInstance().loadFromFile("../../include/common/config/config.json");
     SensorManager mgr;
-    if (!mgr.start("../../include/common/config/config.json", 5)) {
-        std::cerr << "Failed to start SensorManager\n";
-        return 1;
-    }
 
-    // 演示：实时读取某个传感器
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    auto r = mgr.getSensorDataRealTime("sensor_002");
-    if (r) {
-        std::cout << "Realtime sensor_002 -> temp=" << r->temperature
-                  << " C, hum=" << r->humidity << " %, status=" << to_string(r->status) << "\n";
+    std::string id = "sensor_001";
+
+    // ✅ 正确用法：接收 optional 并检查
+    if (auto data = mgr.getSensorDataRealTime(id)) {
+        std::cout << "ID: " << data->id << "\n"
+                  << "Temp: " << data->temperature << "°C\n"
+                  << "Humi: " << data->humidity << "%\n"
+                  << "Status: " << toString(data->status) << "\n";
     } else {
-        std::cout << "sensor_002 not found\n";
+        std::cerr << "Failed to read sensor '" << id << "' in real-time.\n";
     }
-
-    // 演示：读取缓存
-    auto c = mgr.getSensorDataCached("sensor_001");
-    if (c) {
-        std::cout << "Cached sensor_001 -> temp=" << c->temperature
-                  << " C, hum=" << c->humidity << " %, status=" << to_string(c->status) << "\n";
-    } else {
-        std::cout << "sensor_001 not in cache\n";
-    }
-
-    // 等待一会儿让后台刷新跑几次
-    std::this_thread::sleep_for(std::chrono::seconds(12));
 
     mgr.stop();
     return 0;

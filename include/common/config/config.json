@@ -61,10 +61,10 @@
         {
           "id": "sensor_001",
           "name": "物料到位传感器",
-          "type": "photoelectric",
+          "type": "modbus",
           "serial_config": {
-            "port": "/dev/ttyUSB1",
-            "baud_rate": 19200,
+            "port": "",
+            "baud_rate": 9600,
             "parity": "none",
             "stop_bits": 1
           }
@@ -72,10 +72,10 @@
         {
           "id": "sensor_002",
           "name": "温度监测传感器",
-          "type": "thermocouple",
+          "type": "modbus",
           "serial_config": {
-            "port": "/dev/ttyUSB1",
-            "baud_rate": 19200,
+            "port": "",
+            "baud_rate": 9600,
             "parity": "none",
             "stop_bits": 1
           }

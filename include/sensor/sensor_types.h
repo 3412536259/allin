@@ -25,6 +25,7 @@ struct SensorData {
     std::string id;
     float temperature = 0.0f;
     float humidity = 0.0f;
+    float value = 0.0f; // 其他主值
     SensorStatus status = SensorStatus::OFFLINE;
 };
 

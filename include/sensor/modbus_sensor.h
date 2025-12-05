@@ -1,32 +1,29 @@
-#ifndef MOCK_SENSOR_H
-#define MOCK_SENSOR_H
+// modbus_sensor.h
+#ifndef MODBUS_SENSOR_H
+#define MODBUS_SENSOR_H
 
 #include "isensor.h"
-#include "config_info.h"   // <- 你已经提供的类型定义（SensorConfig / SerialConfig）
+#include "config_info.h"
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <termios.h> // for speed_t
-#include <unistd.h> // for read/write/close
+#include <termios.h>
+#include <unistd.h>
 
-class MockSensor : public ISensor {
+class ModbusSensor : public ISensor {
 public:
-    explicit MockSensor(const SensorConfig& cfg);
-    ~MockSensor();
+    explicit ModbusSensor(const SensorConfig& cfg);
+    ~ModbusSensor() override;
 
     bool init() override;
     void closeSerial() override;
-
     bool readData() override;
 
     std::string getId() const override;
     float getTemperatureC() const override;
     float getHumidityPct() const override;
-    float getValue() const override ;
+    float getValue() const override;
     SensorStatus getStatus() const override;
-
-    // 如果需要即时读取并返回 int（温度*10）可用
-    int queryDataInt();
 
 private:
     SensorConfig cfg_;
@@ -36,12 +33,10 @@ private:
     float humidityPct_ = 0.0f;
     SensorStatus status_ = SensorStatus::OFFLINE;
 
-    // Modbus params (defaults; you can extend to read from JSON)
     int modbusAddr_ = 1;
     int regStart_ = 0;
     int regCount_ = 2;
 
-    // helpers
     static speed_t baudToSpeed(int baud);
     static uint16_t crc16_modbus(const uint8_t* data, size_t len);
     bool writeExact(const uint8_t* data, size_t len);
@@ -50,4 +45,4 @@ private:
     bool parseModbusResponse(const uint8_t* resp, size_t respLen);
 };
 
-#endif // MOCK_SENSOR_H
+#endif // MODBUS_SENSOR_H
