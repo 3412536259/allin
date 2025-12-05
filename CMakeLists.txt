@@ -22,8 +22,8 @@ else()
     message(FATAL_ERROR "❌ 未找到系统 OpenCV")
 endif()
 
-# add_subdirectory(rknn/3rdparty)
-# add_subdirectory(rknn/utils)
+add_subdirectory(rknn/3rdparty)
+add_subdirectory(rknn/utils)
 add_subdirectory(src)
 
 # 可选：安装配置

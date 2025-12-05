@@ -3,6 +3,7 @@
 
 #include "itask.h"
 #include "thread_pool.h"
+#include "idevice_manager.h"
 #include <queue>
 #include <mutex>
 #include <thread>
@@ -12,11 +13,11 @@
 
 class JobScheduler{
 public:
-    JobScheduler(size_t workerCount = std::thread::hardware_concurrency());
+    JobScheduler(size_t workerCount,IDeviceManager* devMgr,MqttService* mqtt);
     ~JobScheduler();
 
     int submit(std::shared_ptr<ITask> task);
-
+    void setMqtt(MqttService* mqtt);
     TaskStatus getTaskStatus(int taskId);
 private:
     void dispatchLoop();
@@ -34,8 +35,8 @@ private:
 
     std::atomic_bool stop_{false};
     std::atomic_int nextId_{1};
-
-
+    IDeviceManager* devMgr_;
+    MqttService* mqtt_;
 };
 
 

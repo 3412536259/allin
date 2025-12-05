@@ -1,6 +1,7 @@
 #include "JobScheduler.h"
-JobScheduler::JobScheduler(size_t workerCount)
-    :pool_(workerCount)
+#include "mqtt_service.h"
+JobScheduler::JobScheduler(size_t workerCount,IDeviceManager* devMgr,MqttService* mqtt)
+    :pool_(workerCount),devMgr_(devMgr),mqtt_(mqtt)
 {
     dispatcher_ = std::thread(&JobScheduler::dispatchLoop,this);
 }
@@ -11,7 +12,10 @@ JobScheduler::~JobScheduler()
     cv_.notify_all();
     if(dispatcher_.joinable()) dispatcher_.join();
 }
-
+void JobScheduler::setMqtt(MqttService* mqtt)
+{
+    mqtt_ = mqtt;
+}
 int JobScheduler::submit(std::shared_ptr<ITask> task)
 {  
     auto tcb = std::make_shared<TaskControlBlock>();
@@ -63,7 +67,7 @@ void JobScheduler::dispatchLoop()
         }
 
         pool_.submit([this,tcb](){
-            TaskContext ctx{.taskId = tcb->id};
+            TaskContext ctx{.taskId = tcb->id,.devMgr = this->devMgr_,.mqtt = this->mqtt_};
             try{
                 tcb->task->run(ctx);
                 tcb->status = TaskStatus::FINISHED;

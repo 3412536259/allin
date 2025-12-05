@@ -26,18 +26,6 @@ bool CameraManager::registerDevices()
         addCamera(info);
     }
 
-    // // 示例：加载两个摄像头
-    // CameraStaticInfo info1;
-    // info1.camera_id = "1";
-    // info1.rtsp_url = "rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/101";
-
-    // CameraStaticInfo info2;
-    // info2.camera_id = "2";
-    // info2.rtsp_url = "rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/201";
-
-    // addCamera(info1);
-    // addCamera(info2);
-
     return true;
 }
 

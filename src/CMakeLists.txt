@@ -24,8 +24,14 @@ set(SRC_FILES
     camera/dao/video_capture.cpp
     ../include/common/config/config_parser.cpp
     common/logger/logger.cpp
+    common/base64/base64.cpp
+    common/yolo8/postprocess.cc
+    common/yolo8/yolov8.cc
+    common/imageprocess/image_processor.cpp
     task/JobScheduler.cpp
+    task/task.cpp
     mqtt/mqtt_command_dispatcher.cpp
+    mqtt/mqtt_service.cpp
 
 )
 
@@ -42,9 +48,12 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/mqtt
     ${CMAKE_SOURCE_DIR}/include/camera/dao
 
+    ${CMAKE_SOURCE_DIR}/include/common/base64
+    ${CMAKE_SOURCE_DIR}/include/common/imageprocess
     ${CMAKE_SOURCE_DIR}/include/common/logger
     ${CMAKE_SOURCE_DIR}/include/common/config
     ${CMAKE_SOURCE_DIR}/include/common/threads
+    ${CMAKE_SOURCE_DIR}/include/common/yolo8
     ${CMAKE_SOURCE_DIR}/third_party/mqtt
     # ${CMAKE_SOURCE_DIR}/include/service
     # ${CMAKE_SOURCE_DIR}/include/infrastructure
@@ -58,13 +67,13 @@ target_include_directories(receive PUBLIC
     # ${PROJECT_SOURCE_DIR}/utils/base64
     # ${PROJECT_SOURCE_DIR}/utils/Frameprocess
     # ${PROJECT_SOURCE_DIR}/utils/FrameUtils
-    # ${STB_INCLUDES}
-    # ${LIBJPEG_INCLUDES}
-    # ${LIBRKNNRT_INCLUDES}
-    # ${LIBRGA_INCLUDES}
-    # ${LIBSNDFILE_INCLUDES}
-    # ${CMAKE_SOURCE_DIR}/rknn/utils
-    # ${OpenCV_INCLUDE_DIRS}
+    ${STB_INCLUDES}
+    ${LIBJPEG_INCLUDES}
+    ${LIBRKNNRT_INCLUDES}
+    ${LIBRGA_INCLUDES}
+    ${LIBSNDFILE_INCLUDES}
+    ${CMAKE_SOURCE_DIR}/rknn/utils
+    ${OpenCV_INCLUDE_DIRS}
 )
 # link_directories(
 #     ${PROJECT_SOURCE_DIR}/lib  # 告诉编译器从项目 lib 目录找库
@@ -74,10 +83,10 @@ find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 # -------------------------- 4. 链接依赖库 --------------------------
 target_link_libraries(receive PUBLIC
-    # fileutils
-    # imagedrawing
-    # imageutils
-    # audioutils
+    fileutils
+    imagedrawing
+    imageutils
+    audioutils
     ${LIBJPEG}
     ${LIBRKNNRT}
     ${LIBRGA}

@@ -12,9 +12,9 @@ public:
     DeviceStatus getStatus() override;
 
     void getAllRealImage() override;
-    void getRealImage(const CameraStaticInfo& info) override;
+    void getRealImage(const std::string& camId) override;
     void getAllHistoryImage() override;
-    void getHistoryImage(const CameraStaticInfo& info) override;
+    void getHistoryImage(const std::string& camId) override;
     
     void operateCamera() override;
     void operatePlc(const std::string &deviceId, const std::string &cmd) override;

@@ -4,9 +4,13 @@
 #include <memory>
 #include <chrono>
 #include <atomic>
+#include "idevice_manager.h"
+class MqttService; 
 class TaskContext{
 public:
     int taskId;
+    IDeviceManager* devMgr;
+    class MqttService* mqtt;
 };
 
 class ITask{

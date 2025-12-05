@@ -9,9 +9,9 @@ public:
 
     virtual DeviceStatus getStatus() = 0; //设备状态获取
 
-    virtual void getRealImage(const CameraStaticInfo& info) = 0; //获取对应摄像头实时图片
+    virtual void getRealImage(const std::string& camId) = 0; //获取对应摄像头实时图片
     virtual void getAllRealImage() = 0; //获取所有摄像头实时图片
-    virtual void getHistoryImage(const CameraStaticInfo& info) = 0;
+    virtual void getHistoryImage(const std::string& camId) = 0;
     virtual void getAllHistoryImage() = 0;
     
     virtual void operateCamera() = 0;
