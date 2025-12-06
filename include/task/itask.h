@@ -1,49 +1,48 @@
 #ifndef I_TASK_H
 #define I_TASK_H
 #include <string>
-#include <future>
+#include <memory>
 #include <chrono>
-#include <functional>
+#include <atomic>
 #include "idevice_manager.h"
-enum class TaskResult
-{
-    SUCCESS,
-    TIMEOUT,
-    FAILED
-    
+class MqttService; 
+class TaskContext{
+public:
+    int taskId;
+    IDeviceManager* devMgr;
+    class MqttService* mqtt;
 };
 
-class ITask
-{
+class ITask{
 public:
     virtual ~ITask() = default;
-    virtual TaskResult execute(IDeviceManager& devMgr) = 0;
+    virtual void run(TaskContext& ctx) = 0;
     virtual std::string name() const = 0;
-
 };
 
-// ------------------------
-// 超时包装器
-// ------------------------
-template<typename F>
-auto make_timeout_task(F task, std::chrono::milliseconds timeout)
-{
-    return [task, timeout]() {
-        using R = TaskResult;
+enum class TaskStatus {
+    NEW,
+    READY,
+    RUNNING,
+    FINISHED,
+    FAILED
+};
 
-        std::packaged_task<R()> pkg(task);
-        std::future<R> fut = pkg.get_future();
+struct TaskControlBlock{
+    int id;
+    std::shared_ptr<ITask> task;
+    TaskStatus status = TaskStatus::NEW;
 
-        // 在独立线程执行真正的任务
-        std::thread(std::move(pkg)).detach();
+    std::chrono::steady_clock::time_point enqueueTime;
+    std::chrono::steady_clock::time_point startTime;
+    std::chrono::steady_clock::duration duration{};
 
-        if (fut.wait_for(timeout) == std::future_status::timeout)
-        {
-            std::cout << "[Task] Timeout!" << std::endl;
-            return TaskResult::TIMEOUT;
-        }
-        return fut.get();
-    };
-}
+    std::string name;
+};
+
+
+
+
+
 
 #endif

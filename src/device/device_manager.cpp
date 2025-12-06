@@ -1,6 +1,7 @@
 #include "device_manager.h"
 #include "camera_manager.h"
 #include "sensor_manager.h"
+
 #include <iostream>
 DeviceManager::DeviceManager()
 {
@@ -40,13 +41,14 @@ void DeviceManager::getAllRealImage()
     }
 }
 
-void DeviceManager::getRealImage(const CameraStaticInfo& info)
+void DeviceManager::getRealImage(const std::string& camId)
 {
     if (!cameraManager_) {
         std::cerr << "DeviceManager: cameraManager_ is null!" << std::endl;
         return;
     }
-
+    CameraStaticInfo info;
+    info.camera_id = camId;
     FrameData frame;
 
     // 调用 CameraManager 获取关键帧
@@ -55,6 +57,7 @@ void DeviceManager::getRealImage(const CameraStaticInfo& info)
         std::cerr << "DeviceManager: failed to get real image for camera "<< info.camera_id << std::endl;
         return;
     }
+
 
     // TODO：把 frame 传递到云端 或者回调给上层
     // 示例（你之后自己替换上传函数）：
@@ -69,7 +72,7 @@ void DeviceManager::getAllHistoryImage()
 
 }
 
-void DeviceManager::getHistoryImage(const CameraStaticInfo& info)
+void DeviceManager::getHistoryImage(const std::string& camId)
 {
 
 }

@@ -12,6 +12,7 @@ ConfigParser& ConfigParser::getInstance()
 
 bool ConfigParser::loadFromFile(const std::string& path)
 {
+    // std::cout << "[ConfigParser] Loading config from: " << path << "\n";
     if(isLoaded_) {
         return true; // 已加载，直接返回
     }
@@ -24,6 +25,7 @@ bool ConfigParser::loadFromFile(const std::string& path)
     json j;
     try {
         ifs >> j;
+        // std::cout << "[ConfigParser] JSON loaded successfully.\n";
     } catch (std::exception& e) {
         std::cerr << "[ConfigParser] JSON parse error: " << e.what() << "\n";
         return false;
@@ -131,6 +133,12 @@ void ConfigParser::parseSensors(const json& j)
         s.serial.baudRate = sc.value("baud_rate", 0);
         s.serial.parity = sc.value("parity", "");
         s.serial.stopBits = sc.value("stop_bits", 1);
+
+        if (s.type == "modbus") {
+            s.modbusAddr = item.value("modbus_addr", 1);
+            s.regStart   = item.value("reg_start", 0);
+            s.regCount   = item.value("reg_count", 2);
+        }
 
         config_.sensors.push_back(s);
     }

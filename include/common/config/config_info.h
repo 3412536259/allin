@@ -59,6 +59,10 @@ struct SensorConfig {
     std::string name;
     std::string type;
     SerialConfig serial;
+    
+    int modbusAddr = 1;
+    int regStart = 0;
+    int regCount = 2;
 };
 
 // ---------------- Gateway (业务网关信息) ----------------

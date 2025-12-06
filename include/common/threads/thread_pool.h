@@ -12,61 +12,61 @@
 #include "threadsafe_queue.h"
 #include "join_threads.h"
 #include <atomic>
-class thread_pool
-{   
+class ThreadPool
+{
 private:
     std::atomic_bool done;
     ThreadSafeQueue<std::function<void()>> work_queue;
     std::vector<std::thread> threads;
     join_threads joiner;
+    std::condition_variable wake_cv;
+    std::mutex wake_mtx;
 
     void worker_thread()
     {
-        while(!done)
+        while (true)
         {
             std::function<void()> task;
-            // if(work_queue.try_pop(task))
-            // {
-            //     task();
-            // }
-            // else
-            // {
-            //     std::this_thread::yield();
-            // }
 
-            work_queue.wait_and_pop(task);
-            task();
+            // 先尝试获取任务
+            if (work_queue.try_pop(task))
+            {
+                task();
+                continue;
+            }
+
+            // 如果已经 done，则退出
+            if (done)
+                return;
+
+            // 否则阻塞等待
+            std::unique_lock<std::mutex> lock(wake_mtx);
+            wake_cv.wait_for(lock, std::chrono::milliseconds(50));
         }
     }
 
 public:
-    thread_pool()
-        :done(false),joiner(threads)
+    ThreadPool(size_t thread_count = 8)
+        : done(false), joiner(threads)
     {
-        unsigned const thread_count = std::thread::hardware_concurrency();
-        //unsigned const thread_count = 40;
-        try
+        for (size_t i = 0; i < thread_count; ++i)
         {
-            for (unsigned i = 0; i < thread_count; ++i)
-            {
-                threads.push_back(std::thread(&thread_pool::worker_thread,this));
-            }
+            threads.push_back(std::thread(&ThreadPool::worker_thread, this));
         }
-        catch(...)
-        {
-            done = true;
-            throw;
-        }
-    }
-    ~thread_pool()
-    {
-        done = true;
-    }
-    template<typename FunctionType>
-    void submit(FunctionType f)
-    {
-        work_queue.push(std::function<void()>(f));
     }
 
+    ~ThreadPool()
+    {
+        done = true;
+        wake_cv.notify_all();   // <-- 唤醒所有等待线程
+    }
+
+    template<typename F>
+    void submit(F f)
+    {
+        work_queue.push(std::function<void()>(f));
+        wake_cv.notify_one();    // <-- 通知 worker 有任务
+    }
 };
+
 #endif
