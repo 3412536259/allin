@@ -153,7 +153,6 @@ void ConfigParser::parseGateways(const json& j)
         GatewayConfig g;
         g.id = item.value("id", "");
         g.name = item.value("name", "");
-        g.model = item.value("model", "");
         g.ip = item.value("ip", "");
         g.protocol = item.value("protocol", "");
         g.status = item.value("status", "");

@@ -34,8 +34,8 @@
           "connection_type": "gateway",
           "gateway": {
             "gateway_id": "gw_001",
-            "gateway_ip": "192.168.1.100",
-            "gateway_port": 502
+            "gateway_ip": "192.168.10.253",
+            "gateway_port": 31001
           }
         }
       ],
@@ -52,7 +52,7 @@
           "plc_id": "plc_02",
           "name": "出料电磁阀",
           "type": "solenoid_valve",
-          "register": "0x0002"
+          "register": "0x0504"
         }
       ],
 
@@ -86,8 +86,7 @@
         {
           "id": "gw_001",
           "name": "工业智能网关",
-          "model": "Huawei AR502H",
-          "ip": "192.168.1.100",
+          "ip": "192.168.10.253",
           "protocol": "Modbus TCP", 
           "status": "online" 
         }

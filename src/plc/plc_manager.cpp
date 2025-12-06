@@ -25,9 +25,8 @@ std::string getCurrentTimeStr() {
 
 // --- PLCManager 实现 ---
 
-PLCManager::PLCManager() {
+PLCManager::PLCManager() : stopThread_(false) {
     // 1. 从 ConfigParser 单例获取配置数据
-    // 假设 ConfigParser::loadConfig() 已经在程序启动时调用
     DeviceConfigRoot rootConfig = ConfigParser::getInstance().getConfig();
 
     // 2. 初始化配置映射和连接器
@@ -40,9 +39,7 @@ PLCManager::PLCManager() {
             connector = std::make_unique<SerialPLCConnector>(plcConfig);
         }
         else if(plcConfig.connectionType == "gateway"){
-            // 未来可添加 GatewayPLCConnector 实现
-            std::cerr << "[PLCManager] WARNING: Gateway connection type not implemented yet for PLC ID: " << plcConfig.plcId << "\n";
-            continue; // 跳过未实现的连接类型
+            connector = std::make_unique<GatewayTCPConnector>(plcConfig);
         }
         else{
             std::cerr << "[PLCManager] WARNING: Unknown connection type '" << plcConfig.connectionType 
@@ -66,16 +63,34 @@ PLCManager::PLCManager() {
     // 4. 初始化设备实例
     initializeDevices();
 
-    // 4. 尝试连接所有 PLC
+    // 5. 尝试连接所有 PLC
     for (auto const& [plcId, connector] : plcConnectors_) {
         connector->connect();
     }
+
+    // 6. 启动定时刷新线程
+    refreshThread_ = std::thread(&PLCManager::periodStatusRefresh, this);
 }
 
 PLCManager::~PLCManager() {
     // 断开所有连接
     for (auto const& [plcId, connector] : plcConnectors_) {
         connector->disconnect();
+    }
+    // 停止定时刷新线程
+    stopThread_ = true;
+    if (refreshThread_.joinable()) {
+        refreshThread_.join();
+    }
+}
+
+void PLCManager::periodStatusRefresh(){
+    while(!stopThread_){
+        for(const auto& pair : plcConfigs_){
+            const std::string& plcId = pair.first;
+            queryAndRefreshStatus(plcId);
+        }
+        std::this_thread::sleep_for(REFRESH_INTERVAL);
     }
 }
 
@@ -171,21 +186,30 @@ PLCInfo PLCManager::queryAndRefreshStatus(const std::string& plcId) {
 }
 
 
-PLCInfo PLCManager::getStatus(const std::string& plcId) {
+PLCInfo PLCManager::getStatus(const std::string& deviceId) {
+    // 1. 找到deviceId 对应的plcId
+    auto itDeviceConfig = deviceConfigs_.find(deviceId);
+    if(itDeviceConfig == deviceConfigs_.end()){
+        PLCInfo errorInfo;
+        errorInfo.plcId = "UNKNOWN";
+        errorInfo.connectionStatus = "DEVICE_NOT_FOUND";
+        return errorInfo;
+    }
+    const std::string& plcId = itDeviceConfig->second.plcId;
     // 1. 尝试从缓存读取 (需要加锁保护)
     {
         std::lock_guard<std::mutex> lock(cacheMutex_);
         auto it = statusCache_.find(plcId);
         if (it != statusCache_.end() && !isCacheExpired(it->second.lastChecked)) {
             // 缓存命中且未过期，直接返回
-            // std::cout << "[Cache Hit] for PLC: " << plcId << std::endl;
+            std::cout << "[Cache Hit] for PLC: " << plcId << std::endl;
             return it->second.info;
         }
         // 缓存未命中或过期
     }
     
     // 2. 缓存失效，实时查询并更新缓存
-    // std::cout << "[Cache Miss/Expired] Querying PLC: " << plcId << std::endl;
+    std::cout << "[Cache Miss/Expired] Querying PLC: " << plcId << std::endl;
     return queryAndRefreshStatus(plcId);
 }
 
