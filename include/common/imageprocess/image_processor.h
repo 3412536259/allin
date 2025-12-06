@@ -23,6 +23,8 @@ public:
     static bool avframeToRGB(AVFrame* frame, int width, int height, image_buffer_t* out_image);
     static void drawDetections(image_buffer_t* rgb_image,object_detect_result_list& results);
     static bool compressToJpeg(const image_buffer_t* rgb_image,std::vector<unsigned char>& outJpeg,int quality = 95);
+    static std::string jpegToBase64(const std::vector<unsigned char>& jpegData);
+    static bool saveJpegToFile(const std::vector<unsigned char>& jpegData, const std::string& filename);
 };
 
 #endif // IMAGE_PROCESSOR_H
