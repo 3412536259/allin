@@ -65,7 +65,6 @@ struct SensorConfig {
 struct GatewayConfig {
     std::string id;
     std::string name;
-    std::string model;
     std::string ip;
     std::string protocol;
     std::string status;

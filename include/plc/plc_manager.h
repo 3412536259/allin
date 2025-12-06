@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <sstream>
 #include <thread>
+#include <atomic>
 #include "config_info.h"
 #include "iplc_manager.h"
 #include "plc_connector.h" // 包含 PLCConnector 和 MockPLCConnector
@@ -18,6 +19,7 @@
 #include "iplc_device.h"
 #include "base_plc_device.h"
 #include "solenoid_valve_plc_device.h"
+#include "gateway_tcp_connector.h"
 
 // 状态缓存结构体，包含时间戳
 struct PLCStatusCache {
@@ -30,7 +32,7 @@ public:
     PLCManager();
     ~PLCManager() override;
 
-    PLCInfo getStatus(const std::string& plcId) override;
+    PLCInfo getStatus(const std::string& deviceId) override;
     std::vector<PLCInfo> getAllStatus() override;
     OperateResult operate(const std::string& deviceId, const std::string& cmd) override;
 
@@ -57,7 +59,13 @@ private:
     std::mutex cacheMutex_; 
 
     // 状态缓存的有效期 (例如 2 秒)
-    const std::chrono::seconds CACHE_TTL = std::chrono::seconds(2); 
+    const std::chrono::seconds CACHE_TTL = std::chrono::seconds(8); 
+
+    // 定时刷新线程
+    std::atomic<bool> stopThread_{false};
+    std::thread refreshThread_;
+    void periodStatusRefresh();     // 定时刷新函数
+    const std::chrono::seconds REFRESH_INTERVAL = std::chrono::seconds(5); // 刷新间隔
 
     /**
      * @brief 检查缓存是否过期
