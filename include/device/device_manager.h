@@ -12,7 +12,7 @@ public:
     DeviceStatus getStatus() override;
 
     void getAllRealImage() override;
-    void getRealImage(const std::string& camId) override;
+    RealImage getRealImage(const std::string& camId) override;
     void getAllHistoryImage() override;
     void getHistoryImage(const std::string& camId) override;
     

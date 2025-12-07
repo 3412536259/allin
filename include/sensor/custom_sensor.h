@@ -1,14 +1,13 @@
-// custom_sensor.h
-#ifndef CUSTOM_SENSOR_H
-#define CUSTOM_SENSOR_H
+#ifndef CUSTOM_PROTOCOL_SENSOR_H
+#define CUSTOM_PROTOCOL_SENSOR_H
 
 #include "isensor.h"
-#include "config_info.h"
-#include <string>
-#include <memory>
 #include <vector>
 #include <termios.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <cstring>
+#include <cerrno>
 
 class CustomProtocolSensor : public ISensor {
 public:
@@ -20,16 +19,16 @@ public:
     bool readData() override;
 
     std::string getId() const override { return cfg_.id; }
-    float getTemperatureC() const override { return temperatureC_; }
-    float getHumidityPct() const override { return humidityPct_; }
-    float getValue() const override { return temperatureC_; }
+    std::string getType() const override { return "custom"; } // 新增
+    float getTemperatureC() const override { return 0.0f; }   // 不适用
+    float getHumidityPct() const override { return 0.0f; }    // 不适用
+    float getValue() const override { return value_; }         // 返回自定义值
     SensorStatus getStatus() const override { return status_; }
 
 private:
     SensorConfig cfg_;
     int serial_fd_ = -1;
-    float temperatureC_ = 0.0f;
-    float humidityPct_ = 0.0f;
+    float value_ = 0.0f; // 自定义协议核心值（替换原温湿度）
     SensorStatus status_ = SensorStatus::OFFLINE;
 
     bool openSerial();
@@ -38,4 +37,4 @@ private:
     bool parseCustomFrame(const std::vector<uint8_t>& frame);
 };
 
-#endif // CUSTOM_SENSOR_H
+#endif // CUSTOM_PROTOCOL_SENSOR_H

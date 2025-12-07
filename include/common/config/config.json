@@ -61,24 +61,38 @@
 
       "sensor": [
         {
-          "id": "sensor_001",
-          "name": "物料到位传感器",
+          "id": "sensor001",
+          "name": "车间温湿度传感器",
           "type": "modbus",
           "serial_config": {
-            "port": "",
+            "port": "/dev/ttyS3",
             "baud_rate": 9600,
             "parity": "none",
             "stop_bits": 1
+          },
+          "modbus_addr": 1,
+          "reg_start": 0,
+          "reg_count": 2
+        },
+        {
+          "id": "sensor002",
+          "name": "机房水浸传感器",
+          "type": "gpio",
+          "serial_config": {
+            "port": "gpio18",
+            "baud_rate": 0,
+            "parity": "",
+            "stop_bits": 0
           }
         },
         {
-          "id": "sensor_002",
-          "name": "温度监测传感器",
-          "type": "modbus",
+          "id": "sensor003",
+          "name": "管道压力传感器",
+          "type": "custom",
           "serial_config": {
-            "port": "",
-            "baud_rate": 9600,
-            "parity": "none",
+            "port": "/dev/ttyUSB2",
+            "baud_rate": 19200,
+            "parity": "even",
             "stop_bits": 1
           }
         }

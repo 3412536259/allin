@@ -1,9 +1,11 @@
 #include "custom_sensor.h"
-#include <fcntl.h>
-#include <termios.h>
-#include <unistd.h>
-#include <cstring>
-#include <iostream>
+#include <iostream>  
+#include <vector>    
+#include <termios.h> 
+#include <unistd.h>  
+#include <fcntl.h>   
+#include <cstring>   
+#include <cerrno> 
 
 CustomProtocolSensor::CustomProtocolSensor(const SensorConfig& cfg) : cfg_(cfg) {}
 
@@ -63,13 +65,12 @@ bool CustomProtocolSensor::receiveAndParse(std::vector<uint8_t>& out) {
 
 bool CustomProtocolSensor::parseCustomFrame(const std::vector<uint8_t>& frame) {
     // TODO: 实现你的私有协议解析
-    // 例如：检查帧头 0xAA，长度，校验和，提取温度湿度
+    // 例如：检查帧头 0xAA，长度，校验和，提取自定义值
     if (frame.size() < 6 || frame[0] != 0xAA) return false;
 
-    // 假设 frame[1]=temp_high, frame[2]=temp_low → temp = (high<<8 | low)/10.0
-    uint16_t raw_temp = (frame[1] << 8) | frame[2];
-    temperatureC_ = raw_temp / 10.0f;
-    humidityPct_ = frame[3]; // 示例
+    // 示例：提取自定义值（frame[1]和frame[2]拼接）
+    uint16_t raw_val = (frame[1] << 8) | frame[2];
+    value_ = raw_val / 10.0f; // 自定义值赋值
 
     return true;
 }

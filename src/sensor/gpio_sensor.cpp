@@ -1,7 +1,9 @@
 #include "gpio_sensor.h"
-#include <fstream>
-#include <unistd.h>
-#include <cstdlib>
+#include <iostream>  // 新增：std::cerr 依赖
+#include <fstream>   // 新增：文件操作依赖
+#include <string>    // 新增：字符串拼接依赖
+#include <cerrno>    // 新增：strerror(errno) 依赖
+#include <cstring>
 
 bool GPIOSensor::exportGpio() {
     // 从 cfg_.serial.port 提取 GPIO 编号，例如 "gpio18" -> 18

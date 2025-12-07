@@ -13,4 +13,11 @@ struct DeviceStatus
 
 };
 
+struct RealImage
+{
+    FrameData frame;
+    std::string sourceCameraId;
+    bool integrity = false;
+};
+
 #endif

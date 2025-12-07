@@ -1,12 +1,10 @@
-// modbus_sensor.cpp
 #include "modbus_sensor.h"
-#include <iostream>
-#include <fcntl.h>
-#include <unistd.h>
-#include <cstring>
-#include <cstdlib> // for rand()
+#include <iostream>  // 新增：std::cerr 依赖
+#include <ostream>   // 新增：std::endl 依赖
+#include <cstdlib>   // 新增：rand() 依赖（simulateData 用）
+#include <cstring>   // 新增：memset 依赖
+#include <cerrno>  
 
-// Helper: Convert baud rate to termios speed_t
 speed_t ModbusSensor::baudToSpeed(int baud) {
     switch (baud) {
         case 1200:   return B1200;
@@ -21,7 +19,6 @@ speed_t ModbusSensor::baudToSpeed(int baud) {
     }
 }
 
-// CRC16-MODBUS calculation
 uint16_t ModbusSensor::crc16_modbus(const uint8_t* data, size_t len) {
     uint16_t crc = 0xFFFF;
     for (size_t i = 0; i < len; ++i) {
@@ -73,7 +70,7 @@ void ModbusSensor::simulateData() {
 
     temperatureC_ = temp;
     humidityPct_ = hum;
-    status_ = SensorStatus::NORMAL; // ✅ 使用 NORMAL 表示正常
+    status_ = SensorStatus::NORMAL;
 }
 
 ModbusSensor::ModbusSensor(const SensorConfig& cfg) : cfg_(cfg) {
@@ -97,41 +94,74 @@ bool ModbusSensor::init() {
         return true;
     }
 
-    std::string device = cfg_.serial.port; // ✅ 正确
+    std::string device = cfg_.serial.port;
     if (device.empty()) {
         status_ = SensorStatus::OFFLINE;
         return false;
     }
 
-    int baud = cfg_.serial.baudRate; // ✅ 正确
+    int baud = cfg_.serial.baudRate;
     if (baud <= 0) baud = 9600;
 
-    serial_fd_ = open(device.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+    // 1. 打开串口
+    serial_fd_ = open(device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (serial_fd_ < 0) {
+        std::cerr << "[ModbusSensor] 串口打开失败：" << strerror(errno) << std::endl;
         status_ = SensorStatus::OFFLINE;
         return false;
     }
 
-    struct termios tty;
+    // 2. 配置串口属性
+    termios tty;
+    memset(&tty, 0, sizeof(tty));
     if (tcgetattr(serial_fd_, &tty) != 0) {
+        std::cerr << "[ModbusSensor] 获取串口属性失败：" << strerror(errno) << std::endl;
         close(serial_fd_);
         serial_fd_ = -1;
         status_ = SensorStatus::OFFLINE;
         return false;
     }
 
-    cfmakeraw(&tty);
-    cfsetspeed(&tty, baudToSpeed(baud));
-    tty.c_cflag |= CLOCAL | CREAD;
-    tty.c_cc[VMIN] = 0;
+    // 波特率
+    cfsetospeed(&tty, baudToSpeed(baud));
+    cfsetispeed(&tty, baudToSpeed(baud));
+
+    // 数据位/校验位/停止位
+    tty.c_cflag &= ~CSIZE;
+    tty.c_cflag |= CS8;            // 8位数据位
+    tty.c_cflag &= ~PARENB;        // 无校验
+    tty.c_cflag &= ~CSTOPB;        // 1位停止位
+    tty.c_cflag &= ~CRTSCTS;       // 禁用硬件流控
+
+    // 模式配置
+    tty.c_lflag &= ~ICANON;        // 非规范模式
+    tty.c_lflag &= ~ECHO;
+    tty.c_lflag &= ~ECHOE;
+    tty.c_lflag &= ~ISIG;
+
+    // 输入处理
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY);
+    tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL);
+
+    // 输出处理
+    tty.c_oflag &= ~OPOST;
+    tty.c_oflag &= ~ONLCR;
+
+    // 超时配置
     tty.c_cc[VTIME] = 10;
+    tty.c_cc[VMIN] = 0;
 
+    // 应用配置
     if (tcsetattr(serial_fd_, TCSANOW, &tty) != 0) {
+        std::cerr << "[ModbusSensor] 配置串口属性失败：" << strerror(errno) << std::endl;
         close(serial_fd_);
         serial_fd_ = -1;
         status_ = SensorStatus::OFFLINE;
         return false;
     }
+
+    // 恢复阻塞模式
+    fcntl(serial_fd_, F_SETFL, 0);
 
     status_ = SensorStatus::NORMAL;
     return true;
@@ -154,37 +184,50 @@ bool ModbusSensor::readData() {
         return false;
     }
 
-    // Build Modbus RTU request: [addr][func][start_hi][start_lo][count_hi][count_lo][crc_lo][crc_hi]
-    uint8_t req[8];
-    req[0] = static_cast<uint8_t>(modbusAddr_);
-    req[1] = 0x03; // Read Holding Registers
-    req[2] = static_cast<uint8_t>((regStart_ >> 8) & 0xFF);
-    req[3] = static_cast<uint8_t>(regStart_ & 0xFF);
-    req[4] = static_cast<uint8_t>((regCount_ >> 8) & 0xFF);
-    req[5] = static_cast<uint8_t>(regCount_ & 0xFF);
-    uint16_t crc = crc16_modbus(req, 6);
-    req[6] = static_cast<uint8_t>(crc & 0xFF);
-    req[7] = static_cast<uint8_t>((crc >> 8) & 0xFF);
+    // 1. 构造Modbus请求帧
+    uint8_t req[8] = {0x01, 0x03, 0x00, 0x00, 0x00, 0x02, 0xC4, 0x0B};
 
-    if (!writeExact(req, 8)) {
+    // 2. 清空接收缓冲区
+    tcflush(serial_fd_, TCIFLUSH);
+
+    // 3. 发送数据
+    ssize_t bytes_written = write(serial_fd_, req, sizeof(req));
+    if (bytes_written < 0 || (size_t)bytes_written != sizeof(req)) {
+        std::cerr << "[ModbusSensor] 发送数据失败：" << strerror(errno) << std::endl;
         status_ = SensorStatus::OFFLINE;
         return false;
     }
 
-    size_t respLen = 3 + 2 * regCount_ + 2;
-    uint8_t* resp = new uint8_t[respLen];
-    bool ok = readExact(resp, respLen);
-    if (ok) {
-        ok = parseModbusResponse(resp, respLen);
-    }
-    delete[] resp;
+    // 4. 等待响应
+    usleep(200000);
 
-    if (!ok) {
-        status_ = SensorStatus::ABNORMAL; // ✅ 通信失败 → 异常
+    // 5. 读取响应
+    uint8_t resp[100] = {0};
+    ssize_t bytes_read = read(serial_fd_, resp, sizeof(resp));
+    if (bytes_read < 0) {
+        std::cerr << "[ModbusSensor] 读取数据失败：" << strerror(errno) << std::endl;
+        status_ = SensorStatus::ABNORMAL;
+        return false;
+    }
+    if (bytes_read == 0) {
+        std::cerr << "[ModbusSensor] 未收到响应" << std::endl;
+        status_ = SensorStatus::ABNORMAL;
         return false;
     }
 
-    return true;
+    // 6. 解析响应
+    if (bytes_read >= 9) {
+        uint16_t tempRaw = (resp[3] << 8) | resp[4];
+        uint16_t humRaw = (resp[5] << 8) | resp[6];
+        temperatureC_ = tempRaw / 10.0f;
+        humidityPct_ = humRaw / 10.0f;
+        status_ = SensorStatus::NORMAL;
+        return true;
+    } else {
+        std::cerr << "[ModbusSensor] 响应长度不足：" << bytes_read << "字节" << std::endl;
+        status_ = SensorStatus::ABNORMAL;
+        return false;
+    }
 }
 
 bool ModbusSensor::parseModbusResponse(const uint8_t* resp, size_t respLen) {
@@ -206,7 +249,7 @@ bool ModbusSensor::parseModbusResponse(const uint8_t* resp, size_t respLen) {
         humidityPct_ = humRaw / 10.0f;
     }
 
-    status_ = SensorStatus::NORMAL; // ✅ 解析成功
+    status_ = SensorStatus::NORMAL;
     return true;
 }
 
@@ -223,7 +266,7 @@ float ModbusSensor::getHumidityPct() const {
 }
 
 float ModbusSensor::getValue() const {
-    return temperatureC_; // or customize
+    return temperatureC_;
 }
 
 SensorStatus ModbusSensor::getStatus() const {

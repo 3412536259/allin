@@ -3,6 +3,9 @@
 #include <cstring>
 #include <ctime>
 #include "turbojpeg.h"
+#include <fstream>
+#include "base64.h"
+
 bool ImageProcessor::avframeToRGB(AVFrame* frame, int width, int height, image_buffer_t* out_image) {
     if (!frame || !out_image || width <= 0 || height <= 0) {
         std::cerr << "Error: Invalid parameters" << std::endl;
@@ -134,5 +137,27 @@ bool ImageProcessor::compressToJpeg(const image_buffer_t* rgb_image,std::vector<
     outJpeg.assign(jpegBuf, jpegBuf + jpegSize);
     tjFree(jpegBuf);
     tjDestroy(handle);
+    return true;
+}
+
+std::string ImageProcessor::jpegToBase64(const std::vector<unsigned char>& jpegData)
+{
+     if (jpegData.empty()) {
+        return "";
+    }
+
+    return base64_encode(jpegData.data(), jpegData.size());
+}
+
+bool ImageProcessor::saveJpegToFile(const std::vector<unsigned char>& jpegData, const std::string& filename)
+{
+    std::ofstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return false;
+    }
+
+    file.write(reinterpret_cast<const char*>(jpegData.data()), jpegData.size());
+    file.close();
     return true;
 }

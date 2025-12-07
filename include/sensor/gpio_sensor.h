@@ -1,12 +1,11 @@
-// gpio_sensor.h
 #ifndef GPIO_SENSOR_H
 #define GPIO_SENSOR_H
 
 #include "isensor.h"
-#include "config_info.h"
-#include <string>
 #include <fstream>
-#include <iostream>
+#include <string>
+#include <cerrno>
+#include <cstring>
 
 class GPIOSensor : public ISensor {
 public:
@@ -17,6 +16,7 @@ public:
     bool readData() override;
 
     std::string getId() const override { return cfg_.id; }
+    std::string getType() const override { return "gpio"; } // 新增
     float getTemperatureC() const override { return 0.0f; } // 不适用
     float getHumidityPct() const override { return 0.0f; }  // 不适用
     float getValue() const override { return value_; }       // 返回 GPIO 电平或计数
