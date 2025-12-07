@@ -15,12 +15,13 @@ void GetCameraRealImageTask::run(TaskContext& ctx)
         nlohmann::json j;
         j["cameraId"] =  camId_;
         j["image"] = imageBase64;
-        ctx.mqtt->publish("device/camera/result/getRealImage", j.dump());
+        ctx.publisher->publish("device/camera/result/getRealImage", j.dump());
     }
     else{
         nlohmann::json j;
         j["code"] = "no image";
-        ctx.mqtt->publish("device/camera/result/getRealImage", j.dump());
+        ctx.publisher->publish("device/camera/result/getRealImage", j.dump());
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
+
 }

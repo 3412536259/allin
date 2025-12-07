@@ -1,12 +1,13 @@
 #include "device_manager.h"
 #include "camera_manager.h"
 #include "sensor_manager.h"
-
+#include "plc_manager.h"
 #include <iostream>
 DeviceManager::DeviceManager()
 {
     cameraManager_ = std::make_shared<CameraManager>();
-    // sensorManager_ = std::make_shared<SensorManager>();
+    sensorManager_ = std::make_shared<SensorManager>();
+    plcManager_ = std::make_shared<PLCManager>();
 }
 
 DeviceManager::~DeviceManager()

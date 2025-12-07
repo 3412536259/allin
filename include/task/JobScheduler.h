@@ -10,14 +10,14 @@
 #include <set>
 #include <condition_variable>
 #include <map>
-
+#include "itask_result_publisher.h"
 class JobScheduler{
 public:
-    JobScheduler(size_t workerCount,IDeviceManager* devMgr,MqttService* mqtt);
+    JobScheduler(size_t workerCount,IDeviceManager* devMgr,ITaskResultPublisher* publisher);
     ~JobScheduler();
 
     int submit(std::shared_ptr<ITask> task);
-    void setMqtt(MqttService* mqtt);
+    void setPublisher(ITaskResultPublisher* publisher);
     TaskStatus getTaskStatus(int taskId);
 private:
     void dispatchLoop();
@@ -36,7 +36,7 @@ private:
     std::atomic_bool stop_{false};
     std::atomic_int nextId_{1};
     IDeviceManager* devMgr_;
-    MqttService* mqtt_;
+    ITaskResultPublisher* publisher_;
 };
 
 

@@ -3,7 +3,7 @@
 
 MqttCommandDispatcher::MqttCommandDispatcher(JobScheduler& scheduler)
     :scheduler_(scheduler){}
-void MqttCommandDispatcher::onMqttMessage(const std::string& topic, const std::string& payload)
+void MqttCommandDispatcher::onMessage(const std::string& topic, const std::string& payload)
 {
     nlohmann::json j;
     try{
@@ -49,3 +49,4 @@ void MqttCommandDispatcher::handleUpdateConfig(const nlohmann::json& j)
 {
 
 }
+
