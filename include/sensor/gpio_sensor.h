@@ -1,12 +1,11 @@
-// gpio_sensor.h
 #ifndef GPIO_SENSOR_H
 #define GPIO_SENSOR_H
 
 #include "isensor.h"
-#include "config_info.h"
-#include <string>
 #include <fstream>
-#include <iostream>
+#include <string>
+#include <cerrno>
+#include <cstring>
 
 class GPIOSensor : public ISensor {
 public:

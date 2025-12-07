@@ -1,9 +1,11 @@
 #include "custom_sensor.h"
-#include <fcntl.h>
-#include <termios.h>
-#include <unistd.h>
-#include <cstring>
-#include <iostream>
+#include <iostream>  // 新增：std::cerr 依赖
+#include <vector>    // 新增：std::vector 依赖
+#include <termios.h> // 新增：串口配置依赖
+#include <unistd.h>  // 新增：open/close/write/read 依赖
+#include <fcntl.h>   // 新增：O_RDWR 等宏依赖
+#include <cstring>   // 新增：memset 依赖
+#include <cerrno> 
 
 CustomProtocolSensor::CustomProtocolSensor(const SensorConfig& cfg) : cfg_(cfg) {}
 

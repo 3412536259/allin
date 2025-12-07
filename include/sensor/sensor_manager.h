@@ -1,33 +1,28 @@
 #ifndef SENSOR_MANAGER_H
 #define SENSOR_MANAGER_H
 
-#include <string>
+#include "isensor_manager.h"
+#include "isensor.h"
+#include "config_parser.h"
 #include <unordered_map>
-#include <memory>
 #include <mutex>
 #include <thread>
 #include <atomic>
-#include <optional>
-#include "sensor_types.h"
-#include "config_info.h"
-#include "config_parser.h"
-#include "isensor_manager.h"
-#include "sensor_factory.h"
-#include "isensor.h"
+#include <chrono>
 
 class SensorManager : public ISensorManager {
 public:
     SensorManager();
-    ~SensorManager();
+    ~SensorManager() override;
 
-    void stop();
-    std::optional<SensorData> getSensorDataRealTime(const std::string& id);
-    std::optional<SensorData> getSensorDataCached(const std::string& id);
+    void stop() override;
+    std::optional<SensorData> getSensorDataRealTime(const std::string& id) override;
+    std::optional<SensorData> getSensorDataCached(const std::string& id) override;
+    std::vector<SensorData> getAllSensorData() override;
     bool refreshSensor(const std::string& id);
     void refreshAllSensors();
 
 private:
-
     std::unordered_map<std::string, std::unique_ptr<ISensor>> sensors_;
     std::unordered_map<std::string, SensorData> cache_;
     mutable std::mutex mu_;

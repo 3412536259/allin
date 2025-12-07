@@ -1,14 +1,13 @@
-// modbus_sensor.h
 #ifndef MODBUS_SENSOR_H
 #define MODBUS_SENSOR_H
 
 #include "isensor.h"
-#include "config_info.h"
-#include <cstdint>
-#include <string>
-#include <vector>
 #include <termios.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <cstring>
+#include <cerrno>
+#include <random>
 
 class ModbusSensor : public ISensor {
 public:

@@ -1,9 +1,13 @@
-#ifndef ISENSOR_H
-#define ISENSOR_H
+#ifndef I_SENSOR_H
+#define I_SENSOR_H
 
-#include <string>
+#include "config_info.h"
 #include "sensor_types.h"
-#include "config_info.h" // Use your project's SensorConfig type
+#include <string>
+#include <optional>
+#include <memory>  // 新增：std::unique_ptr 依赖
+#include <iostream> // 新增：后续 cerr/cout 依赖
+#include <ostream>
 
 // 抽象传感器接口
 struct ISensor {
@@ -27,4 +31,7 @@ struct ISensor {
     virtual SensorStatus getStatus() const = 0;
 };
 
-#endif // ISENSOR_H
+// 传感器工厂
+std::unique_ptr<ISensor> createSensor(const SensorConfig& config);
+
+#endif // I_SENSOR_H

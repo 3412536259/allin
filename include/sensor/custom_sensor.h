@@ -1,14 +1,13 @@
-// custom_sensor.h
-#ifndef CUSTOM_SENSOR_H
-#define CUSTOM_SENSOR_H
+#ifndef CUSTOM_PROTOCOL_SENSOR_H
+#define CUSTOM_PROTOCOL_SENSOR_H
 
 #include "isensor.h"
-#include "config_info.h"
-#include <string>
-#include <memory>
 #include <vector>
 #include <termios.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <cstring>
+#include <cerrno>
 
 class CustomProtocolSensor : public ISensor {
 public:
@@ -38,4 +37,4 @@ private:
     bool parseCustomFrame(const std::vector<uint8_t>& frame);
 };
 
-#endif // CUSTOM_SENSOR_H
+#endif // CUSTOM_PROTOCOL_SENSOR_H
