@@ -68,4 +68,9 @@ private:
      * @return 完整的 Modbus TCP 报文帧。
      */
     std::vector<char> buildTCPFrame(const std::vector<char>& pdu, uint16_t transactionId, uint8_t unitId);
+
+    bool performHealthCheck(uint8_t slaveId); // 检查连接，发送并校验特定的健康报文
+    bool validateResponse(const std::vector<char>& response, uint16_t transactionId, uint8_t expectedFuncCode, size_t expectedMinLength) const; //校验相应结构
+
+    std::vector<char> addressToBytes(const std::string& registerAddress) const; // 地址和数据转换辅助函数
 };

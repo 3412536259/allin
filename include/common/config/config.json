@@ -20,6 +20,7 @@
         {
           "plc_id": "plc_01",
           "name": "主控制PLC",
+          "slave_id": "0x01",
           "connection_type": "direct",
           "serial": {
             "port": "/dev/ttyS4",
@@ -31,6 +32,7 @@
         {
           "plc_id": "plc_02",
           "name": "网关PLC",
+          "slave_id": "0x01",
           "connection_type": "gateway",
           "gateway": {
             "gateway_id": "gw_001",

@@ -33,6 +33,7 @@ struct PLCGatewayBase {
 struct PLCConfig {
     std::string plcId;
     std::string name;
+    uint8_t slaveId = 1;
     std::string connectionType; // direct / gateway
 
     bool hasSerial = false;

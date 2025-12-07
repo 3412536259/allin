@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config_info.h"
+#include "plc_common_utils.h"
 #include "plc_connector.h"
 #include <string>
 #include <vector>
@@ -9,11 +10,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <chrono>
-
-// 辅助函数声明（仅暴露必要接口，实现放在.cpp）
-unsigned short calculate_crc16(const std::vector<char>& data);
-std::vector<char> HexStringToBytes(const std::string& hexFrame);
-std::string BytesToHexString(const std::vector<char>& data);
 
 /**
  * @brief SerialPLCConnector 实体类
@@ -39,4 +35,12 @@ private:
     void closeSerialPort();
     size_t writeToSerial(const std::vector<char>& data);
     std::vector<char> readFromSerial(size_t expectedMinBytes, int timeout_ms = 2000);
+
+    std::vector<char> buildModbusFrame(uint8_t funcCode, const std::vector<char>& data) const;
+    std::vector<char> exchangeFrame(const std::vector<char>& txFrame, size_t expectedMinBytes, int timeout_ms);
+
+    bool performHealthCheck(); // 检查连接，发送并校验特定的健康报文
+    bool validateResponse(const std::vector<char>& response, uint8_t expectedFuncCode, size_t expectedMinLength) const; //校验相应结构
+
+    std::vector<char> addressToBytes(const std::string& registerAddress) const; // 地址和数据转换辅助函数
 };
