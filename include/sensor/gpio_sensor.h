@@ -16,6 +16,7 @@ public:
     bool readData() override;
 
     std::string getId() const override { return cfg_.id; }
+    std::string getType() const override { return "gpio"; } // 新增
     float getTemperatureC() const override { return 0.0f; } // 不适用
     float getHumidityPct() const override { return 0.0f; }  // 不适用
     float getValue() const override { return value_; }       // 返回 GPIO 电平或计数

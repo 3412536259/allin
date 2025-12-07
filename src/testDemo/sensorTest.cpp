@@ -1,7 +1,7 @@
 #include "config_parser.h"
 #include "sensor_manager.h"
 #include "config_info.h"
-#include "sensor_types.h"
+#include "sensor_types.h" // 引入 printSensorData
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -19,15 +19,11 @@ int main() {
         return -1;
     }
 
-    // 持续读取传感器数据
+    // 持续读取传感器数据（使用新的打印函数）
     std::cout << "\n--- 持续读取传感器数据 ---\n";
     std::vector<SensorData> allSensors = manager.getAllSensorData();
     for (const auto& sensor : allSensors) {
-        std::cout << "Sensor ID: " << sensor.id 
-                  << ", Temperature: " << sensor.temperature 
-                  << "°C, Humidity: " << sensor.humidity 
-                  << "%, Status: " << to_string(sensor.status)
-                  << ", Last Update: " << sensor.lastUpdateTime << std::endl;
+        printSensorData(sensor); // 替换原打印逻辑
     }
 
     // 测试实时读取特定传感器
@@ -36,10 +32,7 @@ int main() {
         std::string testId = allSensors[0].id;
         std::optional<SensorData> realTimeData = manager.getSensorDataRealTime(testId);
         if (realTimeData) {
-            std::cout << "Real-time data for sensor " << testId 
-                      << ": Temp=" << realTimeData->temperature 
-                      << "°C, Humidity=" << realTimeData->humidity 
-                      << "%, Status=" << to_string(realTimeData->status) << std::endl;
+            printSensorData(*realTimeData); // 替换原打印逻辑
         }
     }
 
@@ -47,15 +40,11 @@ int main() {
     std::cout << "\n--- 等待定时刷新... ---\n";
     std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    // 最终状态
+    // 最终状态（使用新的打印函数）
     std::cout << "\n--- 最终传感器状态 ---\n";
     allSensors = manager.getAllSensorData();
     for (const auto& sensor : allSensors) {
-        std::cout << "Sensor ID: " << sensor.id 
-                  << ", Temperature: " << sensor.temperature 
-                  << "°C, Humidity: " << sensor.humidity 
-                  << "%, Status: " << to_string(sensor.status)
-                  << ", Last Update: " << sensor.lastUpdateTime << std::endl;
+        printSensorData(sensor); // 替换原打印逻辑
     }
 
     std::cout << "\n程序结束，传感器管理器将自动停止刷新线程并清理资源。\n";

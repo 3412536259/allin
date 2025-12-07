@@ -19,6 +19,7 @@ public:
     bool readData() override;
 
     std::string getId() const override;
+    std::string getType() const override { return "modbus"; } // 新增
     float getTemperatureC() const override;
     float getHumidityPct() const override;
     float getValue() const override;

@@ -1,11 +1,11 @@
 #include "sensor_manager.h"
-#include "modbus_sensor.h"    // 新增：ModbusSensor 声明
-#include "gpio_sensor.h"      // 新增：GPIOSensor 声明
-#include "custom_sensor.h"    // 新增：CustomProtocolSensor 声明
+#include "modbus_sensor.h"    
+#include "gpio_sensor.h"      
+#include "custom_sensor.h"    // 修正头文件名称
 #include "config_info.h"
-#include "sensor_types.h"       // 新增：getCurrentTimeStr 依赖
-#include <iostream>           // 新增：std::cerr/std::cout 依赖
-#include <algorithm>          // 新增：tolower 依赖（工厂函数）
+#include "sensor_types.h"       
+#include <iostream>           
+#include <algorithm>          
 #include <cctype>    
 
 // 传感器工厂实现
@@ -45,8 +45,10 @@ SensorManager::SensorManager() {
             sensor->init();
             SensorData d;
             d.id = sconf.id;
+            d.type = sensor->getType(); // 新增：记录类型
             d.temperature = sensor->getTemperatureC();
             d.humidity = sensor->getHumidityPct();
+            d.value = sensor->getValue(); // 新增：记录核心值
             d.status = sensor->getStatus();
             d.lastUpdateTime = getCurrentTimeStr();
 
@@ -84,24 +86,25 @@ void SensorManager::stop() {
 }
 
 std::optional<SensorData> SensorManager::getSensorDataRealTime(const std::string& id) {
-    std::unique_ptr<ISensor>* sensorPtr = nullptr;
-    {
-        std::lock_guard<std::mutex> lk(mu_);
-        auto it = sensors_.find(id);
-        if (it == sensors_.end()) return std::nullopt;
-        // 注意：我们不能返回 raw pointer 出临界区，所以直接在锁内操作
-        if (!it->second->readData()) {
-            return std::nullopt;
-        }
-        SensorData d;
-        d.id = id;
-        d.temperature = it->second->getTemperatureC();
-        d.humidity = it->second->getHumidityPct();
-        d.status = it->second->getStatus();
-        d.lastUpdateTime = getCurrentTimeStr();
-        cache_[id] = d;
-        return d;
+    std::lock_guard<std::mutex> lk(mu_);
+    auto it = sensors_.find(id);
+    if (it == sensors_.end()) return std::nullopt;
+    
+    if (!it->second->readData()) {
+        return std::nullopt;
     }
+    
+    SensorData d;
+    d.id = id;
+    d.type = it->second->getType(); // 新增：记录类型
+    d.temperature = it->second->getTemperatureC();
+    d.humidity = it->second->getHumidityPct();
+    d.value = it->second->getValue(); // 新增：更新核心值
+    d.status = it->second->getStatus();
+    d.lastUpdateTime = getCurrentTimeStr();
+    
+    cache_[id] = d;
+    return d;
 }
 
 std::optional<SensorData> SensorManager::getSensorDataCached(const std::string& id) {
@@ -131,8 +134,10 @@ bool SensorManager::refreshSensor(const std::string& id) {
 
     SensorData d;
     d.id = id;
+    d.type = it->second->getType(); // 新增：记录类型
     d.temperature = it->second->getTemperatureC();
     d.humidity = it->second->getHumidityPct();
+    d.value = it->second->getValue(); // 新增：更新核心值
     d.status = it->second->getStatus();
     d.lastUpdateTime = getCurrentTimeStr();
     cache_[id] = d;

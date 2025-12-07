@@ -5,8 +5,8 @@
 #include "sensor_types.h"
 #include <string>
 #include <optional>
-#include <memory>  // 新增：std::unique_ptr 依赖
-#include <iostream> // 新增：后续 cerr/cout 依赖
+#include <memory>
+#include <iostream>
 #include <ostream>
 
 // 抽象传感器接口
@@ -25,6 +25,7 @@ struct ISensor {
 
     // 下面的 getter 不应触发 IO，仅返回内部缓存
     virtual std::string getId() const = 0;
+    virtual std::string getType() const = 0; // 新增：获取传感器类型
     virtual float getTemperatureC() const = 0;
     virtual float getHumidityPct() const = 0;
     virtual float getValue() const = 0; 

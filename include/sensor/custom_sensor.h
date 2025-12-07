@@ -19,16 +19,16 @@ public:
     bool readData() override;
 
     std::string getId() const override { return cfg_.id; }
-    float getTemperatureC() const override { return temperatureC_; }
-    float getHumidityPct() const override { return humidityPct_; }
-    float getValue() const override { return temperatureC_; }
+    std::string getType() const override { return "custom"; } // 新增
+    float getTemperatureC() const override { return 0.0f; }   // 不适用
+    float getHumidityPct() const override { return 0.0f; }    // 不适用
+    float getValue() const override { return value_; }         // 返回自定义值
     SensorStatus getStatus() const override { return status_; }
 
 private:
     SensorConfig cfg_;
     int serial_fd_ = -1;
-    float temperatureC_ = 0.0f;
-    float humidityPct_ = 0.0f;
+    float value_ = 0.0f; // 自定义协议核心值（替换原温湿度）
     SensorStatus status_ = SensorStatus::OFFLINE;
 
     bool openSerial();
