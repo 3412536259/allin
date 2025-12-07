@@ -1,0 +1,21 @@
+{
+  "device_config": {
+    "version": "1.0",
+    "description": "Test config for SensorManager",
+    "devices": {
+      "sensor": [
+        {
+          "id": "sensor_002",
+          "type": "modbus",
+          "name": "test",
+          "serial_config": {
+            "port": ""
+          },
+          "modbus_addr": 1,
+          "reg_start": 0,
+          "reg_count": 2
+        }
+      ]
+    }
+  }
+}

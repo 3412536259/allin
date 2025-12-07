@@ -1,0 +1,17 @@
+{
+    "sensors": [
+        {
+            "id": "TEMP_01",
+            "type": "temp_humi",
+            "port": "/dev/ttyUSB0",
+            "baudrate":9600,   
+            "stopBits":1, 
+            "dataBits":8,    
+            "parity": "N",     
+            "min_temp":-20.0,
+            "max_temp":60.0,
+            "min_humi":10.0,
+            "max_humi":90.0
+        }
+    ]
+}
