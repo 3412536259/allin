@@ -43,7 +43,14 @@ void MqttCommandDispatcher::handleGetRealImage(const nlohmann::json& j)
 }
 void MqttCommandDispatcher::handleOperatePlc(const nlohmann::json& j)
 {
+    if(!j.contains("deviceId") || !j.contains("action")) return;
+    std::string deviceId = j["deviceId"];
+    std::string cmd = j["action"];
+    auto task = std::make_shared<OperateValveTask>(deviceId, cmd);
+    int id = scheduler_.submit(task);
 
+    std::cout << "Submitted GetRealImageTask id=" << id 
+              << " for device=" << deviceId << " operation=" << cmd << std::endl;
 }
 void MqttCommandDispatcher::handleUpdateConfig(const nlohmann::json& j)
 {

@@ -17,7 +17,7 @@ public:
     void getHistoryImage(const std::string& camId) override;
     
     void operateCamera() override;
-    void operatePlc(const std::string &deviceId, const std::string &cmd) override;
+    OperatePLC operatePlc(const std::string &deviceId, const std::string &cmd) override;
     
     void updateConfig() override;
 

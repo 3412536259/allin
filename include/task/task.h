@@ -17,4 +17,15 @@ private:
     std::string camId_;
 };
 
+class OperateValveTask : public ITask
+{
+public:
+    OperateValveTask(std::string deviceId, std::string cmd)
+        : deviceId_(deviceId), cmd_(cmd){}
+    std::string name() const override { return "OperateValve"; }
+    void run(TaskContext& ctx) override;
+private:
+    std::string deviceId_;
+    std::string cmd_;
+};
 #endif

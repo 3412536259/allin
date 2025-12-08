@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 // 设备信息结构体
 struct PLCDeviceStatus{
