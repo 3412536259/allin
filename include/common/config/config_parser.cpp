@@ -72,6 +72,13 @@ void ConfigParser::parsePLCList(const json& j)
 
         p.plcId = item.value("plc_id", "");
         p.name = item.value("name", "");
+        std::string sid = item.value("slave_id", "1");
+        if(sid.rfind("0x", 0) == 0 || sid.rfind("0X", 0) == 0){
+            p.slaveId = static_cast<uint8_t>(std::stoi(sid, nullptr, 16));
+        }
+        else{
+            p.slaveId = static_cast<uint8_t>(std::stoi(sid));
+        }
         p.connectionType = item.value("connection_type", "");
 
         // direct

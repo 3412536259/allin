@@ -5,12 +5,13 @@
 #include <chrono>
 #include <atomic>
 #include "idevice_manager.h"
+#include "itask_result_publisher.h"
 class MqttService; 
 class TaskContext{
 public:
     int taskId;
     IDeviceManager* devMgr;
-    class MqttService* mqtt;
+    ITaskResultPublisher* publisher;
 };
 
 class ITask{

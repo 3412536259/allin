@@ -9,6 +9,8 @@ MqttCommandDispatcher::MqttCommandDispatcher(JobScheduler& scheduler)
     ConfigUtil::loadBoxId(ConfigUtil::getConfigPath(), boxId_);
 }
 void MqttCommandDispatcher::onMqttMessage(const std::string& topic, const std::string& payload)
+    :scheduler_(scheduler){}
+void MqttCommandDispatcher::onMessage(const std::string& topic, const std::string& payload)
 {
     nlohmann::json j;
     try{
@@ -54,3 +56,4 @@ void MqttCommandDispatcher::handleUpdateConfig(const nlohmann::json& j)
 {
 
 }
+

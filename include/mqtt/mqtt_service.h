@@ -12,17 +12,18 @@ public:
                 const std::string& clientId,
                 JobScheduler& scheduler,
                 const std::string& boxId);
+                ICommandDispatcher* dispatcher);
 
     void start();
 
-    void connection_lost(const std::string& cause) override;
-    void message_arrived(mqtt::const_message_ptr msg) override;
-    void delivery_complete(mqtt::delivery_token_ptr tok) override {}
+    void connection_lost(const std::string& cause) override; //断连时触发
+    void message_arrived(mqtt::const_message_ptr msg) override; //收到消息时触发
+    void delivery_complete(mqtt::delivery_token_ptr tok) override {} //消息发布完成时触发
     void publish(const std::string& topic, const std::string& payload, int qos = 1, bool retained = false);
 private:
     mqtt::async_client client_;
     std::string boxId_;
     MqttCommandDispatcher dispatcher_;
+    ICommandDispatcher* dispatcher_;
 };
-
 #endif

@@ -6,12 +6,12 @@
 #include <json.hpp>
 #include "JobScheduler.h"
 #include "task.h"
-
-class MqttCommandDispatcher
+#include "icommand_dispatcher.h"
+class MqttCommandDispatcher : public ICommandDispatcher
 {
 public:
     MqttCommandDispatcher(JobScheduler& scheduler);
-    void onMqttMessage(const std::string& topic, const std::string& payload);
+    void onMessage(const std::string& topic, const std::string& payload) override;
 
 private:
     JobScheduler& scheduler_;

@@ -14,69 +14,6 @@
 #include <chrono>
 
 // -------------------------------------------------------------------
-// 辅助函数实现
-// -------------------------------------------------------------------
-
-/**
- * @brief 计算 Modbus RTU 规范的 CRC-16/MODBUS 校验码。
- * @param data 待校验的字节数组 (不含CRC)
- * @return CRC-16 校验码 (低位在前，高位在后)
- */
-unsigned short calculate_crc16(const std::vector<char>& data) {
-    unsigned short crc = 0xFFFF;
-    for (char byte : data) {
-        crc ^= (unsigned char)byte;
-        for (int i = 0; i < 8; ++i) {
-            if (crc & 0x0001) {
-                crc >>= 1;
-                crc ^= 0xA001; // 0x8005 反转
-            } else {
-                crc >>= 1;
-            }
-        }
-    }
-    // 返回未交换的 CRC 值，由调用者决定如何附加 (通常是低位在前)
-    return crc;
-}
-
-/**
- * @brief 将 Hex 字符串转换为字节向量 (真实 Modbus RTU 必需)
- */
-std::vector<char> HexStringToBytes(const std::string& hexFrame) {
-    std::vector<char> bytes;
-    std::stringstream ss(hexFrame);
-    std::string byteString;
-    while (ss >> byteString) {
-        if (byteString.length() == 2) {
-            try {
-                bytes.push_back(static_cast<char>(std::stoul(byteString, nullptr, 16)));
-            } catch (const std::exception& e) {
-                std::cerr << "Hex conversion error for byte: " << byteString << std::endl;
-            }
-        }
-    }
-    return bytes;
-}
-
-/**
- * @brief 将字节数组转换为 Hex 字符串用于打印日志
- */
-inline std::string BytesToHexString(const std::vector<char>& data) {
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0');
-    for (const auto& byte : data) {
-        ss << std::setw(2) << (static_cast<int>(byte) & 0xFF) << " ";
-    }
-    std::string result = ss.str();
-    if (!result.empty()) {
-        result.pop_back(); // 移除末尾空格
-    }
-    // 确保所有字符为大写，便于日志阅读
-    std::transform(result.begin(), result.end(), result.begin(), ::toupper);
-    return result;
-}
-
-// -------------------------------------------------------------------
 // SerialPLCConnector 类实现
 // -------------------------------------------------------------------
 
@@ -97,44 +34,23 @@ bool SerialPLCConnector::connect() {
         return true;
     }
 
-    // 1. 打开串口并配置 (使用 termios 实现)
+    // 1. 打开串口并配置 (I/O 逻辑)
     if (!openSerialPort()) {
         status_ = "PORT_ERROR";
         return false;
     }
 
-    // 2. 准备健康检查报文: 01 01 00 00 00 01 (功能码01 读取线圈，地址0x0000)
-    // 期待响应: 01 01 01 00 (表示线圈状态为 OFF)
-    std::vector<char> healthCheckFrame = { 0x01, 0x01, 0x00, 0x00, 0x00, 0x01 };
-    
-    unsigned short crc = calculate_crc16(healthCheckFrame);
-    healthCheckFrame.push_back((char)(crc & 0xFF));        // CRC Low Byte
-    healthCheckFrame.push_back((char)((crc >> 8) & 0xFF)); // CRC High Byte
-
-    std::cout << "[SerialPLC:" << config_.plcId << "] Sending Health Check to determine PLC Online Status:\n";
-    std::cout << "  -> TX Sent: " << BytesToHexString(healthCheckFrame) << " (" << healthCheckFrame.size() << " bytes)\n";
-
-    // 3. 写入串口
-    writeToSerial(healthCheckFrame);
-    
-    // 4. 接收响应 (期望 8 字节: 01 01 01 00 51 88)
-    std::vector<char> response = readFromSerial(6, 2000); 
-    
-    if (response.empty()) {
-        status_ = "DISCONNECTED";
-        std::cout << "  <- RX Received: <Timeout/No Reply>\n";
-        std::cout << "[SerialPLC:" << config_.plcId << "] Connection failed (PLC Offline).\n";
+    // 2. 执行 Modbus 级别的连接检查 (业务逻辑)
+    if (!performHealthCheck()) {
+        // HealthCheck 失败时，它内部已经打印了失败原因
+        // 必须关闭串口，因为连接失败
         closeSerialPort(); 
+        status_ = "DISCONNECTED";
         return false;
     }
-
-    // 5. 校验逻辑 (仅检查最小长度和功能码，实际项目中需校验 CRC)
-    if (response.size() < 6 || (response[0] != 0x01 || response[1] != 0x01)) { 
-         std::cout << "  <- RX Received: " << BytesToHexString(response) << " (Invalid Reply - PLC Status UNCERTAIN)\n";
-    }
     
+    // 3. 连接成功
     status_ = "CONNECTED";
-    std::cout << "  <- RX Received: " << BytesToHexString(response) << " (PLC Online)\n";
     std::cout << "[SerialPLC:" << config_.plcId << "] Connection established (PLC Online).\n";
     return true;
 }
@@ -160,48 +76,42 @@ std::string SerialPLCConnector::readRegister(const std::string& address) {
         return "ERROR";
     }
     
-    // 1. 构造读取报文 (功能码 01: Read Coils)
-    // 地址格式: 0x0504 -> 05 04。由于 HexStringToBytes 接受带空格的Hex，这里先进行转换
-    std::string cleanedAddress = address.substr(2, 2) + " " + address.substr(4, 2);
-    std::vector<char> addrBytes = HexStringToBytes(cleanedAddress);
+    const uint8_t FUNC_READ_COILS = 0x01;
+    const size_t MIN_RESPONSE_LENGTH = 6; // SlaveID FuncCode ByteCount Data CRC
 
-    // Frame structure: SlaveID(1) Func(1) Addr_Hi(1) Addr_Lo(1) Count_Hi(1) Count_Lo(1)
-    std::vector<char> readFrame = { 
-        0x01, // Slave ID 
-        0x01, // Function Code (Read Coils)
-        addrBytes[0], addrBytes[1], // Register Address 0x0504
-        0x00, 0x01 // Read 1 coil
-    };
-
-    unsigned short crc = calculate_crc16(readFrame);
-    readFrame.push_back((char)(crc & 0xFF));
-    readFrame.push_back((char)((crc >> 8) & 0xFF));
-
-    std::cout << "[SerialPLC:" << config_.plcId << "] Reading Device Status on Address " << address << ":\n";
-    std::cout << "  -> TX Sent: " << BytesToHexString(readFrame) << " (" << readFrame.size() << " bytes)\n";
-    
-    // 2. 写入串口
-    writeToSerial(readFrame);
-    
-    // 3. 读取响应 (期望 6 字节: SlaveID FuncCode ByteCount Data CRC_L CRC_H)
-    std::vector<char> response = readFromSerial(6); 
-
-    // 4. 真实解析和判断逻辑
-    if (response.empty()) {
-        std::cout << "  <- RX Received: <Timeout/Error>\n";
+    // 1. 构造读取报文 (Modbus 报文数据层)
+    std::vector<char> addrBytes;
+    try {
+        addrBytes = addressToBytes(address);
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: " << e.what() << std::endl;
         return "ERROR";
     }
 
-    // 检查最小长度和功能码
-    if (response.size() >= 4 && response[0] == 0x01 && response[1] == 0x01) {
-        // response[3] 是数据位。对于单个线圈，数据位是 0x01 (ON) 或 0x00 (OFF)
-        std::string status = (response[3] & 0x01) ? "1" : "0";
-        std::cout << "  <- RX Received: " << BytesToHexString(response) << " (Status: " << status << ")\n";
-        return status;
+    // Modbus Data: Address_Hi, Address_Lo, Quantity_Hi, Quantity_Lo (Read 1 coil)
+    std::vector<char> readData = { 
+        addrBytes[0], addrBytes[1], 
+        0x00, 0x01 
+    };
+
+    std::vector<char> readFrame = buildModbusFrame(FUNC_READ_COILS, readData);
+
+    std::cout << "[SerialPLC:" << config_.plcId << "] Reading Device Status on Address " << address << ":\n";
+    std::cout << "  -> TX Sent: " << BytesToHexString(readFrame) << " (" << readFrame.size() << " bytes)\n";
+    
+    // 2. 帧交换
+    std::vector<char> response = exchangeFrame(readFrame, MIN_RESPONSE_LENGTH, 2000);
+
+    // 3. 校验和解析
+    if (!validateResponse(response, FUNC_READ_COILS, MIN_RESPONSE_LENGTH)) {
+        return "ERROR";
     }
 
-    std::cout << "  <- RX Received: " << BytesToHexString(response) << " (Invalid Response)\n";
-    return "ERROR";
+    // 响应的第 4 个字节 (response[3]) 是数据位。
+    // 对于单个线圈，数据位是 0x01 (ON) 或 0x00 (OFF)
+    std::string status = (response[3] & 0x01) ? "1" : "0";
+    std::cout << "[SerialPLC:" << config_.plcId << "] Read Success. (Status: " << status << ")\n";
+    return status;
 }
 
 /**
@@ -213,7 +123,11 @@ bool SerialPLCConnector::writeRegister(const std::string& address, const std::st
         std::cout << "[SerialPLC:" << config_.plcId << "] ERROR: Write failed, PLC is DISCONNECTED." << std::endl;
         return false;
     }
+    
+    const uint8_t FUNC_WRITE_SINGLE_COIL = 0x05;
+    const size_t EXPECTED_ECHO_LENGTH = 8; // Echo frame: 8 bytes
 
+    // 确定写入数据值 (FF00 或 0000)
     std::vector<char> dataValue;
     if (value == "1" || value == "ON") {
         dataValue = { (char)0xFF, (char)0x00 }; // ON: FF 00
@@ -224,49 +138,46 @@ bool SerialPLCConnector::writeRegister(const std::string& address, const std::st
         return false;
     }
 
-    // 1. 构造写入报文 (功能码 05: Write Single Coil)
-    std::string cleanedAddress = address.substr(2, 2) + " " + address.substr(4, 2);
-    std::vector<char> addrBytes = HexStringToBytes(cleanedAddress);
+    // 1. 构造写入报文 (Modbus 报文数据层)
+    std::vector<char> addrBytes;
+    try {
+        addrBytes = addressToBytes(address);
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: " << e.what() << std::endl;
+        return false;
+    }
 
-    // Frame structure: SlaveID(1) Func(1) Addr_Hi(1) Addr_Lo(1) Data_Hi(1) Data_Lo(1)
-    std::vector<char> writeFrame = { 
-        0x01, // Slave ID 
-        0x05, // Function Code (Write Single Coil)
-        addrBytes[0], addrBytes[1], // Register Address 0x0504
-        dataValue[0], dataValue[1] // Coil Value (FF00 or 0000)
+    // Modbus Data: Address_Hi, Address_Lo, Value_Hi, Value_Lo
+    std::vector<char> writeData = { 
+        addrBytes[0], addrBytes[1], 
+        dataValue[0], dataValue[1] 
     };
     
-    unsigned short crc = calculate_crc16(writeFrame);
-    writeFrame.push_back((char)(crc & 0xFF));
-    writeFrame.push_back((char)((crc >> 8) & 0xFF));
+    std::vector<char> writeFrame = buildModbusFrame(FUNC_WRITE_SINGLE_COIL, writeData);
 
     std::cout << "[SerialPLC:" << config_.plcId << "] Writing Device Status on Address " << address << " with value " << value << ":\n";
-    std::cout << "  -> TX Sent: " << BytesToHexString(writeFrame) << " (" << writeFrame.size() << " bytes)\n";
+    std::cout << "  -> TX Sent: " << BytesToHexString(writeFrame) << " (" << writeFrame.size() << " bytes)\n";
     
-    // 2. 写入串口
-    writeToSerial(writeFrame);
-    
-    // 3. 读取响应 (期待 Echo Frame, 8 字节)
-    std::vector<char> response = readFromSerial(writeFrame.size()); 
+    // 2. 帧交换
+    std::vector<char> response = exchangeFrame(writeFrame, EXPECTED_ECHO_LENGTH, 2000);
 
-    // 4. 真实解析和判断逻辑
-    if (response.empty()) {
-        std::cout << "  <- RX Received: <Timeout/Error>\n";
+    // 3. 校验 Echo Frame
+    if (!validateResponse(response, FUNC_WRITE_SINGLE_COIL, EXPECTED_ECHO_LENGTH)) {
+        return false;
+    }
+
+    // 4. 进一步校验 Echo Frame 是否完全匹配 (写操作特有)
+    // 检查响应帧是否与请求帧完全一致 (包含 CRC，因为 validateResponse 只做了基础检查)
+    bool isEchoMatch = (response.size() == writeFrame.size() && 
+                        std::equal(response.begin(), response.end(), writeFrame.begin()));
+
+    if (!isEchoMatch) {
+        std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Write failed. Echo frame mismatch.\n";
         return false;
     }
     
-    // 校验 Echo Frame: 检查长度、功能码和数据是否与发送帧匹配
-    bool success = (response.size() == writeFrame.size() && 
-                    response[0] == writeFrame[0] && 
-                    response[1] == writeFrame[1] &&
-                    response[2] == writeFrame[2] && 
-                    response[3] == writeFrame[3] &&
-                    response[4] == writeFrame[4] &&
-                    response[5] == writeFrame[5]); 
-                    // 真实项目还会校验 CRC
-
-    std::cout << "  <- RX Received (Echo Frame): " << BytesToHexString(response) << (success ? " (Match)" : " (Mismatch)") << "\n";
-    return success;
+    std::cout << "[SerialPLC:" << config_.plcId << "] Write Success. (Echo Match)\n";
+    return true;
 }
 
 // -------------------------------------------------------------------
@@ -464,4 +375,113 @@ std::vector<char> SerialPLCConnector::readFromSerial(size_t expectedMinBytes, in
 
     // 超时
     return {}; 
+}
+
+/**
+ * @brief 构建 Modbus RTU 报文帧，附加 CRC 校验码。
+ */
+std::vector<char> SerialPLCConnector::buildModbusFrame(uint8_t funcCode, const std::vector<char>& data) const {
+    std::vector<char> frame;
+    frame.push_back(static_cast<char>(config_.slaveId)); // Slave ID
+    frame.push_back(static_cast<char>(funcCode));        // Function Code
+    frame.insert(frame.end(), data.begin(), data.end()); // Data
+
+    // 计算CRC
+    unsigned short crc = calculate_crc16(frame);
+    frame.push_back((char)(crc & 0xFF));        // CRC Low Byte
+    frame.push_back((char)((crc >> 8) & 0xFF)); // CRC High Byte
+
+    return frame;
+}
+
+/**
+ * @brief 发送并接收 Modbus RTU 报文帧。
+ */
+std::vector<char> SerialPLCConnector::exchangeFrame(const std::vector<char>& txFrame, size_t expectedMinBytes, int timeout_ms) {
+    writeToSerial(txFrame);
+
+    std::vector<char> response = readFromSerial(expectedMinBytes, timeout_ms);
+
+    if(response.empty()) {
+        std::cout << "  <- RX Received: <Timeout/Error>\n";
+    } else {
+        std::cout << "  <- RX Received: " << BytesToHexString(response) << "\n";
+        // 此处应校验CRC
+    }
+
+    return response;
+}
+
+bool SerialPLCConnector::validateResponse(const std::vector<char>& response, uint8_t expectedFuncCode, size_t expectedMinLength) const{
+    if(response.empty()){
+        std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Response timeout/empty.\n";
+        return false;
+    }
+    if (response.size() < expectedMinLength) {
+        std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Response too short (" << response.size() << " bytes).\n";
+        return false;
+    }
+    
+    // 1. 校验 Slave ID
+    if (static_cast<uint8_t>(response[0]) != config_.slaveId) {
+        std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Slave ID mismatch. Expected " << (int)config_.slaveId << ", Got " << (int)response[0] << ".\n";
+        return false;
+    }
+
+    // 2. 校验功能码（检查是否为异常响应）
+    uint8_t funcCode = static_cast<uint8_t>(response[1]);
+    if (funcCode == (expectedFuncCode | 0x80)) {
+        // 异常响应 (功能码最高位为1)
+        uint8_t exceptionCode = static_cast<uint8_t>(response[2]);
+        std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Modbus Exception Code " << (int)exceptionCode << " (Func: " << (int)funcCode << ").\n";
+        return false;
+    }
+    
+    // 3. 校验功能码（检查是否为期望功能码）
+    if (funcCode != expectedFuncCode) {
+        std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Function Code mismatch. Expected " << (int)expectedFuncCode << ", Got " << (int)funcCode << ".\n";
+        return false;
+    }
+
+    // 4. 真实项目中，此处应执行 **CRC 校验**。
+    
+    return true;
+}
+
+/**
+ * @brief 内部连接检查：发送特定 Modbus 报文以确认 PLC 在线。
+ */
+bool SerialPLCConnector::performHealthCheck() {
+    const uint8_t FUNC_READ_COILS = 0x01;
+    const size_t MIN_RESPONSE_LENGTH = 6; // 01 01 01 XX CRC_L CRC_H
+
+    // 报文数据: 地址 0x0000, 读取 1 个线圈
+    std::vector<char> checkData = { 0x00, 0x00, 0x00, 0x01 };
+    std::vector<char> healthCheckFrame = buildModbusFrame(FUNC_READ_COILS, checkData);
+    
+    std::cout << "[SerialPLC:" << config_.plcId << "] Sending Health Check to determine PLC Online Status:\n";
+    std::cout << "  -> TX Sent: " << BytesToHexString(healthCheckFrame) << " (" << healthCheckFrame.size() << " bytes)\n";
+    
+    std::vector<char> response = exchangeFrame(healthCheckFrame, MIN_RESPONSE_LENGTH, 2000); // 2000ms Timeout
+
+    if (!validateResponse(response, FUNC_READ_COILS, MIN_RESPONSE_LENGTH)) {
+        std::cout << "[SerialPLC:" << config_.plcId << "] Connection failed (PLC Offline/Invalid Check Response).\n";
+        return false;
+    }
+    
+    return true;
+}
+
+/**
+ * @brief 将寄存器地址字符串 (例如 "0x0504") 转换为 Modbus 地址字节 (例如 {0x05, 0x04})。
+ */
+std::vector<char> SerialPLCConnector::addressToBytes(const std::string& registerAddress) const {
+    // 提取地址的后四个字符 (例如 "0504")
+    if (registerAddress.length() < 6 || registerAddress.substr(0, 2) != "0x") {
+        throw std::invalid_argument("Invalid register address format. Expected 0xXXXX.");
+    }
+
+    // "0x0504" -> "05 04" -> Bytes
+    std::string cleanedAddress = registerAddress.substr(2, 2) + " " + registerAddress.substr(4, 2);
+    return HexStringToBytes(cleanedAddress);
 }

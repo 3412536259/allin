@@ -1,5 +1,5 @@
 #include "gateway_tcp_connector.h"
-#include "serial_plc_connector.h"
+#include "plc_common_utils.h"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -10,46 +10,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-
-// -------------------------------------------------------------------
-// 辅助函数实现 (与 serial_plc_connector.cpp 中的辅助函数保持一致，但去除了 CRC 计算)
-// -------------------------------------------------------------------
-
-// /**
-//  * @brief 将 Hex 字符串转换为字节向量
-//  */
-// std::vector<char> HexStringToBytes(const std::string& hexFrame) {
-//     std::vector<char> bytes;
-//     std::stringstream ss(hexFrame);
-//     std::string byteString;
-//     while (ss >> byteString) {
-//         if (byteString.length() == 2) {
-//             try {
-//                 bytes.push_back(static_cast<char>(std::stoul(byteString, nullptr, 16)));
-//             } catch (const std::exception& e) {
-//                 std::cerr << "Hex conversion error for byte: " << byteString << std::endl;
-//             }
-//         }
-//     }
-//     return bytes;
-// }
-
-/**
- * @brief 将字节数组转换为 Hex 字符串用于打印日志
- */
-inline std::string BytesToHexString(const std::vector<char>& data) {
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0');
-    for (const auto& byte : data) {
-        ss << std::setw(2) << (static_cast<int>(byte) & 0xFF) << " ";
-    }
-    std::string result = ss.str();
-    if (!result.empty()) {
-        result.pop_back(); // 移除末尾空格
-    }
-    std::transform(result.begin(), result.end(), result.begin(), ::toupper);
-    return result;
-}
 
 // -------------------------------------------------------------------
 // GatewayTCPConnector 类实现
@@ -107,52 +67,23 @@ bool GatewayTCPConnector::connect() {
         return true;
     }
 
-    // 1. 打开 Socket 并连接
+    // 1. 打开 Socket 并连接 (I/O 逻辑)
     if (!openSocket()) {
         status_ = "PORT_ERROR";
         return false;
     }
 
-    // 2. 准备健康检查报文 (RTU PDU: 01 00 00 00 01)
-    // 功能码01 读取线圈，地址0x0000，数量1
-    std::vector<char> healthPDU = { 0x01, 0x00, 0x00, 0x00, 0x01 };
-    uint16_t tid = next_transaction_id_.fetch_add(1) % 65535;
-    uint8_t unitId = 0x01; // 假设网关的 Slave ID 为 1
-    
-    std::vector<char> healthCheckFrame = buildTCPFrame(healthPDU, tid, unitId);
-
-    std::cout << "[GatewayTCP:" << config_.plcId << "] Sending Health Check to determine Gateway Online Status:\n";
-    std::cout << "  -> TX Sent: " << BytesToHexString(healthCheckFrame) << " (" << healthCheckFrame.size() << " bytes)\n";
-
-    // 3. 写入 Socket
-    if (sendToSocket(healthCheckFrame) == 0) {
-        closeSocket();
+    // 2. 执行 Modbus TCP 级别的连接检查 (业务逻辑)，使用配置的 Unit ID
+    // 假设 config_.slaveId 包含了 PLC 的 Unit ID
+    if (!performHealthCheck(config_.slaveId)) { 
+        // HealthCheck 失败时，必须关闭 Socket
+        closeSocket(); 
         status_ = "DISCONNECTED";
         return false;
     }
     
-    // 4. 接收响应 (期望 MBAP Header (7) + PDU (Function Code (1) + Byte Count (1) + Data (1)) = 10 bytes)
-    std::vector<char> response = readFromSocket(9, 2000); 
-    
-    if (response.empty()) {
-        status_ = "DISCONNECTED";
-        std::cout << "  <- RX Received: <Timeout/No Reply>\n";
-        std::cout << "[GatewayTCP:" << config_.plcId << "] Connection failed (Gateway Offline).\n";
-        closeSocket(); 
-        return false;
-    }
-
-    // 5. 校验逻辑 (检查最小长度和功能码)
-    // 响应帧的第 7 字节是功能码
-    if (response.size() < 9 || response[7] != 0x01) { 
-        std::cout << "  <- RX Received: " << BytesToHexString(response) << " (Invalid Reply - Gateway Status UNCERTAIN)\n";
-        status_ = "UNCERTAIN";
-        closeSocket(); 
-        return false;
-    }
-    
+    // 3. 连接成功
     status_ = "CONNECTED";
-    std::cout << "  <- RX Received: " << BytesToHexString(response) << " (Gateway Online)\n";
     std::cout << "[GatewayTCP:" << config_.plcId << "] Connection established (Gateway Online).\n";
     return true;
 }
@@ -181,47 +112,46 @@ std::string GatewayTCPConnector::readRegister(const std::string& address) {
         return "ERROR";
     }
     
+    const uint8_t FUNC_READ_COILS = 0x01;
+    const size_t MIN_RESPONSE_LENGTH = 10; // MBAP(7) + FC(1) + ByteCount(1) + Data(1)
+
     // 1. 构造 PDU (功能码 01: Read Coils)
-    std::string cleanedAddress = address.substr(2, 2) + " " + address.substr(4, 2);
-    std::vector<char> addrBytes = HexStringToBytes(cleanedAddress);
+    std::vector<char> addrBytes;
+    try {
+        addrBytes = addressToBytes(address);
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: " << e.what() << std::endl;
+        return "ERROR";
+    }
 
     // PDU structure: Func(1) Addr_Hi(1) Addr_Lo(1) Count_Hi(1) Count_Lo(1)
     std::vector<char> readPDU = { 
-        0x01, // Function Code (Read Coils)
-        addrBytes[0], addrBytes[1], // Register Address 0x0504
+        FUNC_READ_COILS, 
+        addrBytes[0], addrBytes[1], 
         0x00, 0x01 // Read 1 coil
     };
 
-    uint16_t tid = next_transaction_id_.fetch_add(1) % 65535;
-    uint8_t unitId = 0x01; // 假设 Slave ID 为 1
+    uint16_t tid = next_transaction_id_.fetch_add(1);
+    uint8_t unitId = config_.slaveId; 
     std::vector<char> readFrame = buildTCPFrame(readPDU, tid, unitId);
 
     std::cout << "[GatewayTCP:" << config_.plcId << "] Reading Device Status on Address " << address << ":\n";
     std::cout << "  -> TX Sent: " << BytesToHexString(readFrame) << " (" << readFrame.size() << " bytes)\n";
     
-    // 2. 写入 Socket
+    // 2. 帧交换
     if (sendToSocket(readFrame) == 0) return "ERROR";
     
-    // 3. 读取响应 (期望 9 字节: MBAP(7) + FC(1) + ByteCount(1) + Data(n))
-    std::vector<char> response = readFromSocket(9); 
+    std::vector<char> response = readFromSocket(MIN_RESPONSE_LENGTH); 
 
-    // 4. 真实解析和判断逻辑
-    if (response.empty()) {
-        std::cout << "  <- RX Received: <Timeout/Error>\n";
+    // 3. 校验和解析
+    if (!validateResponse(response, tid, FUNC_READ_COILS, MIN_RESPONSE_LENGTH)) {
         return "ERROR";
     }
 
-    // 检查功能码和长度
-    // 响应帧的第 7 字节是功能码
-    if (response.size() >= 9 && response[7] == 0x01) {
-        // response[9] 是数据位。对于单个线圈，数据位是 0x01 (ON) 或 0x00 (OFF)
-        std::string status = (response[9] & 0x01) ? "1" : "0";
-        std::cout << "  <- RX Received: " << BytesToHexString(response) << " (Status: " << status << ")\n";
-        return status;
-    }
-
-    std::cout << "  <- RX Received: " << BytesToHexString(response) << " (Invalid Response)\n";
-    return "ERROR";
+    // 响应帧的第 9 字节是数据位
+    std::string status = (response[9] & 0x01) ? "1" : "0";
+    std::cout << "[GatewayTCP:" << config_.plcId << "] Read Success. (Status: " << status << ")\n";
+    return status;
 }
 
 /**
@@ -235,62 +165,65 @@ bool GatewayTCPConnector::writeRegister(const std::string& address, const std::s
         return false;
     }
 
+    const uint8_t FUNC_WRITE_SINGLE_COIL = 0x05;
+    const size_t EXPECTED_ECHO_LENGTH = 12; // MBAP(7) + PDU(5)
+
+    // 确定写入数据值 (FF00 或 0000)
     std::vector<char> dataValue;
     if (value == "1" || value == "ON") {
-        dataValue = { (char)0xFF, (char)0x00 }; // ON: FF 00
+        dataValue = { (char)0xFF, (char)0x00 }; 
     } else if (value == "0" || value == "OFF") {
-        dataValue = { (char)0x00, (char)0x00 }; // OFF: 00 00
+        dataValue = { (char)0x00, (char)0x00 };
     } else {
         std::cerr << "[GatewayTCP:" << config_.plcId << "] Invalid write value: " << value << std::endl;
         return false;
     }
 
     // 1. 构造 PDU (功能码 05: Write Single Coil)
-    std::string cleanedAddress = address.substr(2, 2) + " " + address.substr(4, 2);
-    std::vector<char> addrBytes = HexStringToBytes(cleanedAddress);
+    std::vector<char> addrBytes;
+    try {
+        addrBytes = addressToBytes(address);
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: " << e.what() << std::endl;
+        return false;
+    }
 
     // PDU structure: Func(1) Addr_Hi(1) Addr_Lo(1) Data_Hi(1) Data_Lo(1)
     std::vector<char> writePDU = { 
-        0x05, // Function Code (Write Single Coil)
-        addrBytes[0], addrBytes[1], // Register Address 0x0504
-        dataValue[0], dataValue[1] // Coil Value (FF00 or 0000)
+        FUNC_WRITE_SINGLE_COIL, 
+        addrBytes[0], addrBytes[1], 
+        dataValue[0], dataValue[1] 
     };
     
-    uint16_t tid = next_transaction_id_.fetch_add(1) % 65535;
-    uint8_t unitId = 0x01; // 假设 Slave ID 为 1
+    uint16_t tid = next_transaction_id_.fetch_add(1);
+    uint8_t unitId = config_.slaveId; 
     std::vector<char> writeFrame = buildTCPFrame(writePDU, tid, unitId);
 
     std::cout << "[GatewayTCP:" << config_.plcId << "] Writing Device Status on Address " << address << " with value " << value << ":\n";
     std::cout << "  -> TX Sent: " << BytesToHexString(writeFrame) << " (" << writeFrame.size() << " bytes)\n";
     
-    // 2. 写入 Socket
+    // 2. 帧交换
     if (sendToSocket(writeFrame) == 0) return false;
     
-    // 3. 读取响应 (期望 Echo Frame, 12 字节: MBAP(7) + PDU(5))
-    std::vector<char> response = readFromSocket(writeFrame.size()); 
+    std::vector<char> response = readFromSocket(EXPECTED_ECHO_LENGTH); 
 
-    // 4. 真实解析和判断逻辑 (Modbus TCP Echo Frame 校验)
-    if (response.empty()) {
-        std::cout << "  <- RX Received: <Timeout/Error>\n";
+    // 3. 校验 Echo Frame
+    if (!validateResponse(response, tid, FUNC_WRITE_SINGLE_COIL, EXPECTED_ECHO_LENGTH)) {
+        return false;
+    }
+
+    // 4. 进一步校验 PDU 部分是否与发送帧匹配 (写操作特有)
+    // 比较发送帧的 PDU 部分 (从第 7 字节开始)
+    bool isEchoMatch = (response.size() == writeFrame.size() && 
+                        std::equal(response.begin() + 7, response.end(), writeFrame.begin() + 7));
+
+    if (!isEchoMatch) {
+        std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Write failed. PDU Echo frame mismatch.\n";
         return false;
     }
     
-    // 校验 Echo Frame: 检查长度、功能码和数据是否与发送帧匹配
-    // 检查 PDU 部分 (从第 7 字节开始)
-    bool success = (response.size() == writeFrame.size() && 
-                    // 校验 Function Code (第 7 字节)
-                    response[7] == writeFrame[7] && 
-                    // 校验 Address (第 8, 9 字节)
-                    response[8] == writeFrame[8] && 
-                    response[9] == writeFrame[9] &&
-                    // 校验 Data (第 10, 11 字节)
-                    response[10] == writeFrame[10] && 
-                    response[11] == writeFrame[11]); 
-                    
-    // 真实项目还会校验 MBAP 头中的 Transaction ID
-
-    std::cout << "  <- RX Received (Echo Frame): " << BytesToHexString(response) << (success ? " (Match)" : " (Mismatch)") << "\n";
-    return success;
+    std::cout << "[GatewayTCP:" << config_.plcId << "] Write Success. (Echo Match)\n";
+    return true;
 }
 
 // -------------------------------------------------------------------
@@ -414,4 +347,108 @@ std::vector<char> GatewayTCPConnector::readFromSocket(size_t expectedMinBytes, i
     }
     
     return receivedData;
+}
+
+/**
+ * @brief 将寄存器地址字符串 (例如 "0x0504") 转换为 Modbus 地址字节 (例如 {0x05, 0x04})。
+ */
+std::vector<char> GatewayTCPConnector::addressToBytes(const std::string& registerAddress) const {
+    // 提取地址的后四个字符 (例如 "0504")
+    if (registerAddress.length() < 6 || registerAddress.substr(0, 2) != "0x") {
+        throw std::invalid_argument("Invalid register address format. Expected 0xXXXX.");
+    }
+    // "0x0504" -> "05 04" -> Bytes
+    std::string cleanedAddress = registerAddress.substr(2, 2) + " " + registerAddress.substr(4, 2);
+    
+    return HexStringToBytes(cleanedAddress); 
+}
+
+/**
+ * @brief 校验 Modbus TCP/IP 响应的基础结构和 MBAP 头。
+ */
+bool GatewayTCPConnector::validateResponse(const std::vector<char>& response, uint16_t transactionId, uint8_t expectedFuncCode, size_t expectedMinLength) const {
+    if (response.empty()) {
+        std::cout << "  <- RX Received: <Timeout/Empty>\n";
+        return false;
+    }
+
+    std::cout << "  <- RX Received: " << BytesToHexString(response) << "\n";
+
+    if (response.size() < expectedMinLength) {
+        std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Response too short (" << response.size() << " bytes).\n";
+        return false;
+    }
+    
+    // 1. 校验 Transaction ID (MBAP 字节 0, 1)
+    uint16_t rxTid = (static_cast<uint8_t>(response[0]) << 8) | static_cast<uint8_t>(response[1]);
+    if (rxTid != transactionId) {
+        std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Transaction ID mismatch. Expected " << transactionId << ", Got " << rxTid << ".\n";
+        return false;
+    }
+    
+    // 2. 校验 Protocol ID (MBAP 字节 2, 3，必须为 0x0000)
+    if (static_cast<uint8_t>(response[2]) != 0x00 || static_cast<uint8_t>(response[3]) != 0x00) {
+        std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Protocol ID mismatch.\n";
+        return false;
+    }
+
+    // 3. 校验 Unit ID (MBAP 字节 6)
+    // 假设 config_.slaveId 包含了 PLC 的 Unit ID/Slave ID
+    uint8_t rxUnitId = static_cast<uint8_t>(response[6]);
+    if (rxUnitId != config_.slaveId) { 
+        std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Unit ID mismatch. Expected " << (int)config_.slaveId << ", Got " << (int)rxUnitId << ".\n";
+        return false;
+    }
+
+    // 4. 校验功能码 (PDU 字节 0 / 响应字节 7)
+    uint8_t funcCode = static_cast<uint8_t>(response[7]);
+    
+    if (funcCode == (expectedFuncCode | 0x80)) {
+        // 异常响应 (功能码最高位为1)
+        uint8_t exceptionCode = static_cast<uint8_t>(response[8]);
+        std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Modbus Exception Code " << (int)exceptionCode << " (Func: " << (int)funcCode << ").\n";
+        return false;
+    }
+    
+    if (funcCode != expectedFuncCode) {
+        std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Function Code mismatch. Expected " << (int)expectedFuncCode << ", Got " << (int)funcCode << ".\n";
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * @brief 内部连接检查：发送特定 Modbus TCP 报文以确认网关在线。
+ */
+bool GatewayTCPConnector::performHealthCheck(uint8_t unitId) {
+    const uint8_t FUNC_READ_COILS = 0x01;
+    const size_t MIN_RESPONSE_LENGTH = 9; // MBAP(7) + FC(1) + ByteCount(1)
+
+    // PDU: 功能码01, 地址0x0000, 数量1
+    std::vector<char> healthPDU = { 0x01, 0x00, 0x00, 0x00, 0x01 }; 
+    uint16_t tid = next_transaction_id_.fetch_add(1);
+
+    std::vector<char> healthCheckFrame = buildTCPFrame(healthPDU, tid, unitId);
+
+    std::cout << "[GatewayTCP:" << config_.plcId << "] Sending Health Check to determine Gateway Online Status:\n";
+    std::cout << "  -> TX Sent: " << BytesToHexString(healthCheckFrame) << " (" << healthCheckFrame.size() << " bytes)\n";
+
+    // 写入 Socket
+    if (sendToSocket(healthCheckFrame) == 0) {
+        std::cout << "[GatewayTCP:" << config_.plcId << "] Connection failed (Send error).\n";
+        return false;
+    }
+    
+    // 接收响应 (期望 9 字节)
+    std::vector<char> response = readFromSocket(MIN_RESPONSE_LENGTH, 2000); 
+    
+    // 校验逻辑
+    if (!validateResponse(response, tid, FUNC_READ_COILS, MIN_RESPONSE_LENGTH)) {
+        std::cout << "[GatewayTCP:" << config_.plcId << "] Connection failed (Gateway Offline/Invalid Check Response).\n";
+        return false;
+    }
+    
+    std::cout << "[GatewayTCP:" << config_.plcId << "] Health Check Success (Gateway Online)\n";
+    return true;
 }

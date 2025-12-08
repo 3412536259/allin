@@ -11,7 +11,7 @@ public:
 
     void message_arrived(mqtt::const_message_ptr msg) override 
     {
-        dispatcher_.onMqttMessage(msg->get_topic(), msg->to_string());
+        dispatcher_.onMessage(msg->get_topic(), msg->to_string());
     }
 
 private:

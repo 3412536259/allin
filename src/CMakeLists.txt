@@ -15,16 +15,22 @@ set(MQTT_LIBS
 set(SRC_FILES
     main.cpp
     device/device_manager.cpp
-    # plc/plc_manager.cpp
-    # plc/solenoid_value_plc_device.cpp
-    # sensor/mock_sensor.cpp
-    # sensor/sensor_manager.cpp
+    plc/serial_plc_connector.cpp
+    plc/gateway_tcp_connector.cpp
+    plc/plc_manager.cpp
+
+    sensor/custom_sensor.cpp
+    sensor/gpio_sensor.cpp
+    sensor/modbus_sensor.cpp
+    sensor/sensor_manager.cpp
+
     camera/camera_manager.cpp
     camera/camera.cpp
     camera/dao/video_capture.cpp
     ../include/common/config/config_parser.cpp
     common/logger/logger.cpp
     common/base64/base64.cpp
+    common/plc_utils/plc_common_utils.cpp
     common/yolo8/postprocess.cc
     common/yolo8/yolov8.cc
     common/imageprocess/image_processor.cpp
@@ -57,6 +63,7 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/common/config
     ${CMAKE_SOURCE_DIR}/include/common/threads
     ${CMAKE_SOURCE_DIR}/include/common/yolo8
+    ${CMAKE_SOURCE_DIR}/include/common/plc_utils
     ${CMAKE_SOURCE_DIR}/third_party/mqtt
     # ${CMAKE_SOURCE_DIR}/include/service
     # ${CMAKE_SOURCE_DIR}/include/infrastructure
