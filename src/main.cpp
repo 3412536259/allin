@@ -5,6 +5,7 @@
 #include "JobScheduler.h"
 #include "my_mqtt_callback.h"
 #include "mqtt_service.h"
+#include "mqtt_command_dispatcher.h" 
 #include <memory>
 #include <thread>
 #include "WebService.h"
@@ -21,9 +22,8 @@ int main()
     
     std::string serverURI = "tcp://broker.emqx.io:1883";  
     std::string clientId = "allin_client";           
-
-    MqttService mqttService(serverURI, clientId, jobscheduler, boxId);
-    jobscheduler.setMqtt(&mqttService);
+    MqttCommandDispatcher commandDispatcher(jobscheduler);
+    MqttService mqttService(serverURI, clientId, jobscheduler, boxId, &commandDispatcher);
     mqttService.start();
     WebService ws("include/common/config/config.json", 8080, ideviceManager.get(), &jobscheduler);
     ws.start();

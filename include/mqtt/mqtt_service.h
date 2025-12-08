@@ -11,7 +11,7 @@ public:
     MqttService(const std::string& serverURI,
                 const std::string& clientId,
                 JobScheduler& scheduler,
-                const std::string& boxId);
+                const std::string& boxId,
                 ICommandDispatcher* dispatcher);
 
     void start();
@@ -23,7 +23,6 @@ public:
 private:
     mqtt::async_client client_;
     std::string boxId_;
-    MqttCommandDispatcher dispatcher_;
     ICommandDispatcher* dispatcher_;
 };
 #endif

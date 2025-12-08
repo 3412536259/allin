@@ -4,10 +4,11 @@
 MqttService::MqttService(const std::string& serverURI,
                          const std::string& clientId,
                          JobScheduler& scheduler,
-                         const std::string& boxId)
+                         const std::string& boxId,
                          ICommandDispatcher* dispatcher)
     : client_(serverURI, clientId),
-      dispatcher_(dispatcher)
+    boxId_(boxId),
+    dispatcher_(dispatcher)
 {
     client_.set_callback(*this);
 }
@@ -24,6 +25,12 @@ void MqttService::start()
     client_.subscribe("box" + boxId_ + "/device/sensor/modbus", 1);
     client_.subscribe("box" + boxId_ + "/device/control/plc/direct", 1);
     client_.subscribe("box" + boxId_ + "/device/camera", 1);
+
+    std::cout << "MQTT connected & subscribed." << std::endl;
+    }catch(const mqtt::exception& e){
+        std::cerr << "[MQTT] Connect failed: " << e.what() << std::endl;
+        connection_lost("initial connect failed");
+    }
 
 }
 
