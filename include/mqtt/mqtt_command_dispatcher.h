@@ -15,7 +15,7 @@ public:
 
 private:
     JobScheduler& scheduler_;
-    
+    std::string boxId_;
     void handleGetRealImage(const nlohmann::json& j);
     void handleOperatePlc(const nlohmann::json& j);
     void handleUpdateConfig(const nlohmann::json& j);

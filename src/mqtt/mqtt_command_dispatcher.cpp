@@ -1,8 +1,13 @@
 #include "mqtt_command_dispatcher.h"
-
+#include "Command.h"
+#include "CommandTask.h"
+#include "ConfigUtil.h"
 
 MqttCommandDispatcher::MqttCommandDispatcher(JobScheduler& scheduler)
-    :scheduler_(scheduler){}
+    :scheduler_(scheduler)
+{
+    ConfigUtil::loadBoxId(ConfigUtil::getConfigPath(), boxId_);
+}
 void MqttCommandDispatcher::onMqttMessage(const std::string& topic, const std::string& payload)
 {
     nlohmann::json j;
@@ -12,19 +17,19 @@ void MqttCommandDispatcher::onMqttMessage(const std::string& topic, const std::s
         std::cerr << "Invalid JSON: " << payload << std::endl;
         return;
     }
-    // 用 MQTT topic 决定任务类型
-    if (topic == "device/camera/getRealImage") {
-        handleGetRealImage(j);
+    std::string err;
+    Command cmd;
+    if (!Command::fromJson(j, boxId_, cmd, err)) {
+        std::string cameraTopic = "box" + boxId_ + "/device/camera";
+        if (topic == cameraTopic) {
+            handleGetRealImage(j);
+            return;
+        }
+        return;
     }
-    else if (topic == "device/plc/operate") {
-        handleOperatePlc(j);
-    }
-    else if (topic == "device/config/update") {
-        handleUpdateConfig(j);
-    }
-    else {
-        std::cout << "Unknown topic: " << topic << std::endl;
-    }
+
+    auto task = std::make_shared<CommandTask>(cmd);
+    int id = scheduler_.submit(task);
 
 
 }

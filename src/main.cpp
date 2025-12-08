@@ -7,19 +7,26 @@
 #include "mqtt_service.h"
 #include <memory>
 #include <thread>
+#include "WebService.h"
+#include "ConfigUtil.h"
 int main()
 {
     av_log_set_level(AV_LOG_QUIET);
     ConfigParser::getInstance().loadFromFile("/home/ztl/workspace/allin-develop/include/common/config/config.json");
     std::shared_ptr<IDeviceManager> ideviceManager = std::make_shared<DeviceManager>();
-    // std::this_thread::sleep_for(std::chrono::seconds(5)); //等待设备注册初始化完成
-    // ideviceManager->getStatus();
-    // std::this_thread::sleep_for(std::chrono::seconds(5)); 
+ 
     JobScheduler jobscheduler(8,ideviceManager.get(),nullptr);
-    MqttService mqtt("tcp://broker.emqx.io:1883", "edge-box", jobscheduler);
-    jobscheduler.setMqtt(&mqtt);
-    mqtt.start();   // 连接 + 订阅 + 进入稳定状态
+    std::string boxId;
+    ConfigUtil::loadBoxId(ConfigUtil::getConfigPath(), boxId);
+    
+    std::string serverURI = "tcp://broker.emqx.io:1883";  
+    std::string clientId = "allin_client";           
 
+    MqttService mqttService(serverURI, clientId, jobscheduler, boxId);
+    jobscheduler.setMqtt(&mqttService);
+    mqttService.start();
+    WebService ws("include/common/config/config.json", 8080, ideviceManager.get(), &jobscheduler);
+    ws.start();
     std::cout << "System running..." << std::endl;
     while (true) { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 

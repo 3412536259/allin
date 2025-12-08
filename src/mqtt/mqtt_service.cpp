@@ -3,7 +3,8 @@
 
 MqttService::MqttService(const std::string& serverURI,
                          const std::string& clientId,
-                         JobScheduler& scheduler)
+                         JobScheduler& scheduler,
+                         const std::string& boxId)
     : client_(serverURI, clientId),
       dispatcher_(scheduler)
 {
@@ -14,9 +15,13 @@ void MqttService::start()
 {
     client_.connect()->wait();
 
-    client_.subscribe("device/camera/getRealImage", 1);
-    client_.subscribe("device/plc/operate", 1);
-    client_.subscribe("device/config/update", 1);
+    client_.subscribe("box" + boxId_ + "/device/control/solenoid/direct", 1);
+    client_.subscribe("box" + boxId_ + "/device/control/solenoid/verified", 1);
+    client_.subscribe("box" + boxId_ + "/device/sensor/custom", 1);
+    client_.subscribe("box" + boxId_ + "/device/sensor/gpio", 1);
+    client_.subscribe("box" + boxId_ + "/device/sensor/modbus", 1);
+    client_.subscribe("box" + boxId_ + "/device/control/plc/direct", 1);
+    client_.subscribe("box" + boxId_ + "/device/camera", 1);
 
     std::cout << "MQTT connected & subscribed." << std::endl;
 }
@@ -25,7 +30,6 @@ void MqttService::connection_lost(const std::string& cause)
 {
     std::cout << "[MQTT] Connection lost: " << cause << std::endl;
 
-    // 自动重连
     while (true)
     {
         try {
@@ -33,9 +37,13 @@ void MqttService::connection_lost(const std::string& cause)
             client_.reconnect()->wait();
             std::cout << "[MQTT] Reconnected!" << std::endl;
 
-            client_.subscribe("device/camera/getRealImage", 1);
-            client_.subscribe("device/plc/operate", 1);
-            client_.subscribe("device/config/update", 1);
+            client_.subscribe("box" + boxId_ + "/device/control/solenoid/direct", 1);
+            client_.subscribe("box" + boxId_ + "/device/control/solenoid/verified", 1);
+            client_.subscribe("box" + boxId_ + "/device/sensor/custom", 1);
+            client_.subscribe("box" + boxId_ + "/device/sensor/gpio", 1);
+            client_.subscribe("box" + boxId_ + "/device/sensor/modbus", 1);
+            client_.subscribe("box" + boxId_ + "/device/control/plc/direct", 1);
+            client_.subscribe("box" + boxId_ + "/device/camera", 1);
             return;
         }
         catch (...) {

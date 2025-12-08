@@ -32,7 +32,10 @@ set(SRC_FILES
     task/task.cpp
     mqtt/mqtt_command_dispatcher.cpp
     mqtt/mqtt_service.cpp
-
+    presentation/ConfigUtil.cpp
+    presentation/WebController.cpp
+    presentation/WebService.cpp
+    presentation/CommandTask.cpp 
 )
 
 # -------------------------- 2. 生成主程序可执行文件 --------------------------
@@ -47,7 +50,7 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/task
     ${CMAKE_SOURCE_DIR}/include/mqtt
     ${CMAKE_SOURCE_DIR}/include/camera/dao
-
+    ${CMAKE_SOURCE_DIR}/include/presentation
     ${CMAKE_SOURCE_DIR}/include/common/base64
     ${CMAKE_SOURCE_DIR}/include/common/imageprocess
     ${CMAKE_SOURCE_DIR}/include/common/logger
