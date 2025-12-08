@@ -2,27 +2,6 @@
 #include <iostream>
 #include <algorithm>
 
-// --- 实用工具函数 ---
-
-// 获取当前时间字符串
-std::string getCurrentTimeStr() {
-    auto now = std::chrono::system_clock::now();
-    auto in_time_t = std::chrono::system_clock::to_time_t(now);
-    std::tm bt{};
-
-    std::tm* result = std::localtime(&in_time_t);
-    if (result) {
-        bt = *result;
-    } else {
-        // 错误处理，返回空或默认时间
-        return "Time Error"; 
-    }
-
-    std::stringstream ss;
-    ss << std::put_time(&bt, "%Y-%m-%d %H:%M:%S"); // **[修正]**：std::put_time 需要 <iomanip>
-    return ss.str();
-}
-
 // --- PLCManager 实现 ---
 
 PLCManager::PLCManager() : stopThread_(false) {

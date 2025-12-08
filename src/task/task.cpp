@@ -25,3 +25,16 @@ void GetCameraRealImageTask::run(TaskContext& ctx)
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
 }
+
+void OperateValveTask::run(TaskContext& ctx)
+{
+    OperatePLC res = ctx.devMgr->operatePlc(deviceId_, cmd_);
+    nlohmann::json j;
+    if(!res.integrity) j["code"] = "operate failed";
+    j["deviceId"] = deviceId_;
+    j["message"] = res.message;
+    j["status"] = res.status;
+    if(cmd_ == "open") ctx.publisher->publish("box1/switch01/open/result", j.dump());
+    else if(cmd_ == "close") ctx.publisher->publish("box1/switch01/close/result", j.dump());
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}

@@ -17,6 +17,7 @@ DeviceStatus DeviceManager::getStatus()
 {
     DeviceStatus deviceStatus;
     deviceStatus.cameraStatus_ = cameraManager_->getAllStatus();
+    deviceStatus.plcStatus_ = plcManager_->getAllStatus();
     for(auto& kv : deviceStatus.cameraStatus_)
     {
         std::cout << kv.camera_id << kv.online_status << std::endl;
@@ -85,9 +86,25 @@ void DeviceManager::operateCamera()
 {
 
 }
-void DeviceManager::operatePlc(const std::string &deviceId, const std::string &cmd)
+OperatePLC DeviceManager::operatePlc(const std::string &deviceId, const std::string &cmd)
 {
-    // OperateResult res = plcManager_->operate(deviceId,cmd);
+    OperatePLC result;
+    if(!plcManager_){
+        std::cerr << "DeviceManager: plcManager is null!"<<std::endl;
+        return result;
+    }
+    OperateResult res = plcManager_->operate(deviceId,cmd);
+    result.deviceId = deviceId;
+    result.integrity = res.success;
+    result.message = res.message;
+    PLCInfo status = plcManager_->getStatus(deviceId);
+    auto itDeviceStatus = std::find_if(status.deviceStatuses.begin(), status.deviceStatuses.end(), 
+                                           [&deviceId](const PLCDeviceStatus& ds) {
+                                               return ds.id == deviceId;
+                                           });
+    result.status = itDeviceStatus->status;
+    return result;
+
     // TODO：把 res 传递到云端 或者回调给上层
     // 示例（你之后自己替换上传函数）：
     // cloudUploader_.uploadRealImage(deviceId, res);
