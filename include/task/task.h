@@ -15,6 +15,6 @@ public:
 
 private:
     std::string camId_;
-};
+}; 
 
 #endif
