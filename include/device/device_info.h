@@ -28,4 +28,10 @@ struct OperatePLC
     bool integrity = false;
 };
 
+struct RealSensorData
+{
+    SensorData data;
+};
+
+
 #endif
