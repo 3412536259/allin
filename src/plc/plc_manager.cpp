@@ -67,7 +67,7 @@ void PLCManager::periodStatusRefresh(){
     while(!stopThread_){
         std::vector<std::string> plcIds;
         for(const auto& pair : plcConfigs_) plcIds.push_back(pair.first);
-        for(const auto& pair : plcIds){
+        for(const auto& plcId : plcIds){
             if(stopThread_) break;
             queryHardwareStatus(plcId);
         }
@@ -224,11 +224,12 @@ OperateResult PLCManager::operate(const std::string& deviceId, const std::string
         return result;
     }
     IPLCDevice* device = itDevice->second.get();
+    OperateResult result;
 
     // 2. 执行操作
     {
         std::lock_guard<std::recursive_mutex> ioLock(connectorMutex_);
-        OperateResult result = device->writeControl(cmd);
+        result = device->writeControl(cmd);
     }
     
     // 3. 操作成功后，立即清空该 PLC 的状态缓存。

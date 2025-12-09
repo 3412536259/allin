@@ -2,6 +2,7 @@
 
 #include "config_info.h"
 #include "plc_info.h"
+#include "iplc_manager.h"
 #include "iplc_connector.h"
 #include "iplc_device.h"
 
