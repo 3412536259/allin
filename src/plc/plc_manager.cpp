@@ -65,9 +65,11 @@ PLCManager::~PLCManager() {
 
 void PLCManager::periodStatusRefresh(){
     while(!stopThread_){
-        for(const auto& pair : plcConfigs_){
-            const std::string& plcId = pair.first;
-            queryAndRefreshStatus(plcId);
+        std::vector<std::string> plcIds;
+        for(const auto& pair : plcConfigs_) plcIds.push_back(pair.first);
+        for(const auto& pair : plcIds){
+            if(stopThread_) break;
+            queryHardwareStatus(plcId);
         }
         std::this_thread::sleep_for(REFRESH_INTERVAL);
     }
@@ -107,25 +109,29 @@ bool PLCManager::isCacheExpired(std::chrono::steady_clock::time_point cacheTime)
     return (now - cacheTime) > CACHE_TTL;
 }
 
-PLCInfo PLCManager::queryAndRefreshStatus(const std::string& plcId) {
-    auto itConnector = plcConnectors_.find(plcId);
-    if (itConnector == plcConnectors_.end()) {
-        PLCInfo errorInfo;
-        errorInfo.plcId = plcId;
-        errorInfo.connectionStatus = "NOT_FOUND";
-        return errorInfo;
-    }
-
+PLCInfo PLCManager::queryHardwareStatus(const std::string& plcId) {
     PLCInfo currentStatus;
-    PLCConnector* connector = itConnector->second.get();
-
-    // 1. 查询 PLC 本体状态
     currentStatus.plcId = plcId;
-    currentStatus.name = plcConfigs_[plcId].name;
-    currentStatus.connectionStatus = connector->getConnectionStatus();
     currentStatus.lastUpdateTime = getCurrentTimeStr();
 
-    // 2. 查询下挂设备状态
+    // 1. 查找连接器
+    auto itConnector = plcConnectors_.find(plcId);
+    if (itConnector == plcConnectors_.end()) {
+        currentStatus.connectionStatus = "NOT_FOUND";
+        return currentStatus;
+    }
+
+    PLCConnector* connector = itConnector->second.get();
+
+    // 获取配置名称
+    if(plcConfigs_.count(plcId)) currentStatus.name = plcConfigs_[plcId].name;
+
+    std::lock_guard<std::recursive_mutex> ioLock(connectorMutex_);
+
+    // 2.查询PLC连接状态
+    currentStatus.connectionStatus = connector->getConnectionStatus();
+
+    // 3. 查询下挂设备状态
     if (currentStatus.connectionStatus == "CONNECTED") {
         auto itDevices = plcIdToDevices_.find(plcId);
         if (itDevices != plcIdToDevices_.end()) {
@@ -134,6 +140,7 @@ PLCInfo PLCManager::queryAndRefreshStatus(const std::string& plcId) {
                 deviceStatus.id = deviceConfig.id;
                 deviceStatus.name = deviceConfig.name;
                 deviceStatus.registerAddress = deviceConfig.registerAddress;
+                // 后改为批量读取
                 deviceStatus.status = connector->readRegister(deviceConfig.registerAddress); // 实时读取寄存器
                 deviceStatus.lastUpdateTime = currentStatus.lastUpdateTime;
                 currentStatus.deviceStatuses.push_back(deviceStatus);
@@ -155,7 +162,7 @@ PLCInfo PLCManager::queryAndRefreshStatus(const std::string& plcId) {
         }
     }
     
-    // 3. 更新缓存 (需要加锁保护)
+    // 4. 更新缓存 (需要加锁保护)
     {
         std::lock_guard<std::mutex> lock(cacheMutex_);
         statusCache_[plcId] = {currentStatus, std::chrono::steady_clock::now()};
@@ -174,22 +181,7 @@ PLCInfo PLCManager::getStatus(const std::string& deviceId) {
         errorInfo.connectionStatus = "DEVICE_NOT_FOUND";
         return errorInfo;
     }
-    const std::string& plcId = itDeviceConfig->second.plcId;
-    // 1. 尝试从缓存读取 (需要加锁保护)
-    {
-        std::lock_guard<std::mutex> lock(cacheMutex_);
-        auto it = statusCache_.find(plcId);
-        if (it != statusCache_.end() && !isCacheExpired(it->second.lastChecked)) {
-            // 缓存命中且未过期，直接返回
-            std::cout << "[Cache Hit] for PLC: " << plcId << std::endl;
-            return it->second.info;
-        }
-        // 缓存未命中或过期
-    }
-    
-    // 2. 缓存失效，实时查询并更新缓存
-    std::cout << "[Cache Miss/Expired] Querying PLC: " << plcId << std::endl;
-    return queryAndRefreshStatus(plcId);
+    return getPLCStatusInternal(itDeviceConfig->second.plcId);
 }
 
 std::vector<PLCInfo> PLCManager::getAllStatus() {
@@ -197,11 +189,29 @@ std::vector<PLCInfo> PLCManager::getAllStatus() {
     
     // 遍历所有 PLC ID，逐个调用 getStatus
     for (const auto& pair : plcConfigs_) {
+        const std::string& plcId = pair.first;
         // getStatus 内部会处理缓存逻辑
-        allStatus.push_back(getStatus(pair.first)); 
+        allStatus.push_back(getPLCStatusInternal(plcId)); 
     }
 
     return allStatus;
+}
+
+PLCInfo PLCManager::getPLCStatusInternal(const std::string& plcId){
+    // 1.尝试读缓存
+    {
+        std::lock_guard<std::mutex> lock(cacheMutex_);
+        auto it = statusCache_.find(plcId);
+        if(it != statusCache_.end() && !isCacheExpired(it->second.lastChecked)){
+            // 缓存命中且未过期，直接返回
+            std::cout << "[Cache Hit] for PLC: " << plcId << std::endl;
+            return it->second.info;
+        }
+    }
+
+    // 2.缓存失效，执行硬件查询
+    std::cout << "[Cache Miss/Expired] Querying PLC: " << plcId << std::endl;
+    return queryHardwareStatus(plcId);
 }
 
 OperateResult PLCManager::operate(const std::string& deviceId, const std::string& cmd) {
@@ -216,7 +226,11 @@ OperateResult PLCManager::operate(const std::string& deviceId, const std::string
     IPLCDevice* device = itDevice->second.get();
 
     // 2. 执行操作
-    OperateResult result = device->writeControl(cmd);
+    {
+        std::lock_guard<std::recursive_mutex> ioLock(connectorMutex_);
+        OperateResult result = device->writeControl(cmd);
+    }
+    
     // 3. 操作成功后，立即清空该 PLC 的状态缓存。
     if (result.success) {
         // 查找设备配置以获取 PLC ID

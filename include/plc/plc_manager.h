@@ -57,6 +57,10 @@ private:
     std::map<std::string, PLCStatusCache> statusCache_; 
     // 保护状态缓存的互斥锁
     std::mutex cacheMutex_; 
+    // 保护Connector IO 操作的互斥锁，放置后台刷新和前台控制同时写入同一个socket/串口
+    std::recursive_mutex connectorMutex_;
+
+    PLCInfo getPLCStatusInternal(const std::string& plcId);
 
     // 状态缓存的有效期 (例如 2 秒)
     const std::chrono::seconds CACHE_TTL = std::chrono::seconds(8); 
@@ -79,7 +83,7 @@ private:
      * @param plcId PLC ID
      * @return 实时查询到的状态
      */
-    PLCInfo queryAndRefreshStatus(const std::string& plcId);
+    PLCInfo queryHardwareStatus(const std::string& plcId);
     /**
      * @brief 初始化所有设备实例，根据 deviceType 创建对象
      */

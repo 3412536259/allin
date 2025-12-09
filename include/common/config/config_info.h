@@ -79,6 +79,7 @@ struct GatewayConfig {
 struct DeviceConfigRoot {
     std::string version;
     std::string description;
+    std::string boxId = 1;
 
     std::vector<CameraConfig> cameras;
     std::vector<PLCConfig> plcs;            // <-- 新增

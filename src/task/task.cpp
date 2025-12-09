@@ -2,6 +2,8 @@
 #include "mqtt_service.h"
 #include "json.hpp"
 #include "image_processor.h"
+#include "config_info.h"
+#include "config_parser.h"
 void GetCameraRealImageTask::run(TaskContext& ctx)
 {
     RealImage image = ctx.devMgr->getRealImage(camId_);
@@ -34,7 +36,8 @@ void OperateValveTask::run(TaskContext& ctx)
     j["deviceId"] = deviceId_;
     j["message"] = res.message;
     j["status"] = res.status;
-    if(cmd_ == "open") ctx.publisher->publish("box1/switch01/open/result", j.dump());
-    else if(cmd_ == "close") ctx.publisher->publish("box1/switch01/close/result", j.dump());
+    DeviceConfigRoot cfg = ConfigParser::getInstance().getConfig();
+    std::string theme = "box" + cfg.boxId + "device/control/solenoid/direct/result";
+    ctx.publisher->publish(theme, j.dump());
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }

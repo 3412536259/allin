@@ -2,6 +2,7 @@
   "device_config": {
     "version": "1.0",
     "description": "设备配置（含PLC直连/网关连接两种类型）",
+    "box": "1",
     "devices": {
       "camera": [
         {

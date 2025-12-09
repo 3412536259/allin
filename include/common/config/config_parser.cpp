@@ -35,6 +35,7 @@ bool ConfigParser::loadFromFile(const std::string& path)
 
     config_.version = root.value("version", "");
     config_.description = root.value("description", "");
+    config_.boxId = root.value("box", "");
 
     auto& devs = root["devices"];
 
