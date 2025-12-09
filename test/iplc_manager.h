@@ -11,4 +11,4 @@ public:
     virtual PLCInfo getStatus(const std::string& deviceId) = 0;
     virtual std::vector<PLCInfo> getAllStatus() = 0;
     virtual OperateResult operate(const std::string& deviceId, const std::string& cmd) = 0;
-}
+};

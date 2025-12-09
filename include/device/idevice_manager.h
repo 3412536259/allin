@@ -15,7 +15,7 @@ public:
     virtual void getAllHistoryImage() = 0;
     
     virtual void operateCamera() = 0;
-    virtual void operatePlc(const std::string &deviceId, const std::string &cmd) = 0;
+    virtual OperatePLC operatePlc(const std::string &deviceId, const std::string &cmd) = 0;
 
     virtual void updateConfig() = 0; //更新配置
 

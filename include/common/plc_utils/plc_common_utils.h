@@ -3,11 +3,13 @@
 #include <vector>
 #include <string>
 #include <iomanip>
+#include <chrono>
 #include <sstream>
 #include <algorithm>
 
 unsigned short calculate_crc16(const std::vector<char>& data);
 std::vector<char> HexStringToBytes(const std::string& hexFrame);
+std::string getCurrentTimeStr();
 /**
  * @brief 将字节数组转换为 Hex 字符串用于打印日志
  */
