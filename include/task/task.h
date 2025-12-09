@@ -15,7 +15,7 @@ public:
 
 private:
     std::string camId_;
-};
+}; 
 
 class OperateValveTask : public ITask
 {
