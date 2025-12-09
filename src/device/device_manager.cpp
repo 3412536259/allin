@@ -114,3 +114,22 @@ void DeviceManager::updateConfig()
 {
 
 }
+RealSensorData DeviceManager::getSensorData(const std::string& sensorId)
+{
+    RealSensorData rsd;
+  if (!sensorManager_) return rsd;
+
+    // 优先尝试实时读取
+    auto opt = sensorManager_->getSensorDataRealTime(sensorId);
+    if (opt) {
+        rsd.data = *opt;
+        return rsd;
+    }
+
+    // 若实时读取失败，则返回缓存数据（如果有）
+    auto optc = sensorManager_->getSensorDataCached(sensorId);
+    if (optc) {
+        rsd.data = *optc;
+    }
+    return rsd;
+}

@@ -15,7 +15,7 @@ public:
 
 private:
     std::string camId_;
-};
+}; 
 
 class OperateValveTask : public ITask
 {
@@ -28,4 +28,16 @@ private:
     std::string deviceId_;
     std::string cmd_;
 };
+
+class GetSensorDataTask : public ITask
+{
+public:
+    GetSensorDataTask(std::string sensorId)
+        : sensorId_(sensorId) {}
+    std::string name() const override { return "GetSensorData"; }
+    void run(TaskContext& ctx) override;
+private:
+    std::string sensorId_;
+};
+
 #endif
