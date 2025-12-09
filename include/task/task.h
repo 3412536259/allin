@@ -29,6 +29,17 @@ private:
     std::string cmd_;
 };
 
+class GetPLCDeviceTask : public ITask
+{
+public:
+    GetPLCDeviceTask(std::string deviceId)
+        : deviceId_(deviceId) {}
+    std::string name() const override { return "GetPLCDeviceStatus"; }
+    void run(TaskContext& ctx) override;
+private:
+    std::string deviceId_;
+}
+
 class GetSensorDataTask : public ITask
 {
 public:
