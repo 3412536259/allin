@@ -25,22 +25,30 @@ DeviceStatus DeviceManager::getStatus()
     return deviceStatus;
 }
 
-void DeviceManager::getAllRealImage()
+RealImageList DeviceManager::getAllRealImage()
 {
-    if(!cameraManager_) return;
-    
+    RealImageList list;
+    RealImage image;
+    if(!cameraManager_)
+    {
+        list.success = false;
+        return list;
+    }
     auto allFrames = cameraManager_->getAllLastKeyFrames();
 
     for(auto& kv : allFrames)
     {
         std::string id = kv.first;
         const FrameData& frame = kv.second;
+        image.integrity = true;
+        image.frame = frame;
+        image.sourceCameraId = id;
+        list.RealImages.push_back(image);
         // TODO: 上传云端或回调 UI
         // cloudUploader.uploadRealImage(id, frame);
-        std::cout << "DeviceManager: Real frame for camera "
-                  << id << " timestamp=" << frame.timestamp << std::endl;
-        
+ 
     }
+    return list;
 }
 
 RealImage DeviceManager::getRealImage(const std::string& camId)

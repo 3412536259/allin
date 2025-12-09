@@ -11,7 +11,7 @@ public:
     ~DeviceManager();
     DeviceStatus getStatus() override;
 
-    void getAllRealImage() override;
+    RealImageList getAllRealImage() override;
     RealImage getRealImage(const std::string& camId) override;
     void getAllHistoryImage() override;
     void getHistoryImage(const std::string& camId) override;
