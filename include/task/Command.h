@@ -6,6 +6,7 @@
 using nlohmann::json;
 
 
+
 enum class CommandType {
     Unknown,
     SolenoidDirect,

@@ -41,7 +41,7 @@ set(SRC_FILES
     presentation/ConfigUtil.cpp
     presentation/WebController.cpp
     presentation/WebService.cpp
-    presentation/CommandTask.cpp 
+    task/CommandTask.cpp
 )
 
 # -------------------------- 2. 生成主程序可执行文件 --------------------------

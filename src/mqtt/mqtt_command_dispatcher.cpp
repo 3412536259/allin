@@ -3,6 +3,7 @@
 #include "CommandTask.h"
 #include "ConfigUtil.h"
 
+
 MqttCommandDispatcher::MqttCommandDispatcher(JobScheduler& scheduler)
     :scheduler_(scheduler)
 {
@@ -29,8 +30,8 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
         return;
     }
 
-    auto task = std::make_shared<CommandTask>(cmd);
-    int id = scheduler_.submit(task);
+    auto t = std::make_shared<CommandTask>(cmd);
+    int id = scheduler_.submit(t);
 
 
 }

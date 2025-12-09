@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Command.h"
 #include "itask.h"
-
+#include "Command.h"
 
 
 class CommandTask : public ITask {

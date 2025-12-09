@@ -1,7 +1,6 @@
 #include "CommandTask.h"
 #include "json.hpp"
 #include "image_processor.h"
-#include "mqtt_service.h"
 #include <iostream>
 
 using nlohmann::json;
@@ -11,7 +10,8 @@ void CommandTask::run(TaskContext& ctx)
     try {
         switch (cmd_.type) {
             case CommandType::Camera: {
-                RealImage image = ctx.devMgr->getRealImage(cmd_.raw.value("carmeId", cmd_.raw.value("cameraId", std::string(""))));
+                std::string camId = cmd_.raw.value("carmeId", cmd_.raw.value("cameraId", std::string("")));
+                RealImage image = ctx.devMgr->getRealImage(camId);
                 if (image.integrity) {
                     image_buffer_t out_image;
                     std::vector<unsigned char> outJpeg;
@@ -19,12 +19,12 @@ void CommandTask::run(TaskContext& ctx)
                     ImageProcessor::compressToJpeg(&out_image,outJpeg);
                     std::string imageBase64 = ImageProcessor::jpegToBase64(outJpeg);
                     json j;
-                    j["cameraId"] = cmd_.raw.value("carmeId", cmd_.raw.value("cameraId", std::string("")));
+                    j["cameraId"] = camId;
                     j["image"] = imageBase64;
-                    if (ctx.publisher) ctx.publisher->publish("box/" + cmd_.boxId + "/device/camera/result/getRealImage", j.dump());
+                    if (ctx.publisher) ctx.publisher->publish("device/camera/result/getRealImage", j.dump());
                 } else {
                     json j; j["code"] = "no image";
-                    if (ctx.publisher) ctx.publisher->publish("box/" + cmd_.boxId + "/device/camera/result/getRealImage", j.dump());
+                    if (ctx.publisher) ctx.publisher->publish("device/camera/result/getRealImage", j.dump());
                 }
                 break;
             }
@@ -36,7 +36,7 @@ void CommandTask::run(TaskContext& ctx)
                     j["plc_device_id"] = cmd_.plc_device_id;
                     j["action"] = cmd_.action;
                     j["result"] = "sent";
-                    if (ctx.publisher) ctx.publisher->publish("box/" + cmd_.boxId + "/device/plc/result/operate", j.dump());
+                    if (ctx.publisher) ctx.publisher->publish("device/plc/result/operate", j.dump());
                 }
                 break;
             }
@@ -62,7 +62,7 @@ void CommandTask::run(TaskContext& ctx)
                 j["plc_device_id"] = cmd_.plc_device_id;
                 j["action"] = cmd_.action;
                 j["verified"] = ok;
-                if (ctx.publisher) ctx.publisher->publish("box/" + cmd_.boxId + "/device/plc/result/operate_verified", j.dump());
+                if (ctx.publisher) ctx.publisher->publish("device/plc/result/operate_verified", j.dump());
                 break;
             }
             case CommandType::SensorCustom:
@@ -71,7 +71,7 @@ void CommandTask::run(TaskContext& ctx)
                 if (ctx.publisher) {
                     json j = cmd_.raw;
                     j["box_id"] = cmd_.boxId;
-                    ctx.publisher->publish("box/" + cmd_.boxId + "/device/sensor/report", j.dump());
+                    ctx.publisher->publish("device/sensor/report", j.dump());
                 }
                 break;
             }
