@@ -109,7 +109,25 @@ OperatePLC DeviceManager::operatePlc(const std::string &deviceId, const std::str
     // 示例（你之后自己替换上传函数）：
     // cloudUploader_.uploadRealImage(deviceId, res);
 }
-    
+
+PLCDeviceStatus DeviceManager::getPLCDeviceStatus(const std::string& deviceId)
+{
+    PLCDeviceStatus res;
+    if(!plcManager_){
+        std::cerr << "DeviceManager: plcManager is null!"<<std::endl;
+        return res;
+    }
+    PLCInfo status = plcManager_->getStatus(deviceId);
+    auto itDeviceStatus = std::find_if(status.deviceStatuses.begin(), status.deviceStatuses.end(), 
+                                           [&deviceId](const PLCDeviceStatus& ds) {
+                                               return ds.id == deviceId;
+                                           });
+    if(itDeviceStatus != status.deviceStatuses.end()){
+        res.data = *itDeviceStatus;
+    }
+    return res;
+}
+
 void DeviceManager::updateConfig()
 {
 

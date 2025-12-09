@@ -18,6 +18,7 @@ public:
     
     void operateCamera() override;
     OperatePLC operatePlc(const std::string &deviceId, const std::string &cmd) override;
+    PLCDeviceStatus getPLCDeviceStatus(const std::string& deviceId) override;
     RealSensorData getSensorData(const std::string& sensorId) override;
 
     void updateConfig() override;

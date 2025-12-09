@@ -28,6 +28,11 @@ struct OperatePLC
     bool integrity = false;
 };
 
+struct PLCDeviceStatus
+{
+    PLCDeviceStatus data;
+};
+
 struct RealSensorData
 {
     SensorData data;

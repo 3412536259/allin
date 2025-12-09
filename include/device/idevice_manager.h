@@ -16,8 +16,9 @@ public:
     
     virtual void operateCamera() = 0;
     virtual OperatePLC operatePlc(const std::string &deviceId, const std::string &cmd) = 0;
+    virtual PLCDeviceStatus getPLCDeviceStatus(const std::string& deviceId) = 0;
     virtual RealSensorData getSensorData(const std::string& sensorId) = 0;
-    
+
     virtual void updateConfig() = 0; //更新配置
 
 };
