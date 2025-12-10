@@ -22,10 +22,10 @@ DeviceStatus DeviceManager::getStatus()
         deviceStatus.plcStatus_ = PLCList;
     }
     
-    for(auto& kv : deviceStatus.cameraStatus_)
-    {
-        std::cout << kv.camera_id << kv.online_status << std::endl;
-    }
+    if(sensorManager_{
+        deviceStatus.sensorStatus_ = sensorManager_ -> getAllSensorData();
+    })
+
     return deviceStatus;
 }
 
