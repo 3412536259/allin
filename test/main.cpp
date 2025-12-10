@@ -16,7 +16,7 @@ int main() {
     PLCManager manager;
 
     // 简单的检查 PLC 是否加载成功
-    if (manager.getAllStatus().empty()) {
+    if (manager.getAllStatus().plcList.empty()) {
         std::cerr << "Manager initialization failed or no PLCs found. Exiting application.\n";
     }
 

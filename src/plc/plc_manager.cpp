@@ -1,6 +1,9 @@
 #include "plc_manager.h" 
 #include <iostream>
 #include <algorithm>
+#include "serial_plc_connector.h"
+#include "solenoid_valve_plc_device.h"
+#include "gateway_tcp_connector.h"
 
 // --- PLCManager 实现 ---
 
@@ -65,10 +68,8 @@ PLCManager::~PLCManager() {
 
 void PLCManager::periodStatusRefresh(){
     while(!stopThread_){
-        std::vector<std::string> plcIds;
-        for(const auto& pair : plcConfigs_) plcIds.push_back(pair.first);
-        for(const auto& plcId : plcIds){
-            if(stopThread_) break;
+        for(const auto& [plcId, config] : plcConfigs_){
+            if(stopThread_) break; // 提前退出
             queryHardwareStatus(plcId);
         }
         std::this_thread::sleep_for(REFRESH_INTERVAL);
@@ -77,9 +78,7 @@ void PLCManager::periodStatusRefresh(){
 
 void PLCManager::initializeDevices(){
     std::cout << "[PLCManager] Initializing devices...\n";
-    for(const auto& pair : deviceConfigs_){
-        const PLCDeviceConfig& deviceConfig = pair.second;
-        
+    for(const auto& [deviceId, deviceConfig] : deviceConfigs_){
         // 1.找到对应的PLC连接器
         auto itConnector = plcConnectors_.find(deviceConfig.plcId);
         if(itConnector == plcConnectors_.end()){
@@ -99,7 +98,7 @@ void PLCManager::initializeDevices(){
             continue;
         }
         // 3.存储设备实例（如果需要的话，可以扩展PLCManager以管理设备实例）
-        devices_[deviceConfig.id] = std::move(deviceInstance);
+        devices_[deviceId] = std::move(deviceInstance);
     }
     std::cout << "[PLCManager] Device initialization complete. Total devices: " << devices_.size() << "\n";
 }
@@ -130,35 +129,30 @@ PLCInfo PLCManager::queryHardwareStatus(const std::string& plcId) {
 
     // 2.查询PLC连接状态
     currentStatus.connectionStatus = connector->getConnectionStatus();
+    bool isConnected = (currentStatus.connectionStatus == "CONNECTED");
 
-    // 3. 查询下挂设备状态
-    if (currentStatus.connectionStatus == "CONNECTED") {
-        auto itDevices = plcIdToDevices_.find(plcId);
-        if (itDevices != plcIdToDevices_.end()) {
-            for (const auto& deviceConfig : itDevices->second) {
-                PLCDeviceStatus deviceStatus;
-                deviceStatus.id = deviceConfig.id;
-                deviceStatus.name = deviceConfig.name;
-                deviceStatus.registerAddress = deviceConfig.registerAddress;
-                // 后改为批量读取
-                deviceStatus.status = connector->readRegister(deviceConfig.registerAddress); // 实时读取寄存器
-                deviceStatus.lastUpdateTime = currentStatus.lastUpdateTime;
-                currentStatus.deviceStatuses.push_back(deviceStatus);
+    // 3. 统一遍历设备 (消除重复代码)
+    auto itDevices = plcIdToDevices_.find(plcId);
+    if (itDevices != plcIdToDevices_.end()) {
+        // 小优化：提前预留空间，避免 vector 频繁扩容
+        currentStatus.deviceStatuses.reserve(itDevices->second.size()); 
+
+        for (const auto& deviceConfig : itDevices->second) {
+            PLCDeviceStatus deviceStatus;
+            deviceStatus.id = deviceConfig.id;
+            deviceStatus.name = deviceConfig.name;
+            deviceStatus.registerAddress = deviceConfig.registerAddress;
+            deviceStatus.lastUpdateTime = currentStatus.lastUpdateTime;
+
+            if (isConnected) {
+                // 已连接：真实读取
+                deviceStatus.status = connector->readRegister(deviceConfig.registerAddress);
+            } else {
+                // 未连接：设为 UNKNOWN
+                deviceStatus.status = "UNKNOWN";
             }
-        }
-    } else {
-        // 如果 PLC 未连接，则所有下挂设备状态为 UNKNOWN
-        auto itDevices = plcIdToDevices_.find(plcId);
-        if (itDevices != plcIdToDevices_.end()) {
-             for (const auto& deviceConfig : itDevices->second) {
-                PLCDeviceStatus deviceStatus;
-                deviceStatus.id = deviceConfig.id;
-                deviceStatus.name = deviceConfig.name;
-                deviceStatus.registerAddress = deviceConfig.registerAddress;
-                deviceStatus.status = "UNKNOWN"; 
-                deviceStatus.lastUpdateTime = currentStatus.lastUpdateTime;
-                currentStatus.deviceStatuses.push_back(deviceStatus);
-             }
+            
+            currentStatus.deviceStatuses.push_back(deviceStatus);
         }
     }
     
@@ -186,15 +180,11 @@ PLCInfo PLCManager::getStatus(const std::string& deviceId) {
 
 PLCList PLCManager::getAllStatus() {
     PLCList plcList;
-    std::vector<PLCInfo> allStatus;
     
-    // 遍历所有 PLC ID，逐个调用 getStatus
     for (const auto& pair : plcConfigs_) {
         const std::string& plcId = pair.first;
-        // getStatus 内部会处理缓存逻辑
-        allStatus.push_back(getPLCStatusInternal(plcId)); 
+        plcList.plcList.push_back(getPLCStatusInternal(plcId)); // 直接填充
     }
-    plcList.plcList = std::move(allStatus);
 
     return plcList;
 }
