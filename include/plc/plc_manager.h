@@ -33,7 +33,7 @@ public:
     ~PLCManager() override;
 
     PLCInfo getStatus(const std::string& deviceId) override;
-    std::vector<PLCInfo> getAllStatus() override;
+    PLCList getAllStatus() override;
     OperateResult operate(const std::string& deviceId, const std::string& cmd) override;
 
 private:

@@ -184,7 +184,8 @@ PLCInfo PLCManager::getStatus(const std::string& deviceId) {
     return getPLCStatusInternal(itDeviceConfig->second.plcId);
 }
 
-std::vector<PLCInfo> PLCManager::getAllStatus() {
+PLCList PLCManager::getAllStatus() {
+    PLCList plcList;
     std::vector<PLCInfo> allStatus;
     
     // 遍历所有 PLC ID，逐个调用 getStatus
@@ -193,8 +194,9 @@ std::vector<PLCInfo> PLCManager::getAllStatus() {
         // getStatus 内部会处理缓存逻辑
         allStatus.push_back(getPLCStatusInternal(plcId)); 
     }
+    plcList.plcList = std::move(allStatus);
 
-    return allStatus;
+    return plcList;
 }
 
 PLCInfo PLCManager::getPLCStatusInternal(const std::string& plcId){

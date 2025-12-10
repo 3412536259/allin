@@ -18,14 +18,8 @@ DeviceStatus DeviceManager::getStatus()
     DeviceStatus deviceStatus;
     deviceStatus.cameraStatus_ = cameraManager_->getAllStatus();
     if(plcManager_){
-        std::vector<PLCInfo> allPLCInfo = plcManager_->getAllStatus();
-        for(const auto& plcInfo : allPLCInfo){
-            for(const auto& devStatus : plcInfo.deviceStatuses){
-                PLCDeviceState plcDevState;
-                plcDevState.data = devStatus;
-                deviceStatus.plcStatus_.push_back(plcDevState);
-            }
-        }
+        PLCList plcList = plcManager_->getAllStatus();
+        deviceStatus.plcStatus_ = PLCList;
     }
     
     for(auto& kv : deviceStatus.cameraStatus_)

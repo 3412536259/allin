@@ -8,7 +8,7 @@
 struct DeviceStatus
 {
     std::vector<CameraStatus> cameraStatus_;
-    std::vector<PLCDeviceState> plcStatus_;
+    PLCList plcStatus_;
     std::vector<SensorData> sensorStatus_;
 
 };
