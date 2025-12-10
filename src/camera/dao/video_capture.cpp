@@ -32,7 +32,14 @@ bool VideoCapture::openStream(){
     }
 
     LOG_INFO("Opening RTSP stream: " + rtspUrl_);
-    int ret = avformat_open_input(&pFormatCtx_,rtspUrl_.c_str(),NULL,NULL);
+    //int ret = avformat_open_input(&pFormatCtx_,rtspUrl_.c_str(),NULL,NULL);
+    AVDictionary* options = NULL;
+    av_dict_set(&options, "rtsp_transport", "tcp", 0);
+    av_dict_set(&options, "max_delay", "500000", 0);  // 减少卡顿
+    av_dict_set(&options, "stimeout", "5000000", 0);  // 5 秒超时
+
+    int ret = avformat_open_input(&pFormatCtx_, rtspUrl_.c_str(), NULL, &options);
+    av_dict_free(&options);
     if(ret < 0){
         char err_buf[1024] = {0};
         av_strerror(ret, err_buf, sizeof(err_buf));

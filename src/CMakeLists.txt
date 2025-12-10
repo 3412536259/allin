@@ -27,6 +27,7 @@ set(SRC_FILES
     camera/camera_manager.cpp
     camera/camera.cpp
     camera/dao/video_capture.cpp
+    camera/dao/video_storage.cpp
     ../include/common/config/config_parser.cpp
     common/logger/logger.cpp
     common/base64/base64.cpp
@@ -34,6 +35,8 @@ set(SRC_FILES
     common/yolo8/postprocess.cc
     common/yolo8/yolov8.cc
     common/imageprocess/image_processor.cpp
+    common/timestamp/SegmentManager.cpp
+    common/FileUtils/FileUtils.cpp
     task/JobScheduler.cpp
     task/task.cpp
     mqtt/mqtt_command_dispatcher.cpp
@@ -56,6 +59,8 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/camera/dao
     ${CMAKE_SOURCE_DIR}/include/ai
 
+    ${CMAKE_SOURCE_DIR}/include/common/FileUtils
+    ${CMAKE_SOURCE_DIR}/include/common/timestamp
     ${CMAKE_SOURCE_DIR}/include/common/base64
     ${CMAKE_SOURCE_DIR}/include/common/imageprocess
     ${CMAKE_SOURCE_DIR}/include/common/logger
