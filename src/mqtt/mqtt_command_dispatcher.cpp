@@ -4,6 +4,7 @@ const std::string GET_REAL_IMAGE_TOPIC = "device/camera/getRealImage";
 const std::string OPERATE_PLC_TOPIC = "device/plc/operate";
 const std::string UPDATE_CONFIG_TOPIC = "device/config/update";
 const std::string GET_SENSOR_DATA_TOPIC = "device/sensor/status";
+const std::string GET_ALL_DEVICE_STATUS_TOPIC = "device/status/getall"
 
 MqttCommandDispatcher::MqttCommandDispatcher(JobScheduler& scheduler)
     :scheduler_(scheduler){}
@@ -28,6 +29,9 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
     }
     else if(topic == GET_SENSOR_DATA_TOPIC) {
         handleGetSensorData(j);
+    }
+    else if(topic == "device/status/getAll"){
+        handleGetAllDeviceStatus(j);
     }
     else {
         std::cout << "Unknown topic: " << topic << std::endl;
@@ -83,3 +87,10 @@ void MqttCommandDispatcher::handleUpdateConfig(const nlohmann::json& j)
 
 }
 
+void MqttCommandDispatcher::handleGetAllDeviceStatus(const nlohmann::json& j)
+{
+    auto task = std::make_shared<GetDeviceStatusTask>();
+    int id = scheduler_.submit(task);
+
+    std::cout << "submitted GetDeviceStatusTask id=" << id << std::endl;
+}

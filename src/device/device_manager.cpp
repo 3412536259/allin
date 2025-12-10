@@ -16,15 +16,15 @@ DeviceManager::~DeviceManager()
 DeviceStatus DeviceManager::getStatus()
 {
     DeviceStatus deviceStatus;
-    deviceStatus.cameraStatus_ = cameraManager_->getAllStatus();
+    deviceStatus.cameraStatusList = cameraManager_->getAllStatus();
     if(plcManager_){
         PLCList plcList = plcManager_->getAllStatus();
-        deviceStatus.plcStatus_ = PLCList;
+        deviceStatus.plcStatus_ = plcList;
     }
     
-    if(sensorManager_{
+    if(sensorManager_){
         deviceStatus.sensorStatus_ = sensorManager_ -> getAllSensorData();
-    })
+    }
 
     return deviceStatus;
 }

@@ -80,3 +80,38 @@ void GetSensorDataTask::run(TaskContext& ctx)
     ctx.publisher->publish("device/sensor/result/getSensorData", j.dump());
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
+
+void GetDeviceStatusTask::run(TaskContext& ctx)
+{
+    DeviceStatus status = ctx.devMgr->getStatus();
+    nlohmann::json j;
+    auto& device = j["device"];
+
+    for(const auto& camStatus : status.cameraStatusList.cameraStatus){
+        device["cameras"].push_back({
+            {"cameraId",camStatus.camera_id},
+            {"onlineStatus",camStatus.online_status == CameraOnlineStatus::ONLINE ? "ONLINE" : "OFFLINE"}
+        });
+    }
+
+    for(const auto& devStatus : status.plcStatus_.plcList){
+        for(const auto& dev : devStatus.deviceStatuses){
+            device["plc_device"].push_back({
+                {"deviceId", dev.id},
+                {"name", dev.name},
+                {"status", dev.status}
+            });
+        }
+    }
+
+    for(const auto& sensorStatus : status.sensorStatus_.sensors){
+        device["sensors"].push_back({
+            {"sensorId", sensorStatus.id},
+            {"type", sensorStatus.type},
+            {"status", to_string(sensorStatus.status)},
+        });
+    }
+
+    ctx.publisher->publish("device/status/result/getAll", j.dump());
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}

@@ -9,7 +9,7 @@ struct DeviceStatus
 {
     CameraStatusList cameraStatusList;
     PLCList plcStatus_;
-    std::vector<SensorData> sensorStatus_;
+    SensorList sensorStatus_;
 
 };
 
