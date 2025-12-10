@@ -16,8 +16,18 @@ DeviceManager::~DeviceManager()
 DeviceStatus DeviceManager::getStatus()
 {
     DeviceStatus deviceStatus;
-    deviceStatus.cameraStatusList = cameraManager_->getAllStatus();
-    deviceStatus.plcStatus_ = plcManager_->getAllStatus();
+    deviceStatus.cameraStatus_ = cameraManager_->getAllStatus();
+    if(plcManager_){
+        std::vector<PLCInfo> allPLCInfo = plcManager_->getAllStatus();
+        for(const auto& plcInfo : allPLCInfo){
+            for(const auto& devStatus : plcInfo.deviceStatuses){
+                PLCDeviceState plcDevState;
+                plcDevState.data = devStatus;
+                deviceStatus.plcStatus_.push_back(plcDevState);
+            }
+        }
+    }
+    
     for(auto& kv : deviceStatus.cameraStatus_)
     {
         std::cout << kv.camera_id << kv.online_status << std::endl;
