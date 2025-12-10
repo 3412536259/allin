@@ -110,7 +110,13 @@ OperatePLC DeviceManager::operatePlc(const std::string &deviceId, const std::str
                                            [&deviceId](const PLCDeviceStatus& ds) {
                                                return ds.id == deviceId;
                                            });
-    result.status = itDeviceStatus->status;
+    if(itDeviceStatus != status.deviceStatuses.end()){
+        result.status = itDeviceStatus->status;
+    }
+    else{
+        result.status = "UNKNOWN";
+    }
+    
     return result;
 
     // TODO：把 res 传递到云端 或者回调给上层
