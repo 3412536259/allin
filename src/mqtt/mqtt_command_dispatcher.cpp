@@ -56,7 +56,7 @@ void MqttCommandDispatcher::handleOperatePlc(const nlohmann::json& j)
     auto task = std::make_shared<OperateValveTask>(deviceId, cmd);
     int id = scheduler_.submit(task);
 
-    std::cout << "Submitted GetRealImageTask id=" << id 
+    std::cout << "Submitted OperatePLC id=" << id 
               << " for device=" << deviceId << " operation=" << cmd << std::endl;
 }
 void MqttCommandDispatcher::handleGetPLCDeviceStatus(const nlohmann::json& j){
