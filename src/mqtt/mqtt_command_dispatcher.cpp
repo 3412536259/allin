@@ -62,7 +62,7 @@ void MqttCommandDispatcher::handleOperatePlc(const nlohmann::json& j)
 void MqttCommandDispatcher::handleGetPLCDeviceStatus(const nlohmann::json& j){
     if(!j.contains("deviceId")) return;
     std::string deviceId = j["deviceId"];
-    auto task = std::make_shared<GetPLCDeviceStatusTask>(deviceId);
+    auto task = std::make_shared<GetPLCDeviceTask>(deviceId);
     int id = scheduler_.submit(task);
 
     std::cout << "Submitted GetPLCDeviceStatus id=" << id 

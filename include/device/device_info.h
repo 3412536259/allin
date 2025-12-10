@@ -33,7 +33,7 @@ struct OperatePLC
     bool integrity = false;
 };
 
-struct PLCDeviceStatus
+struct PLCDeviceState
 {
     PLCDeviceStatus data;
 };

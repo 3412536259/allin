@@ -1,5 +1,9 @@
 #include "mqtt_service.h"
 #include <iostream>
+const std::string GET_REAL_IMAGE_TOPIC = "device/camera/getRealImage";
+const std::string OPERATE_PLC_TOPIC = "device/plc/operate";
+const std::string UPDATE_CONFIG_TOPIC = "device/config/update";
+const std::string GET_SENSOR_DATA_TOPIC = "device/sensor/status";
 
 MqttService::MqttService(const std::string& serverURI,
                          const std::string& clientId,
@@ -15,9 +19,10 @@ void MqttService::start()
     try{
         client_.connect()->wait();
 
-        client_.subscribe("device/camera/getRealImage", 1);
-        client_.subscribe("device/plc/operate", 1);
-        client_.subscribe("device/config/update", 1);
+        client_.subscribe(GET_REAL_IMAGE_TOPIC, 1);
+        client_.subscribe(OPERATE_PLC_TOPIC, 1);
+        client_.subscribe(UPDATE_CONFIG_TOPIC, 1);
+        client_.subscribe(GET_SENSOR_DATA_TOPIC, 1);
 
         std::cout << "MQTT connected & subscribed." << std::endl;
     }catch(const mqtt::exception& e){
@@ -42,9 +47,11 @@ void MqttService::connection_lost(const std::string& cause)
             std::cout << "[MQTT] Reconnected!" << std::endl;
 
             // 重新订阅主题
-            client_.subscribe("device/camera/getRealImage", 1);
-            client_.subscribe("device/plc/operate", 1);
-            client_.subscribe("device/config/update", 1);
+            client_.subscribe(GET_REAL_IMAGE_TOPIC, 1);
+            client_.subscribe(OPERATE_PLC_TOPIC, 1);
+            client_.subscribe(UPDATE_CONFIG_TOPIC, 1);
+            client_.subscribe(GET_SENSOR_DATA_TOPIC, 1);
+
             return;
         }
         catch (const mqtt::exception& e) {

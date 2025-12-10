@@ -44,7 +44,7 @@ void OperateValveTask::run(TaskContext& ctx)
 
 void GetPLCDeviceTask::run(TaskContext& ctx)
 {
-    PLCDeviceStatus status = ctx.devMgr->getPLCDeviceStatus(deviceId_);
+    PLCDeviceState status = ctx.devMgr->getPLCDeviceStatus(deviceId_);
     nlohmann::json j;
     j["deviceId"] = status.data.id;
     j["name"] = status.data.name;
@@ -52,7 +52,7 @@ void GetPLCDeviceTask::run(TaskContext& ctx)
     ctx.publisher->publish("device/control/result", j.dump());
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
-}
+
 
 void GetSensorDataTask::run(TaskContext& ctx)
 {

@@ -118,9 +118,9 @@ OperatePLC DeviceManager::operatePlc(const std::string &deviceId, const std::str
     // cloudUploader_.uploadRealImage(deviceId, res);
 }
 
-PLCDeviceStatus DeviceManager::getPLCDeviceStatus(const std::string& deviceId)
+PLCDeviceState DeviceManager::getPLCDeviceStatus(const std::string& deviceId)
 {
-    PLCDeviceStatus res;
+    PLCDeviceState res;
     if(!plcManager_){
         std::cerr << "DeviceManager: plcManager is null!"<<std::endl;
         return res;

@@ -38,7 +38,7 @@ public:
     void run(TaskContext& ctx) override;
 private:
     std::string deviceId_;
-}
+};
 
 class GetSensorDataTask : public ITask
 {
