@@ -36,6 +36,10 @@ struct SensorData {
     std::string lastUpdateTime;
 };
 
+struct SensorList{
+    std::vector<SensorData> sensors;
+};
+
 // 辅助函数：按类型打印传感器数据
 inline void printSensorData(const SensorData& data) {
     std::cout << "Sensor ID: " << data.id << ", ";
