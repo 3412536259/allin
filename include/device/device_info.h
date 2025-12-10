@@ -20,6 +20,11 @@ struct RealImage
     bool integrity = false;
 };
 
+struct RealImageList
+{
+    std::vector<RealImage> RealImages;
+    bool success = true;
+};
 struct OperatePLC
 {
     std::string deviceId;
@@ -27,5 +32,16 @@ struct OperatePLC
     std::string message;
     bool integrity = false;
 };
+
+struct PLCDeviceState
+{
+    PLCDeviceStatus data;
+};
+
+struct RealSensorData
+{
+    SensorData data;
+};
+
 
 #endif

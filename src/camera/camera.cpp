@@ -1,8 +1,17 @@
 #include "camera.h"
+#include "logger.h"
+#include "SegmentManager.h"
+#include "TimestampAdjuster.h"
 #include <iostream>
 extern "C" {
 #include <libavutil/time.h>
 }
+const std::string ROOT_DIR = "/home/ztl/workspace/allin/allin/videos/";
+const std::string VIDEOFORMAT = "mp4";
+const int SEGMENTDURATIONSEC = 60;
+
+
+
 Camera::Camera(CameraStaticInfo cameraStaticInfo)
     :cameraStaticInfo_(cameraStaticInfo),videoCapture_(cameraStaticInfo_.rtsp_url)
 {
@@ -84,15 +93,45 @@ void Camera::pullKeyFrameLoop()
 
         return;
     }
+    std::string video_dir = ROOT_DIR+this->cameraStaticInfo_.camera_id;
+    SegmentManager segMgr(video_dir, VIDEOFORMAT, SEGMENTDURATIONSEC);
+    TimestampAdjuster tsAdjuster;
 
+    auto storage = segMgr.createSegment(videoCapture_.getFormatContext());
+    if (!storage) {
+        LOG_ERROR("Failed to create first segment");
+        av_packet_free(&packet);
+        videoCapture_.closeStream();
+        isRunning_ = false;
+        return;
+    }
+
+    int totalPackets = 0;
     while(isRunning_)
     {
+        if (segMgr.needNewSegment()) {
+            storage->closeStorage();
+            storage = segMgr.createSegment(videoCapture_.getFormatContext());
+            tsAdjuster.reset();
+            if (!storage) break;
+        }
+
         if (!videoCapture_.readPacket(packet)) {
             LOG_WARNING("Failed to read packet, retrying...");
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             continue;
         }
-                //对关键帧入队
+
+        tsAdjuster.adjust(packet);
+
+        if (!storage->writePacket(packet)) {
+            LOG_WARNING("Failed to write packet");
+        } else {
+            totalPackets++;
+            if (totalPackets % 200 == 0)
+                LOG_INFO("Written " + std::to_string(totalPackets) + " packets total");
+        }
+                //对关键帧
         if (packet->flags & AV_PKT_FLAG_KEY) {
             if (videoCapture_.decodePacket(packet, frame) >= 0) {  
                 std::lock_guard<std::mutex> lock(keyFrameMutex_);        
@@ -104,6 +143,7 @@ void Camera::pullKeyFrameLoop()
        
         av_packet_unref(packet);
     }
+    if (storage) storage->closeStorage();
 
     av_packet_free(&packet);
     av_frame_free(&frame);

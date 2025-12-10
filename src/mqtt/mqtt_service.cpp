@@ -1,5 +1,9 @@
 #include "mqtt_service.h"
 #include <iostream>
+const std::string GET_REAL_IMAGE_TOPIC = "device/camera/getRealImage";
+const std::string OPERATE_PLC_TOPIC = "device/plc/operate";
+const std::string UPDATE_CONFIG_TOPIC = "device/config/update";
+const std::string GET_SENSOR_DATA_TOPIC = "device/sensor/status";
 
 MqttService::MqttService(const std::string& serverURI,
                          const std::string& clientId,
@@ -18,13 +22,10 @@ void MqttService::start()
     try{
         client_.connect()->wait();
 
-    client_.subscribe("box" + boxId_ + "/device/control/solenoid/direct", 1);
-    client_.subscribe("box" + boxId_ + "/device/control/solenoid/verified", 1);
-    client_.subscribe("box" + boxId_ + "/device/sensor/custom", 1);
-    client_.subscribe("box" + boxId_ + "/device/sensor/gpio", 1);
-    client_.subscribe("box" + boxId_ + "/device/sensor/modbus", 1);
-    client_.subscribe("box" + boxId_ + "/device/control/plc/direct", 1);
-    client_.subscribe("box" + boxId_ + "/device/camera", 1);
+        client_.subscribe(GET_REAL_IMAGE_TOPIC, 1);
+        client_.subscribe(OPERATE_PLC_TOPIC, 1);
+        client_.subscribe(UPDATE_CONFIG_TOPIC, 1);
+        client_.subscribe(GET_SENSOR_DATA_TOPIC, 1);
 
     std::cout << "MQTT connected & subscribed." << std::endl;
     }catch(const mqtt::exception& e){
@@ -47,13 +48,12 @@ void MqttService::connection_lost(const std::string& cause)
             client_.reconnect()->wait();
             std::cout << "[MQTT] Reconnected!" << std::endl;
 
-            client_.subscribe("box" + boxId_ + "/device/control/solenoid/direct", 1);
-            client_.subscribe("box" + boxId_ + "/device/control/solenoid/verified", 1);
-            client_.subscribe("box" + boxId_ + "/device/sensor/custom", 1);
-            client_.subscribe("box" + boxId_ + "/device/sensor/gpio", 1);
-            client_.subscribe("box" + boxId_ + "/device/sensor/modbus", 1);
-            client_.subscribe("box" + boxId_ + "/device/control/plc/direct", 1);
-            client_.subscribe("box" + boxId_ + "/device/camera", 1);
+            // 重新订阅主题
+            client_.subscribe(GET_REAL_IMAGE_TOPIC, 1);
+            client_.subscribe(OPERATE_PLC_TOPIC, 1);
+            client_.subscribe(UPDATE_CONFIG_TOPIC, 1);
+            client_.subscribe(GET_SENSOR_DATA_TOPIC, 1);
+
             return;
         }
         catch (const mqtt::exception& e) {

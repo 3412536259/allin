@@ -9,6 +9,10 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
+#include <iostream>
+#include <cctype>
+#include <algorithm>
+#include <optional>
 
 class SensorManager : public ISensorManager {
 public:

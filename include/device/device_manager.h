@@ -11,14 +11,16 @@ public:
     ~DeviceManager();
     DeviceStatus getStatus() override;
 
-    void getAllRealImage() override;
+    RealImageList getAllRealImage() override;
     RealImage getRealImage(const std::string& camId) override;
     void getAllHistoryImage() override;
     void getHistoryImage(const std::string& camId) override;
     
     void operateCamera() override;
     OperatePLC operatePlc(const std::string &deviceId, const std::string &cmd) override;
-    
+    PLCDeviceState getPLCDeviceStatus(const std::string& deviceId) override;
+    RealSensorData getSensorData(const std::string& sensorId) override;
+
     void updateConfig() override;
 
 private:

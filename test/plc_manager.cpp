@@ -27,4 +27,15 @@ PLCManager::PLCManager(){
         }
         plcConnectors_[plcConfig.plcId] = std::move(connector);
     }
+
+    // 3.初始化配置映射和PLC下挂设备的关系
+    for(const auto& deviceConfig : rootConfig.plcDevices){
+        deviceConfigs_[deviceConfig.id] = deviceConfig;
+        plcIdToDevices_[deviceConfig.plcId].push_back(deviceConfig);
+    }
+
+    if(plcConfigs_.empty()){
+        std::cerr<<"[PLCManager] Warning: No PLC configurations found in singleton data.\n";
+    }
+    
 }

@@ -7,6 +7,7 @@
 #include <iostream>           
 #include <algorithm>          
 #include <cctype>    
+#include <optional>
 
 // 传感器工厂实现
 std::unique_ptr<ISensor> createSensor(const SensorConfig& config) {

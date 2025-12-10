@@ -3,6 +3,10 @@
 #include "CommandTask.h"
 #include "ConfigUtil.h"
 
+const std::string GET_REAL_IMAGE_TOPIC = "device/camera/getRealImage";
+const std::string OPERATE_PLC_TOPIC = "device/plc/operate";
+const std::string UPDATE_CONFIG_TOPIC = "device/config/update";
+const std::string GET_SENSOR_DATA_TOPIC = "device/sensor/status";
 
 MqttCommandDispatcher::MqttCommandDispatcher(JobScheduler& scheduler)
     :scheduler_(scheduler)
@@ -19,15 +23,21 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
         std::cerr << "Invalid JSON: " << payload << std::endl;
         return;
     }
-    std::string err;
-    Command cmd;
-    if (!Command::fromJson(j, boxId_, cmd, err)) {
-        std::string cameraTopic = "box" + boxId_ + "/device/camera";
-        if (topic == cameraTopic) {
-            handleGetRealImage(j);
-            return;
-        }
-        return;
+    // 用 MQTT topic 决定任务类型
+    if (topic == GET_REAL_IMAGE_TOPIC) {
+        handleGetRealImage(j);
+    }
+    else if (topic == OPERATE_PLC_TOPIC) {
+        handleOperatePlc(j);
+    }
+    else if (topic == UPDATE_CONFIG_TOPIC) {
+        handleUpdateConfig(j);
+    }
+    else if(topic == GET_SENSOR_DATA_TOPIC) {
+        handleGetSensorData(j);
+    }
+    else {
+        std::cout << "Unknown topic: " << topic << std::endl;
     }
 
     auto t = std::make_shared<CommandTask>(cmd);
@@ -56,8 +66,27 @@ void MqttCommandDispatcher::handleOperatePlc(const nlohmann::json& j)
     auto task = std::make_shared<OperateValveTask>(deviceId, cmd);
     int id = scheduler_.submit(task);
 
-    std::cout << "Submitted GetRealImageTask id=" << id 
+    std::cout << "Submitted OperatePLC id=" << id 
               << " for device=" << deviceId << " operation=" << cmd << std::endl;
+}
+void MqttCommandDispatcher::handleGetPLCDeviceStatus(const nlohmann::json& j){
+    if(!j.contains("deviceId")) return;
+    std::string deviceId = j["deviceId"];
+    auto task = std::make_shared<GetPLCDeviceTask>(deviceId);
+    int id = scheduler_.submit(task);
+
+    std::cout << "Submitted GetPLCDeviceStatus id=" << id 
+              << " for device=" << deviceId << std::endl;
+}
+void MqttCommandDispatcher::handleGetSensorData(const nlohmann::json& j)
+{
+    if(!j.contains("sensorId")) return;
+    std::string sensorId = j["sensorId"];
+    auto task = std::make_shared<GetSensorDataTask>(sensorId);
+    int id = scheduler_.submit(task);
+
+    std::cout << "Submitted GetSensorDataTask id=" << id 
+              << " for sensor=" << sensorId << std::endl;
 }
 void MqttCommandDispatcher::handleUpdateConfig(const nlohmann::json& j)
 {

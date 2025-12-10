@@ -27,6 +27,7 @@ set(SRC_FILES
     camera/camera_manager.cpp
     camera/camera.cpp
     camera/dao/video_capture.cpp
+    camera/dao/video_storage.cpp
     ../include/common/config/config_parser.cpp
     common/logger/logger.cpp
     common/base64/base64.cpp
@@ -34,14 +35,14 @@ set(SRC_FILES
     common/yolo8/postprocess.cc
     common/yolo8/yolov8.cc
     common/imageprocess/image_processor.cpp
+    common/timestamp/SegmentManager.cpp
+    common/FileUtils/FileUtils.cpp
     task/JobScheduler.cpp
     task/task.cpp
     mqtt/mqtt_command_dispatcher.cpp
     mqtt/mqtt_service.cpp
-    presentation/ConfigUtil.cpp
-    presentation/WebController.cpp
-    presentation/WebService.cpp
-    task/CommandTask.cpp
+    ai/ai_recognize.cpp
+    ai/ai_model_service.cpp
 )
 
 # -------------------------- 2. 生成主程序可执行文件 --------------------------
@@ -56,7 +57,10 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/task
     ${CMAKE_SOURCE_DIR}/include/mqtt
     ${CMAKE_SOURCE_DIR}/include/camera/dao
-    ${CMAKE_SOURCE_DIR}/include/presentation
+    ${CMAKE_SOURCE_DIR}/include/ai
+
+    ${CMAKE_SOURCE_DIR}/include/common/FileUtils
+    ${CMAKE_SOURCE_DIR}/include/common/timestamp
     ${CMAKE_SOURCE_DIR}/include/common/base64
     ${CMAKE_SOURCE_DIR}/include/common/imageprocess
     ${CMAKE_SOURCE_DIR}/include/common/logger
@@ -65,6 +69,7 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/common/yolo8
     ${CMAKE_SOURCE_DIR}/include/common/plc_utils
     ${CMAKE_SOURCE_DIR}/third_party/mqtt
+    ${CMAKE_SOURCE_DIR}/third_party/json
     # ${CMAKE_SOURCE_DIR}/include/service
     # ${CMAKE_SOURCE_DIR}/include/infrastructure
     # ${CMAKE_SOURCE_DIR}/include/third_party
