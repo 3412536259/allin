@@ -98,14 +98,14 @@ CameraStatus CameraManager::getStatus(const CameraStaticInfo& info) {
     return cameras_[id]->getStatus();
 }
 
-std::vector<CameraStatus> CameraManager::getAllStatus() {
+CameraStatusList CameraManager::getAllStatus() {
+    CameraStatusList cameraStatusList;
     std::lock_guard<std::mutex> lock(mutex_);
 
-    std::vector<CameraStatus> result;
     for (auto& camera : cameras_) {
-        result.push_back(camera.second->getStatus());
+        cameraStatusList.cameraStatus.push_back(camera.second->getStatus());
     }
-    return result;
+    return cameraStatusList;
 }
 
 bool CameraManager::getCameraLastKeyFrame(const CameraStaticInfo& info, FrameData& out) {

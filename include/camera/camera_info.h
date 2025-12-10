@@ -58,5 +58,8 @@ struct CameraStatus {
     // int zoom;
 };
 
+struct CameraStatusList{
+    std::vector<CameraStatus> cameraStatus;
+};
 
 #endif

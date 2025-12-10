@@ -10,7 +10,7 @@ public:
     CameraManager();
     ~CameraManager();
     CameraStatus  getStatus(const CameraStaticInfo& info) override;
-    std::vector<CameraStatus>  getAllStatus() override;
+    CameraStatusList  getAllStatus() override;
     bool getCameraLastKeyFrame(const CameraStaticInfo& info, FrameData& out) override;
     std::map<std::string, FrameData> getAllLastKeyFrames() override;
 

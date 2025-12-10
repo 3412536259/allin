@@ -16,7 +16,7 @@ DeviceManager::~DeviceManager()
 DeviceStatus DeviceManager::getStatus()
 {
     DeviceStatus deviceStatus;
-    deviceStatus.cameraStatus_ = cameraManager_->getAllStatus();
+    deviceStatus.cameraStatusList = cameraManager_->getAllStatus();
     deviceStatus.plcStatus_ = plcManager_->getAllStatus();
     for(auto& kv : deviceStatus.cameraStatus_)
     {
