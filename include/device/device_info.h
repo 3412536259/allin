@@ -57,7 +57,7 @@ struct OperatePLCWithVerify{
     RealSensorData sensorData;
     RealImage camData;
     bool isSuccess = false;
-}
+};
 
 
 

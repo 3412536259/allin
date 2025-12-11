@@ -12,6 +12,7 @@ public:
     int taskId;
     IDeviceManager* devMgr;
     ITaskResultPublisher* publisher;
+    
     // source of the command: "mqtt" or "http"
     std::string source = "mqtt";
 };
