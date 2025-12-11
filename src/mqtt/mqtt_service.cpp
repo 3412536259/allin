@@ -1,13 +1,11 @@
 #include "mqtt_service.h"
 #include "mqtt_topics.h"
 #include <iostream>
+
 // const std::string GET_REAL_IMAGE_TOPIC = "device/camera/getRealImage";
 // const std::string OPERATE_PLC_TOPIC = "device/plc/operate";
 // const std::string UPDATE_CONFIG_TOPIC = "device/config/update";
 // const std::string GET_SENSOR_DATA_TOPIC = "device/sensor/status";
-
-
-
 
 MqttService::MqttService(const std::string& serverURI,
                          const std::string& clientId,
@@ -28,8 +26,8 @@ void MqttService::start()
         client_.subscribe(UPDATE_CONFIG_TOPIC, 1);
         client_.subscribe(GET_SENSOR_DATA_TOPIC, 1);
         client_.subscribe(OPERATE_CAR_TOPIC, 1);
-
         client_.subscribe(GET_ALL_DEVICE_STATUS_TOPIC, 1);
+
         std::cout << "MQTT connected & subscribed." << std::endl;
     }catch(const mqtt::exception& e){
         std::cerr << "[MQTT] Connect failed: " << e.what() << std::endl;

@@ -1,7 +1,7 @@
 #include "JobScheduler.h"
 #include "mqtt_service.h"
-JobScheduler::JobScheduler(size_t workerCount,IDeviceManager* devMgr,ITaskResultPublisher* publisher)
-    :pool_(workerCount),devMgr_(devMgr),publisher_(publisher)
+JobScheduler::JobScheduler(size_t workerCount,IDeviceManager* devMgr/*,ITaskResultPublisher* publisher*/)
+    :pool_(workerCount),devMgr_(devMgr)/*,publisher_(publisher)*/
 {
     dispatcher_ = std::thread(&JobScheduler::dispatchLoop,this);
 }
@@ -12,10 +12,10 @@ JobScheduler::~JobScheduler()
     cv_.notify_all();
     if(dispatcher_.joinable()) dispatcher_.join();
 }
-void JobScheduler::setPublisher(ITaskResultPublisher* publisher)
-{
-    publisher_ = publisher;
-}
+// void JobScheduler::setPublisher(ITaskResultPublisher* publisher)
+// {
+//     publisher_ = publisher;
+// }
 int JobScheduler::submit(std::shared_ptr<ITask> task, const std::string& source)
 {  
     auto tcb = std::make_shared<TaskControlBlock>();
@@ -68,7 +68,8 @@ void JobScheduler::dispatchLoop()
         }
 
         pool_.submit([this,tcb](){
-            TaskContext ctx{.taskId = tcb->id,.devMgr = this->devMgr_,.publisher = this->publisher_,.source = tcb->source};
+            ITaskResultPublisher* pub = (tcb->source == "http") ? httpPublisher_ : mqttPublisher_;
+            TaskContext ctx{.taskId = tcb->id,.devMgr = this->devMgr_,.publisher = pub,.source = tcb->source};
             try{
                 tcb->task->run(ctx);
                 tcb->status = TaskStatus::FINISHED;

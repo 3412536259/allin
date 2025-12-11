@@ -101,6 +101,15 @@ json WebController::handleHttp(const std::string& path, const json& payload)
         return resp;
     }
 
+    // 获取全部状态
+    if(path.find("/device/getAll") != std::string::npos) {
+        auto task = std::make_shared<GetDeviceStatusTask>();
+        int id = scheduler_->submit(task, "http");
+        resp["success"] = true;
+        resp["task_id"] = id;
+        return resp;
+    }
+
     // -------------------------------
     // 5) 其它未知路径，统一接受但不执行任务
     // -------------------------------
