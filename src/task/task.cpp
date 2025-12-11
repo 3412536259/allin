@@ -104,12 +104,23 @@ void GetDeviceStatusTask::run(TaskContext& ctx)
         }
     }
 
-    for(const auto& sensorStatus : status.sensorStatus_.sensors){
-        device["sensors"].push_back({
-            {"sensorId", sensorStatus.id},
-            {"type", sensorStatus.type},
-            {"status", to_string(sensorStatus.status)},
-        });
+    for (const auto& sensor : status.sensorStatus_.sensors) {
+        nlohmann::json s;
+        s["id"] = sensor.id;
+        s["type"] = sensor.type;
+        s["status"] = to_string(sensor.status); 
+
+        if (sensor.status == SensorStatus::NORMAL) {
+            if (sensor.type == "modbus") {
+                s["temperature"] = sensor.temperature;
+                s["humidity"] = sensor.humidity;
+            } else if (sensor.type == "gpio" || sensor.type == "custom") {
+                s["value"] = sensor.value;
+            }
+        } else {
+            s["code"] = "no data";
+        }
+        devices["sensor"].push_back(s);
     }
 
     ctx.publisher->publish(RESULT_GET_ALL_DEVICE_STATUS_TOPIC, j.dump());
