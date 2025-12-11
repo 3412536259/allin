@@ -7,8 +7,6 @@
 #include "idevice_manager.h"
 #include "JobScheduler.h"
 
-
-
 class WebService {
 private:
     WebController m_controller;
