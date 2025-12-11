@@ -117,11 +117,11 @@ std::optional<SensorData> SensorManager::getSensorDataCached(const std::string& 
     return std::nullopt;
 }
 
-std::vector<SensorData> SensorManager::getAllSensorData() {
-    std::vector<SensorData> result;
+SensorList SensorManager::getAllSensorData() {
+    SensorList result;
     std::lock_guard<std::mutex> lk(mu_);
     for (const auto& pair : cache_) {
-        result.push_back(pair.second);
+        result.sensors.push_back(pair.second); // ← 填充 .sensors
     }
     return result;
 }

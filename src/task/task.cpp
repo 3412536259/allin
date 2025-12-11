@@ -4,6 +4,7 @@
 #include "image_processor.h"
 #include "config_info.h"
 #include "config_parser.h"
+#include "mqtt_topics.h"
 void GetCameraRealImageTask::run(TaskContext& ctx)
 {
     RealImage image = ctx.devMgr->getRealImage(camId_);
@@ -17,12 +18,12 @@ void GetCameraRealImageTask::run(TaskContext& ctx)
         nlohmann::json j;
         j["cameraId"] =  camId_;
         j["image"] = imageBase64;
-        ctx.publisher->publish("device/camera/result/getRealImage", j.dump());
+        ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, j.dump());
     }
     else{
         nlohmann::json j;
         j["code"] = "no image";
-        ctx.publisher->publish("device/camera/result/getRealImage", j.dump());
+        ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, j.dump());
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
@@ -37,8 +38,7 @@ void OperateValveTask::run(TaskContext& ctx)
     j["message"] = res.message;
     j["status"] = res.status;
     DeviceConfigRoot cfg = ConfigParser::getInstance().getConfig();
-    std::string theme = "box" + cfg.boxId + "device/control/solenoid/direct/result";
-    ctx.publisher->publish(theme, j.dump());
+    ctx.publisher->publish(RESULT_OPERATE_PLC_TOPIC, j.dump());
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
@@ -77,7 +77,53 @@ void GetSensorDataTask::run(TaskContext& ctx)
     {
         j["code"] = "no data";
     }
-    ctx.publisher->publish("device/sensor/result/getSensorData", j.dump());
+    ctx.publisher->publish(RESULT_GET_SENSOR_DATA_TOPIC, j.dump());
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+void GetDeviceStatusTask::run(TaskContext& ctx)
+{
+    DeviceStatus status = ctx.devMgr->getStatus();
+    nlohmann::json j;
+    auto& device = j["device"];
+
+    for(const auto& camStatus : status.cameraStatusList.cameraStatus){
+        device["cameras"].push_back({
+            {"cameraId",camStatus.camera_id},
+            {"onlineStatus",camStatus.online_status == CameraOnlineStatus::ONLINE ? "ONLINE" : "OFFLINE"}
+        });
+    }
+
+    for(const auto& devStatus : status.plcStatus_.plcList){
+        for(const auto& dev : devStatus.deviceStatuses){
+            device["plc_device"].push_back({
+                {"deviceId", dev.id},
+                {"name", dev.name},
+                {"status", dev.status}
+            });
+        }
+    }
+
+    for (const auto& sensor : status.sensorStatus_.sensors) {
+        nlohmann::json s;
+        s["id"] = sensor.id;
+        s["type"] = sensor.type;
+        s["status"] = to_string(sensor.status); 
+
+        if (sensor.status == SensorStatus::NORMAL) {
+            if (sensor.type == "modbus") {
+                s["temperature"] = sensor.temperature;
+                s["humidity"] = sensor.humidity;
+            } else if (sensor.type == "gpio" || sensor.type == "custom") {
+                s["value"] = sensor.value;
+            }
+        } else {
+            s["code"] = "no data";
+        }
+        devices["sensor"].push_back(s);
+    }
+
+    ctx.publisher->publish(RESULT_GET_ALL_DEVICE_STATUS_TOPIC, j.dump());
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 

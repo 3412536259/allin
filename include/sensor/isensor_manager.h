@@ -13,7 +13,7 @@ public:
     virtual void stop() = 0;
     virtual std::optional<SensorData> getSensorDataRealTime(const std::string& id) = 0; //实时数据
     virtual std::optional<SensorData> getSensorDataCached(const std::string& id) = 0; //读缓存
-    virtual std::vector<SensorData> getAllSensorData() = 0; 
+    virtual SensorList getAllSensorData() = 0; 
 }; 
 
 #endif // ISENSOR_MANAGER_H
