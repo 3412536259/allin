@@ -4,37 +4,41 @@
 #include "task.h"
 #include "JobScheduler.h"
 #include "my_mqtt_callback.h"
-#include "mqtt_service.h"
-#include "mqtt_command_dispatcher.h" 
 #include "task_result_publisher.h"
+#include "mqtt_service.h"
+#include "ai_model_service.h"
+#include "ai_recognize.h"
 #include <memory>
 #include <thread>
 #include "WebService.h"
-#include "ConfigUtil.h"
-
+const std::string MODELPATH = "/home/ztl/workspace/allin/model/yolov8n_3568_i8.rknn";
+const std::string CONFIGPATH = "/home/ztl/workspace/allin/include/common/config/config.json";
+// const std::string MODELPATH = "/home/ztl/workspace/allin/model/yolov8n3576_i8.rknn";
+// const std::string CONFIGPATH = "/home/ztl/workspace/allin/include/common/config/config.json";
 int main()
 {
-    av_log_set_level(AV_LOG_QUIET);
-    ConfigParser::getInstance().loadFromFile("/home/ztl/workspace/allin-develop/include/common/config/config.json");
+     av_log_set_level(AV_LOG_QUIET);
+    ConfigParser::getInstance().loadFromFile(CONFIGPATH);
     std::shared_ptr<IDeviceManager> ideviceManager = std::make_shared<DeviceManager>();
- 
+    // std::this_thread::sleep_for(std::chrono::seconds(5)); //等待设备注册初始化完成
+    // ideviceManager->getStatus();
+    // std::this_thread::sleep_for(std::chrono::seconds(5)); 
     JobScheduler jobscheduler(8,ideviceManager.get(),nullptr);
-    std::string boxId;
-    ConfigUtil::loadBoxId(ConfigUtil::getConfigPath(), boxId);
-    
-    std::string serverURI = "tcp://broker.emqx.io:1883";  
-    std::string clientId = "allin_client";           
-    MqttCommandDispatcher commandDispatcher(jobscheduler);
-    MqttService mqttService(serverURI, clientId, jobscheduler, boxId, &commandDispatcher);
-    mqttService.start();
-    
-    WebService ws("include/common/config/config.json", 8080, ideviceManager.get(), &jobscheduler);
-    MqttPublisher publisher(&mqttService);  
-    jobscheduler.setPublisher(&publisher); 
-    
+    MqttCommandDispatcher cmdDispatcher(jobscheduler);  //根据接收的主题来选择调用的处理任务，需要依赖jobscheduler的接口提交任务
+    MqttService mqtt("mqtt://broker.emqx.io:1883", "edge-box", &cmdDispatcher); //需要依赖cmdDispatcher分发相应任务
+    MqttPublisher publisher(&mqtt);
+    jobscheduler.setPublisher(&publisher); //依赖publisher的唯一原因是需要将publisher传入Taskcontext供具体task调用
+    // start HTTP service
+    WebService ws(CONFIGPATH, 8080, ideviceManager.get(), &jobscheduler);
     ws.start();
+    
+    //AI ---------------------------
+    auto model = std::make_unique<AIModelService>(MODELPATH);
+    AIRecognizer ai(std::move(model),ideviceManager.get());
+    ai.start();    
+    
+    
     std::cout << "System running..." << std::endl;
     while (true) { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
-    return 0;
 }

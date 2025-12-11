@@ -5,6 +5,8 @@
 #include "isensor_manager.h"
 #include "idevice_manager.h"
 #include "iplc_manager.h"
+#include "icar_control_manager.h"
+class ICarControlManager;
 class DeviceManager : public IDeviceManager{
 public:
     DeviceManager();
@@ -20,13 +22,14 @@ public:
     OperatePLC operatePlc(const std::string &deviceId, const std::string &cmd) override;
     PLCDeviceState getPLCDeviceStatus(const std::string& deviceId) override;
     RealSensorData getSensorData(const std::string& sensorId) override;
-
+    CarControlResult operateCarControl(const std::string& carControlId, int motor1, int motor2) override;
     void updateConfig() override;
 
 private:
     std::shared_ptr<ICameraManager> cameraManager_;
     std::shared_ptr<IPLCManager> plcManager_;
     std::shared_ptr<ISensorManager> sensorManager_;
+    std::shared_ptr<ICarControlManager> carControlManager_;
 
 };
 

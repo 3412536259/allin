@@ -21,6 +21,7 @@ private:
     void handleGetPLCDeviceStatus(const nlohmann::json& j);
     void handleUpdateConfig(const nlohmann::json& j);
     void handleGetSensorData(const nlohmann::json& j);
+    void handleOperateCar(const nlohmann::json& j);
 
 };
 

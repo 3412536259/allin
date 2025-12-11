@@ -4,15 +4,13 @@ const std::string GET_REAL_IMAGE_TOPIC = "device/camera/getRealImage";
 const std::string OPERATE_PLC_TOPIC = "device/plc/operate";
 const std::string UPDATE_CONFIG_TOPIC = "device/config/update";
 const std::string GET_SENSOR_DATA_TOPIC = "device/sensor/status";
+const std::string OPERATE_CAR_TOPIC="device/control/carcontrol";
 
 MqttService::MqttService(const std::string& serverURI,
                          const std::string& clientId,
-                         JobScheduler& scheduler,
-                         const std::string& boxId,
                          ICommandDispatcher* dispatcher)
     : client_(serverURI, clientId),
-    boxId_(boxId),
-    dispatcher_(dispatcher)
+      dispatcher_(dispatcher)
 {
     client_.set_callback(*this);
 }
@@ -26,10 +24,12 @@ void MqttService::start()
         client_.subscribe(OPERATE_PLC_TOPIC, 1);
         client_.subscribe(UPDATE_CONFIG_TOPIC, 1);
         client_.subscribe(GET_SENSOR_DATA_TOPIC, 1);
+        client_.subscribe(OPERATE_CAR_TOPIC, 1);
 
-    std::cout << "MQTT connected & subscribed." << std::endl;
+        std::cout << "MQTT connected & subscribed." << std::endl;
     }catch(const mqtt::exception& e){
         std::cerr << "[MQTT] Connect failed: " << e.what() << std::endl;
+        //初始化重连
         connection_lost("initial connect failed");
     }
 
@@ -53,6 +53,7 @@ void MqttService::connection_lost(const std::string& cause)
             client_.subscribe(OPERATE_PLC_TOPIC, 1);
             client_.subscribe(UPDATE_CONFIG_TOPIC, 1);
             client_.subscribe(GET_SENSOR_DATA_TOPIC, 1);
+            client_.subscribe(OPERATE_CAR_TOPIC, 1);
 
             return;
         }

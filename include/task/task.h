@@ -51,4 +51,20 @@ private:
     std::string sensorId_;
 };
 
+class CarControlTask : public ITask
+{
+public:
+    CarControlTask(const nlohmann::json& payload)
+        : payload_(payload) {}
+    std::string name() const override { return "CarControlTask"; }
+    void run(TaskContext& ctx) override;
+
+private:
+    nlohmann::json payload_;
+    
+    // 添加辅助方法
+    bool validatePayload(const nlohmann::json& payload);
+    void publishResult(ITaskResultPublisher* publisher, const nlohmann::json& result);
+};
+
 #endif

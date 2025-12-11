@@ -1,19 +1,16 @@
 #include "mqtt_command_dispatcher.h"
-#include "Command.h"
-#include "CommandTask.h"
-#include "ConfigUtil.h"
+#include <iostream>
 
 const std::string GET_REAL_IMAGE_TOPIC = "device/camera/getRealImage";
 const std::string OPERATE_PLC_TOPIC = "device/plc/operate";
 const std::string UPDATE_CONFIG_TOPIC = "device/config/update";
 const std::string GET_SENSOR_DATA_TOPIC = "device/sensor/status";
+const std::string OPERATE_CAR_TOPIC="device/control/carcontrol";
+
+
 
 MqttCommandDispatcher::MqttCommandDispatcher(JobScheduler& scheduler)
-    :scheduler_(scheduler)
-{
-    ConfigUtil::loadBoxId(ConfigUtil::getConfigPath(), boxId_);
-}
-
+    :scheduler_(scheduler){}
 void MqttCommandDispatcher::onMessage(const std::string& topic, const std::string& payload)
 {
     nlohmann::json j;
@@ -36,14 +33,12 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
     else if(topic == GET_SENSOR_DATA_TOPIC) {
         handleGetSensorData(j);
     }
+    else if (topic == OPERATE_CAR_TOPIC) {
+        handleOperateCar(j);
+    }
     else {
         std::cout << "Unknown topic: " << topic << std::endl;
     }
-
-    auto t = std::make_shared<CommandTask>(cmd);
-    int id = scheduler_.submit(t);
-
-
 }
 
 void MqttCommandDispatcher::handleGetRealImage(const nlohmann::json& j)
@@ -93,3 +88,30 @@ void MqttCommandDispatcher::handleUpdateConfig(const nlohmann::json& j)
 
 }
 
+void MqttCommandDispatcher::handleOperateCar(const nlohmann::json& j)
+{
+    if (!j.contains("carcontrol_id") && !j.contains("motor1") && !j.contains("motor2")) {
+        std::cerr << "Invalid car control command: missing required fields" << std::endl;
+        return;
+    }
+    
+    std::string carId = j.value("carcontrol_id", std::string("carcontrol001"));
+    int motor1 = j.value("motor1", 0);
+    int motor2 = j.value("motor2", 0);
+    
+    // 参数范围检查
+    motor1 = std::max(-1500, std::min(1500, motor1));
+    motor2 = std::max(-1500, std::min(1500, motor2));
+    
+    std::cout << "Handling car control command for car_id: " << carId 
+              << ", motor1: " << motor1 << ", motor2: " << motor2 << std::endl;
+    
+    // 创建并提交小车控制任务
+    auto task = std::make_shared<CarControlTask>(j);
+    int id = scheduler_.submit(task);
+    
+    std::cout << "Submitted CarControlTask id=" << id 
+              << " for car=" << carId 
+              << " motor1=" << motor1 
+              << " motor2=" << motor2 << std::endl;
+}

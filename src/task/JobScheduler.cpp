@@ -16,7 +16,7 @@ void JobScheduler::setPublisher(ITaskResultPublisher* publisher)
 {
     publisher_ = publisher;
 }
-int JobScheduler::submit(std::shared_ptr<ITask> task)
+int JobScheduler::submit(std::shared_ptr<ITask> task, const std::string& source)
 {  
     auto tcb = std::make_shared<TaskControlBlock>();
     tcb->id = nextId_++;
@@ -24,6 +24,7 @@ int JobScheduler::submit(std::shared_ptr<ITask> task)
     tcb->status = TaskStatus::READY;
     tcb->name = task->name();
     tcb->enqueueTime = std::chrono::steady_clock::now();
+    tcb->source = source;
    
     {
         std::lock_guard<std::mutex> lk(mtx_); 
@@ -67,7 +68,7 @@ void JobScheduler::dispatchLoop()
         }
 
         pool_.submit([this,tcb](){
-            TaskContext ctx{.taskId = tcb->id,.devMgr = this->devMgr_,.publisher = this->publisher_};
+            TaskContext ctx{.taskId = tcb->id,.devMgr = this->devMgr_,.publisher = this->publisher_,.source = tcb->source};
             try{
                 tcb->task->run(ctx);
                 tcb->status = TaskStatus::FINISHED;

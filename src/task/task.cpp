@@ -80,3 +80,66 @@ void GetSensorDataTask::run(TaskContext& ctx)
     ctx.publisher->publish("device/sensor/result/getSensorData", j.dump());
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
+
+void CarControlTask::run(TaskContext& ctx)
+{
+    if (!validatePayload(payload_)) {
+        nlohmann::json errorResult;
+        errorResult["success"] = false;
+        errorResult["error"] = "Invalid payload parameters";
+        publishResult(ctx.publisher, errorResult);
+        return;
+    }
+    
+    std::string carId = payload_.value("carcontrol_id", std::string("carcontrol001"));
+    int motor1 = payload_.value("motor1", 0);
+    int motor2 = payload_.value("motor2", 0);
+    
+    motor1 = std::max(-1500, std::min(1500, motor1));
+    motor2 = std::max(-1500, std::min(1500, motor2));
+    
+    std::cout << "Executing car control: car_id=" << carId 
+              << ", motor1=" << motor1 << ", motor2=" << motor2 << std::endl;
+    
+    CarControlResult result = ctx.devMgr->operateCarControl(carId, motor1, motor2);
+    
+    nlohmann::json jsonResponse;
+    jsonResponse["success"] = result.success;
+    jsonResponse["carcontrol_id"] = carId;
+    jsonResponse["motor1"] = result.motor1;
+    jsonResponse["motor2"] = result.motor2;
+    jsonResponse["status_byte"] = result.statusByte;
+    jsonResponse["message"] = result.message;
+    
+    publishResult(ctx.publisher, jsonResponse);
+    
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
+bool CarControlTask::validatePayload(const nlohmann::json& payload)
+{
+    if (!payload.contains("motor1") && !payload.contains("motor2")) {
+        return false;
+    }
+    
+    if (payload.contains("motor1") && !payload["motor1"].is_number_integer()) {
+        return false;
+    }
+    
+    if (payload.contains("motor2") && !payload["motor2"].is_number_integer()) {
+        return false;
+    }
+    
+    if (payload.contains("car_id") && !payload["car_id"].is_string()) {
+        return false;
+    }
+    
+    return true;
+}
+
+void CarControlTask::publishResult(ITaskResultPublisher* publisher, const nlohmann::json& result)
+{
+    if (publisher) {
+        publisher->publish("device/carcontrol/result", result.dump());
+    }
+}

@@ -20,6 +20,15 @@ struct RealImage
     bool integrity = false;
 };
 
+struct CarControlResult {
+    bool success = false;
+    int motor1 = 0;
+    int motor2 = 0;
+    uint16_t statusByte = 0;
+    std::string message;
+    long long responseTimeUs = 0; // 添加响应时间字段（微秒）
+};
+
 struct RealImageList
 {
     std::vector<RealImage> RealImages;
@@ -42,6 +51,8 @@ struct RealSensorData
 {
     SensorData data;
 };
+
+
 
 
 #endif

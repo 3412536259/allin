@@ -41,13 +41,19 @@ set(SRC_FILES
     task/task.cpp
     mqtt/mqtt_command_dispatcher.cpp
     mqtt/mqtt_service.cpp
+    http/WebService.cpp
+    http/WebController.cpp
     ai/ai_recognize.cpp
     ai/ai_model_service.cpp
+    carControl/car_control.cpp
+    carControl/car_control_manager.cpp
 )
 
 # -------------------------- 2. 生成主程序可执行文件 --------------------------
 add_executable(receive ${SRC_FILES})  # 可执行文件名：ai_recognition
-
+target_compile_definitions(receive PUBLIC
+    DISABLE_RGA
+)
 # -------------------------- 3. 配置头文件路径 --------------------------
 target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/device
@@ -56,9 +62,10 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/camera
     ${CMAKE_SOURCE_DIR}/include/task
     ${CMAKE_SOURCE_DIR}/include/mqtt
+    ${CMAKE_SOURCE_DIR}/include/http
     ${CMAKE_SOURCE_DIR}/include/camera/dao
     ${CMAKE_SOURCE_DIR}/include/ai
-
+    ${CMAKE_SOURCE_DIR}/include/carControl
     ${CMAKE_SOURCE_DIR}/include/common/FileUtils
     ${CMAKE_SOURCE_DIR}/include/common/timestamp
     ${CMAKE_SOURCE_DIR}/include/common/base64
@@ -69,6 +76,7 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/common/yolo8
     ${CMAKE_SOURCE_DIR}/include/common/plc_utils
     ${CMAKE_SOURCE_DIR}/third_party/mqtt
+
     ${CMAKE_SOURCE_DIR}/third_party/json
     # ${CMAKE_SOURCE_DIR}/include/service
     # ${CMAKE_SOURCE_DIR}/include/infrastructure

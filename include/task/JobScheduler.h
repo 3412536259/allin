@@ -16,7 +16,8 @@ public:
     JobScheduler(size_t workerCount,IDeviceManager* devMgr,ITaskResultPublisher* publisher);
     ~JobScheduler();
 
-    int submit(std::shared_ptr<ITask> task);
+    // submit task; source can be "mqtt" or "http" (default "mqtt")
+    int submit(std::shared_ptr<ITask> task, const std::string& source = "mqtt");
     void setPublisher(ITaskResultPublisher* publisher);
     TaskStatus getTaskStatus(int taskId);
 private:

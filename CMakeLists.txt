@@ -4,8 +4,10 @@ project(hzj_project)
 # 全局配置：C++标准与目标SOC（RK3576）
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(TARGET_SOC "rk3576" CACHE STRING "Target SOC for RKNN")
+set(TARGET_SOC "rk3568" CACHE STRING "Target SOC for RKNN")
 set(CMAKE_SYSTEM_NAME "Linux" CACHE STRING "Target system")
+
+add_definitions(-DDISABLE_RGA)
 
 find_package(OpenCV REQUIRED COMPONENTS 
     core 

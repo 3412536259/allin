@@ -18,6 +18,7 @@ public:
     virtual OperatePLC operatePlc(const std::string &deviceId, const std::string &cmd) = 0;
     virtual PLCDeviceState getPLCDeviceStatus(const std::string& deviceId) = 0;
     virtual RealSensorData getSensorData(const std::string& sensorId) = 0;
+    virtual CarControlResult operateCarControl(const std::string& carControlId, int motor1, int motor2) = 0;
 
     virtual void updateConfig() = 0; //更新配置
 

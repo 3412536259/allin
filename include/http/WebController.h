@@ -2,7 +2,7 @@
 
 #include <string>
 #include "json.hpp"
-#include "Command.h"
+#include "task.h"
 #include "idevice_manager.h"
 #include "JobScheduler.h"
 
@@ -13,6 +13,8 @@ class WebController {
 public:
     WebController(const std::string& configPath, IDeviceManager* devMgr, JobScheduler* scheduler);
     json handleJson(const json& payload);
+
+    json handleHttp(const std::string& path, const json& payload);
 
 private:
     std::string boxId_;

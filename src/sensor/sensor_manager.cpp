@@ -1,7 +1,7 @@
 #include "sensor_manager.h"
 #include "modbus_sensor.h"    
 #include "gpio_sensor.h"      
-#include "custom_sensor.h"    // 修正头文件名称
+#include "custom_sensor.h"   
 #include "config_info.h"
 #include "sensor_types.h"       
 #include <iostream>           

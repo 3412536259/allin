@@ -85,6 +85,7 @@ void WebService::handleClient(int client_fd) {
     std::string request;
     request.reserve(bufsize);
     char buffer[bufsize];
+    // read initial data (headers + maybe body)
     ssize_t n = recv(client_fd, buffer, bufsize - 1, 0);
     if (n <= 0) {
         ::close(client_fd);
@@ -92,6 +93,16 @@ void WebService::handleClient(int client_fd) {
     }
     buffer[n] = '\0';
     request.append(buffer, static_cast<size_t>(n));
+
+    // parse request line to get method and path
+    std::istringstream reqstream(request);
+    std::string requestLine;
+    std::getline(reqstream, requestLine);
+    std::string method, path, httpver;
+    {
+        std::istringstream rl(requestLine);
+        rl >> method >> path >> httpver;
+    }
     std::string::size_type pos = request.find("Content-Length:");
     size_t content_length = 0;
     if (pos != std::string::npos) {
@@ -116,8 +127,10 @@ void WebService::handleClient(int client_fd) {
 
     json respJson;
     try {
-        json root = json::parse(body);
-        respJson = m_controller.handleJson(root);
+        json root = json::parse(body.empty() ? "{}" : body);
+
+        // Route HTTP path to controller handler (controller will map to same tasks as MQTT)
+        respJson = m_controller.handleHttp(path, root);
     } catch (const std::exception& e) {
         respJson["success"] = false;
         respJson["error"] = std::string("invalid_json: ") + e.what();

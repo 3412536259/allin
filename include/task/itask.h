@@ -12,6 +12,8 @@ public:
     int taskId;
     IDeviceManager* devMgr;
     ITaskResultPublisher* publisher;
+    // source of the command: "mqtt" or "http"
+    std::string source = "mqtt";
 };
 
 class ITask{
@@ -33,6 +35,9 @@ struct TaskControlBlock{
     int id;
     std::shared_ptr<ITask> task;
     TaskStatus status = TaskStatus::NEW;
+
+    // source of the task submission: "mqtt" or "http"
+    std::string source = "mqtt";
 
     std::chrono::steady_clock::time_point enqueueTime;
     std::chrono::steady_clock::time_point startTime;

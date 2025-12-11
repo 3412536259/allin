@@ -10,8 +10,6 @@ class MqttService : public virtual mqtt::callback
 public:
     MqttService(const std::string& serverURI,
                 const std::string& clientId,
-                JobScheduler& scheduler,
-                const std::string& boxId,
                 ICommandDispatcher* dispatcher);
 
     void start();
@@ -22,7 +20,6 @@ public:
     void publish(const std::string& topic, const std::string& payload, int qos = 1, bool retained = false);
 private:
     mqtt::async_client client_;
-    std::string boxId_;
     ICommandDispatcher* dispatcher_;
 };
 #endif

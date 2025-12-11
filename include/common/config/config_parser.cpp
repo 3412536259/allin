@@ -43,6 +43,7 @@ bool ConfigParser::loadFromFile(const std::string& path)
     parsePLCList(devs);        // ⭐ 新增
     parsePLCDevices(devs);     // 改写后的
     parseSensors(devs);
+    parseCarControls(devs);
     parseGateways(devs);
 
     isLoaded_ = true;
@@ -151,6 +152,30 @@ void ConfigParser::parseSensors(const json& j)
         config_.sensors.push_back(s);
     }
 }
+
+    // ---------------- CarControl ----------------
+    void ConfigParser::parseCarControls(const json& j)
+    {
+        if (!j.contains("carcontrol")) return;
+
+        for (auto& item : j["carcontrol"]) {
+            CarControlConfig c;
+            c.id = item.value("id", "");
+            c.name = item.value("name", "");
+            if (item.contains("serial_config")) {
+                auto& sc = item["serial_config"];
+                c.serial.port = sc.value("port", "");
+                c.serial.baudRate = sc.value("baud_rate", 0);
+                c.serial.parity = sc.value("parity", "");
+                c.serial.stopBits = sc.value("stop_bits", 1);
+            }
+                // timing params (optional)
+                c.sendWindowMs = item.value("send_window_ms", c.sendWindowMs);
+                c.sendIntervalMs = item.value("send_interval_ms", c.sendIntervalMs);
+                c.operateTimeoutMs = item.value("operate_timeout_ms", c.operateTimeoutMs);
+            config_.carControls.push_back(c);
+        }
+    }
 
 // ---------------- Gateways ----------------
 void ConfigParser::parseGateways(const json& j)

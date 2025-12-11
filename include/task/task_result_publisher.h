@@ -19,8 +19,31 @@ class HttpPublisher : public ITaskResultPublisher {
 public:
     void publish(const std::string& topic,
                  const std::string& message) override {
-       //http实现
+       std::lock_guard<std::mutex> lk(mu_);
+       lastTopic_ = topic;
+       lastMessage_ = message;
+       ready_ = true;
+       cv_.notify_one();
     }
+
+    // wait for a published message (returns empty string if timeout)
+    std::string waitForMessage(int timeoutMs = 1000) {
+        std::unique_lock<std::mutex> lk(mu_);
+        if (!ready_) {
+            cv_.wait_for(lk, std::chrono::milliseconds(timeoutMs));
+        }
+        ready_ = false;
+        return lastMessage_;
+    }
+
+    std::string lastTopic() const { return lastTopic_; }
+
+private:
+    mutable std::mutex mu_;
+    std::condition_variable cv_;
+    bool ready_ = false;
+    std::string lastTopic_;
+    std::string lastMessage_;
 };
 
 #endif

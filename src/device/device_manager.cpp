@@ -2,12 +2,14 @@
 #include "camera_manager.h"
 #include "sensor_manager.h"
 #include "plc_manager.h"
+#include "car_control_manager.h"
 #include <iostream>
 DeviceManager::DeviceManager()
 {
     cameraManager_ = std::make_shared<CameraManager>();
     sensorManager_ = std::make_shared<SensorManager>();
     plcManager_ = std::make_shared<PLCManager>();
+    carControlManager_ = std::make_shared<CarControlManager>();
 }
 
 DeviceManager::~DeviceManager()
@@ -141,6 +143,15 @@ PLCDeviceState DeviceManager::getPLCDeviceStatus(const std::string& deviceId)
     }
     return res;
 }
+
+CarControlResult DeviceManager::operateCarControl(const std::string& carControlId, int motor1, int motor2)
+{
+    CarControlResult r;
+    if (!carControlManager_) { r.success = false; r.message = "no carControlManager"; return r; }
+    return carControlManager_->operate(carControlId, motor1, motor2);
+}
+
+
 
 void DeviceManager::updateConfig()
 {
