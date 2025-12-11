@@ -3,6 +3,7 @@
 #include<string>
 #include<memory>
 #include<fstream>
+#include<vector>
 extern "C" {
 #include <libavutil/frame.h>
 }

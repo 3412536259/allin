@@ -7,7 +7,7 @@
 #include <sstream>  
 #include <iomanip>  
 #include <iostream>
-
+#include <vector>
 // 传感器状态与类型（独立于 config_info.h）
 enum class SensorStatus {
     NORMAL = 0,
