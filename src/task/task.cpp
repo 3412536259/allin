@@ -120,7 +120,7 @@ void GetDeviceStatusTask::run(TaskContext& ctx)
         } else {
             s["code"] = "no data";
         }
-        devices["sensor"].push_back(s);
+        device["sensor"].push_back(s);
     }
 
     ctx.publisher->publish(RESULT_GET_ALL_DEVICE_STATUS_TOPIC, j.dump());
