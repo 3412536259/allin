@@ -43,5 +43,11 @@ struct RealSensorData
     SensorData data;
 };
 
+struct OperatePLCWithVerify{
+    OperatePLC plcresult;
+    RealSensorData sensorData;
+    RealImage camData;
+    bool isSuccess = false;
+}
 
 #endif
