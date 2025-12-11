@@ -13,12 +13,20 @@
 #include "itask_result_publisher.h"
 class JobScheduler{
 public:
-    JobScheduler(size_t workerCount,IDeviceManager* devMgr,ITaskResultPublisher* publisher);
+    JobScheduler(size_t workerCount,IDeviceManager* devMgr);
     ~JobScheduler();
+
+    void setMqttPublisher(ITaskResultPublisher* p) { mqttPublisher_ = p; }
+    void setHttpPublisher(ITaskResultPublisher* p) { httpPublisher_ = p; }
+
+    ITaskResultPublisher* getPublisher(const std::string& source){
+        if(source == "http") return httpPublisher_;
+        return mqttPublisher_;
+    }
 
     // submit task; source can be "mqtt" or "http" (default "mqtt")
     int submit(std::shared_ptr<ITask> task, const std::string& source = "mqtt");
-    void setPublisher(ITaskResultPublisher* publisher);
+    // void setPublisher(ITaskResultPublisher* publisher);
     TaskStatus getTaskStatus(int taskId);
 private:
     void dispatchLoop();
@@ -37,7 +45,8 @@ private:
     std::atomic_bool stop_{false};
     std::atomic_int nextId_{1};
     IDeviceManager* devMgr_;
-    ITaskResultPublisher* publisher_;
+    ITaskResultPublisher* mqttPublisher_;
+    ITaskResultPublisher* httpPublisher_;
 };
 
 

@@ -13,7 +13,8 @@ set(MQTT_LIBS
 
 # -------------------------- 1. 收集src目录源文件 --------------------------
 set(SRC_FILES
-    testDemo/taskTest.cpp
+    #testDemo/taskTest.cpp
+    main.cpp
     device/device_manager.cpp
     plc/serial_plc_connector.cpp
     plc/gateway_tcp_connector.cpp
@@ -97,6 +98,7 @@ target_include_directories(receive PUBLIC
     ${LIBSNDFILE_INCLUDES}
     ${CMAKE_SOURCE_DIR}/rknn/utils
     ${OpenCV_INCLUDE_DIRS}
+    ${CURL_INCLUDE_DIR}
 )
 # link_directories(
 #     ${PROJECT_SOURCE_DIR}/lib  # 告诉编译器从项目 lib 目录找库
@@ -129,6 +131,7 @@ target_link_libraries(receive PUBLIC
     OpenSSL::Crypto
     Threads::Threads
 
+    ${CURL_LIBRARIES}
 
     # 系统库
     dl
