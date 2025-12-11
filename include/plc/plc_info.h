@@ -28,3 +28,7 @@ struct OperateResult{
     bool success;
     std::string message;
 };
+
+struct PLCList{
+    std::vector<PLCInfo> plcList;
+};

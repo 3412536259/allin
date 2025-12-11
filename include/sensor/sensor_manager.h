@@ -22,7 +22,7 @@ public:
     void stop() override;
     std::optional<SensorData> getSensorDataRealTime(const std::string& id) override;
     std::optional<SensorData> getSensorDataCached(const std::string& id) override;
-    std::vector<SensorData> getAllSensorData() override;
+    SensorList getAllSensorData() override;
     bool refreshSensor(const std::string& id);
     void refreshAllSensors();
 

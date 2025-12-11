@@ -67,4 +67,11 @@ private:
     void publishResult(ITaskResultPublisher* publisher, const nlohmann::json& result);
 };
 
+class GetDeviceStatusTask : public ITask
+{
+public:
+    GetDeviceStatusTask() {}
+    std::string name() const override { return "GetDeviceStatus";}
+    void run(TaskContext& ctx) override;
+};
 #endif
