@@ -6,20 +6,15 @@
 #include <memory>
 #include <mutex>
 #include <chrono>
-#include <ctime>
-#include <iomanip>
-#include <sstream>
 #include <thread>
 #include <atomic>
 #include "config_info.h"
 #include "iplc_manager.h"
 #include "plc_connector.h" // 包含 PLCConnector 和 MockPLCConnector
 #include "config_parser.h"
-#include "serial_plc_connector.h"
 #include "iplc_device.h"
 #include "base_plc_device.h"
-#include "solenoid_valve_plc_device.h"
-#include "gateway_tcp_connector.h"
+
 
 // 状态缓存结构体，包含时间戳
 struct PLCStatusCache {
@@ -33,7 +28,7 @@ public:
     ~PLCManager() override;
 
     PLCInfo getStatus(const std::string& deviceId) override;
-    std::vector<PLCInfo> getAllStatus() override;
+    PLCList getAllStatus() override;
     OperateResult operate(const std::string& deviceId, const std::string& cmd) override;
 
 private:

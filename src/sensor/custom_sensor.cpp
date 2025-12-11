@@ -37,7 +37,7 @@ bool CustomProtocolSensor::init() {
         status_ = SensorStatus::OFFLINE;
         return false;
     }
-    status_ = SensorStatus::NORMAL;
+    status_ = SensorStatus::OFFLINE;
     return true;
 }
 

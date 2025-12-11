@@ -1,13 +1,10 @@
 #include "mqtt_command_dispatcher.h"
-#include <iostream>
-
-const std::string GET_REAL_IMAGE_TOPIC = "device/camera/getRealImage";
-const std::string OPERATE_PLC_TOPIC = "device/plc/operate";
-const std::string UPDATE_CONFIG_TOPIC = "device/config/update";
-const std::string GET_SENSOR_DATA_TOPIC = "device/sensor/status";
-const std::string OPERATE_CAR_TOPIC="device/control/carcontrol";
-
-
+#include "mqtt_topics.h"
+// const std::string GET_REAL_IMAGE_TOPIC = "device/camera/getRealImage";
+// const std::string OPERATE_PLC_TOPIC = "device/plc/operate";
+// const std::string UPDATE_CONFIG_TOPIC = "device/config/update";
+// const std::string GET_SENSOR_DATA_TOPIC = "device/sensor/status";
+// const std::string GET_ALL_DEVICE_STATUS_TOPIC = "device/status/getall";
 
 MqttCommandDispatcher::MqttCommandDispatcher(JobScheduler& scheduler)
     :scheduler_(scheduler){}
@@ -35,6 +32,8 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
     }
     else if (topic == OPERATE_CAR_TOPIC) {
         handleOperateCar(j);
+    else if(topic == GET_ALL_DEVICE_STATUS_TOPIC){
+        handleGetAllDeviceStatus(j);
     }
     else {
         std::cout << "Unknown topic: " << topic << std::endl;
@@ -114,4 +113,11 @@ void MqttCommandDispatcher::handleOperateCar(const nlohmann::json& j)
               << " for car=" << carId 
               << " motor1=" << motor1 
               << " motor2=" << motor2 << std::endl;
+void MqttCommandDispatcher::handleGetAllDeviceStatus(const nlohmann::json& j)
+{
+    std::cout << "1111111111111111111111" << std::endl;
+    auto task = std::make_shared<GetDeviceStatusTask>();
+    int id = scheduler_.submit(task);
+
+    std::cout << "submitted GetDeviceStatusTask id=" << id << std::endl;
 }
