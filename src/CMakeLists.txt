@@ -42,6 +42,7 @@ set(SRC_FILES
     task/task.cpp
     mqtt/mqtt_command_dispatcher.cpp
     mqtt/mqtt_service.cpp
+    mqtt/device_status_reporter.cpp
     http/WebService.cpp
     http/WebController.cpp
     ai/ai_recognize.cpp
