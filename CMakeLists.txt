@@ -27,6 +27,7 @@ endif()
 add_subdirectory(rknn/3rdparty)
 add_subdirectory(rknn/utils)
 add_subdirectory(src)
+add_subdirectory(test)
 
 # 可选：安装配置
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Install path")
