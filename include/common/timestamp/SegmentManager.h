@@ -11,6 +11,7 @@ public:
     SegmentManager(const std::string& dir, const std::string& format, int durationSec);
 
     bool needNewSegment();
+    void cleanExpiredFiles(int retainDays);
     std::unique_ptr<VideoStorage> createSegment(AVFormatContext* inputCtx);
 
 private:

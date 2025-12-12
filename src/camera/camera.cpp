@@ -111,6 +111,8 @@ void Camera::pullKeyFrameLoop()
     {
         if (segMgr.needNewSegment()) {
             storage->closeStorage();
+
+            segMgr.cleanExpiredFiles(7);
             storage = segMgr.createSegment(videoCapture_.getFormatContext());
             tsAdjuster.reset();
             if (!storage) break;
