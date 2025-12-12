@@ -32,10 +32,7 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
     }
     else if (topic == OPERATE_CAR_TOPIC) {
         handleOperateCar(j);
-<<<<<<< HEAD
-=======
     }
->>>>>>> b9f0c8dc64d8901f28b3ba6ff8729428ea1e2132
     else if(topic == GET_ALL_DEVICE_STATUS_TOPIC){
         handleGetAllDeviceStatus(j);
     }
@@ -117,10 +114,7 @@ void MqttCommandDispatcher::handleOperateCar(const nlohmann::json& j)
               << " for car=" << carId 
               << " motor1=" << motor1 
               << " motor2=" << motor2 << std::endl;
-<<<<<<< HEAD
-=======
 }
->>>>>>> b9f0c8dc64d8901f28b3ba6ff8729428ea1e2132
 void MqttCommandDispatcher::handleGetAllDeviceStatus(const nlohmann::json& j)
 {
     std::cout << "1111111111111111111111" << std::endl;

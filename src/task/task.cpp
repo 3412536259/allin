@@ -153,7 +153,7 @@ void CarControlTask::run(TaskContext& ctx)
         nlohmann::json errorResult;
         errorResult["success"] = false;
         errorResult["error"] = "Invalid payload parameters";
-        publishResult(ctx.publisher, errorResult);
+        ctx.publisher->publish(RESULT_OPERATE_CAR_TOPIC, errorResult.dump());
         return;
     }
     
@@ -176,11 +176,11 @@ void CarControlTask::run(TaskContext& ctx)
     jsonResponse["motor2"] = result.motor2;
     jsonResponse["status_byte"] = result.statusByte;
     jsonResponse["message"] = result.message;
-    jsonResponse["status_description"] = parseStatusByte(result.statusByte);//ztl
+    jsonResponse["status_description"] = parseStatusByte(result.statusByte);
     
-    publishResult(ctx.publisher, jsonResponse);
+    ctx.publisher->publish(RESULT_OPERATE_CAR_TOPIC, jsonResponse.dump());
     
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 bool CarControlTask::validatePayload(const nlohmann::json& payload)
@@ -202,11 +202,4 @@ bool CarControlTask::validatePayload(const nlohmann::json& payload)
     }
     
     return true;
-}
-
-void CarControlTask::publishResult(ITaskResultPublisher* publisher, const nlohmann::json& result)
-{
-    if (publisher) {
-        publisher->publish("device/carcontrol/result", result.dump());
-    }
 }
