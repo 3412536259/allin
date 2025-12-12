@@ -18,12 +18,16 @@ DeviceManager::~DeviceManager()
 DeviceStatus DeviceManager::getStatus()
 {
     DeviceStatus deviceStatus;
-    deviceStatus.cameraStatus_ = cameraManager_->getAllStatus();
-    deviceStatus.plcStatus_ = plcManager_->getAllStatus();
-    for(auto& kv : deviceStatus.cameraStatus_)
-    {
-        std::cout << kv.camera_id << kv.online_status << std::endl;
+    deviceStatus.cameraStatusList = cameraManager_->getAllStatus();
+    if(plcManager_){
+        PLCList plcList = plcManager_->getAllStatus();
+        deviceStatus.plcStatus_ = plcList;
     }
+    
+    if(sensorManager_){
+        deviceStatus.sensorStatus_ = sensorManager_ -> getAllSensorData();
+    }
+
     return deviceStatus;
 }
 
@@ -126,6 +130,87 @@ OperatePLC DeviceManager::operatePlc(const std::string &deviceId, const std::str
     // cloudUploader_.uploadRealImage(deviceId, res);
 }
 
+// OperatePLCWithVerify DeviceManager::operatePlcWithVerify(const std::string& deviceId, const std::string& cmd, const std::string& sensorId, const std::string& cameraId){
+//     OperatePLCWithVerify result;
+//     if(!plcManager_){
+//         std::cerr << "DeviceManager: plcManager is null!"<<std::endl;
+//         return result;
+//     }
+//     OperateResult res = plcManager_->operate(deviceId,cmd);
+//     result.deviceId = deviceId;
+//     result.integrity = res.success;
+//     result.message = res.message;
+//     PLCInfo status = plcManager_->getStatus(deviceId);
+//     auto itDeviceStatus = std::find_if(status.deviceStatuses.begin(), status.deviceStatuses.end(), 
+//                                            [&deviceId](const PLCDeviceStatus& ds) {
+//                                                return ds.id == deviceId;
+//                                            });
+//     if(itDeviceStatus != status.deviceStatuses.end()){
+//         result.status = itDeviceStatus->status;
+//     }
+//     else{
+//         result.status = "UNKNOWN";
+//     }
+//     result.plcresult = res;
+//     if(cmd == "ON"){
+//         auto start_time = std::chrono::steady_clock::now();
+//         auto timeout_time = start_time + std::chrono::seconds(10); 
+//         SensorData initialSensor = sensorManager_->getSensorDataRealTime(sensorId);
+//         float initialHumidity = initialSensor.humidity;
+//         float targetHumidity = initialHumidity + 5.0f;
+//         bool isSuccess = false;
+//         auto check_2s = start_time + std::chrono::seconds(2);
+//         auto check_4s = start_time + std::chrono::seconds(4);
+//         auto check_8s = start_time + std::chrono::seconds(8);
+//         SensorData currentSensor;
+//         while(std::chrono::steady_clock::now() < timeout_time){
+//             currentSensor = sensorManager_->getSensorDataRealTime(sensorId);
+//             float currentHumidity = currentSensor.humidity;
+//             if (currentHumidity >= targetHumidity) {
+//                 isSuccess = true;
+//                 break; // 满足条件，立即退出循环
+//             }
+//             auto now = std::chrono::steady_clock::now();
+//             if (now >= check_2s && now < check_4s) {
+//                 std::cout << "2秒检测点：当前湿度 = " << currentHumidity << "%（基准=" << initialHumidity << "%）" << std::endl;
+//                 check_2s = timeout_time; // 避免重复打印2s检测日志
+//             } else if (now >= check_4s && now < check_8s) {
+//                 std::cout << "4秒检测点：当前湿度 = " << currentHumidity << "%（基准=" << initialHumidity << "%）" << std::endl;
+//                 check_4s = timeout_time; // 避免重复打印4s检测日志
+//             } else if (now >= check_8s && now < timeout_time) {
+//                 std::cout << "8秒检测点：当前湿度 = " << currentHumidity << "%（基准=" << initialHumidity << "%）" << std::endl;
+//                 check_8s = timeout_time; // 避免重复打印8s检测日志
+//             }
+//             std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//         }
+//         result.isSuccess = isSuccess;
+//         if(result.isSuccess) return result;
+//         else{
+//             result.plcresult.integrity = false;
+//             result.plcresult.message = "Verify failed, please check whether it is opened";
+//             result.plcresult.status = "0";
+//             result.sensorData.data.id = sensorId;
+//             result.sensorData.data.status = currentSensor.status;
+//             result.sensorData.data.temperature = currentSensor.temperature;
+//             result.sensorData.data.humidity = currentSensor.humidity;
+//             RealImage realImage;
+//             CameraStaticInfo info;
+//             info.camera_id = cameraId;
+//             FrameData frame;
+            
+//             realImage.sourceCameraId = cameraId;
+//             // 调用 CameraManager 获取关键帧
+//             bool ok = cameraManager_->getCameraLastKeyFrame(info, frame);
+//             if(ok){
+//                 realImage.frame = frame;
+//                 realImage.integrity = true;
+//             }
+//             result.camData = realImage;
+//             return result;
+//         }
+//     }
+//     return result;
+// }
 PLCDeviceState DeviceManager::getPLCDeviceStatus(const std::string& deviceId)
 {
     PLCDeviceState res;

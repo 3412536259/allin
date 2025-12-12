@@ -16,6 +16,7 @@ find_package(OpenCV REQUIRED COMPONENTS
     videoio  # 包含 VideoCapture
     highgui  # 包含 imshow
 )
+
 if(OpenCV_FOUND)
     message(STATUS "找到系统 OpenCV: ${OpenCV_VERSION}")
     message(STATUS "OpenCV 头文件: ${OpenCV_INCLUDE_DIRS}")
@@ -23,7 +24,7 @@ if(OpenCV_FOUND)
 else()
     message(FATAL_ERROR "❌ 未找到系统 OpenCV")
 endif()
-
+find_package(CURL REQUIRED)
 add_subdirectory(rknn/3rdparty)
 add_subdirectory(rknn/utils)
 add_subdirectory(src)

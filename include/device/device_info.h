@@ -7,9 +7,9 @@
 #include <vector>
 struct DeviceStatus
 {
-    std::vector<CameraStatus> cameraStatus_;
-    std::vector<PLCInfo> plcStatus_;
-    std::vector<SensorData> sensorStatus_;
+    CameraStatusList cameraStatusList;
+    PLCList plcStatus_;
+    SensorList sensorStatus_;
 
 };
 
@@ -52,6 +52,12 @@ struct RealSensorData
     SensorData data;
 };
 
+struct OperatePLCWithVerify{
+    OperatePLC plcresult;
+    RealSensorData sensorData;
+    RealImage camData;
+    bool isSuccess = false;
+};
 
 
 
