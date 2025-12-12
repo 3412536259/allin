@@ -90,7 +90,9 @@ std::optional<SensorData> SensorManager::getSensorDataRealTime(const std::string
     std::lock_guard<std::mutex> lk(mu_);
     auto it = sensors_.find(id);
     if (it == sensors_.end()) return std::nullopt;
+
     SensorData d;
+
     if (!it->second->readData()) {
         d.id =id;
         d.type = it->second->getType();
@@ -124,21 +126,24 @@ std::optional<SensorData> SensorManager::getSensorDataCached(const std::string& 
     return getSensorDataRealTime(id);
 }
 
-SensorList SensorManager::getAllSensorData() {
-    SensorList result;
-    std::lock_guard<std::mutex> lk(mu_);
-    for (const auto& pair : cache_) {
-        result.sensors.push_back(pair.second); // ← 填充 .sensors
-    }
-    return result;
-}
+
 
 bool SensorManager::refreshSensor(const std::string& id) {
     std::lock_guard<std::mutex> lk(mu_);
     auto it = sensors_.find(id);
     if (it == sensors_.end()) return false;
 
-    if (!it->second->readData()) return false;
+    if (!it->second->readData()){
+        SensorData d1;
+        d1.id = id;
+        d1.type = it->second->getType();
+        d1.status = SensorStatus::OFFLINE;
+        d1.temperature = 0.0f;
+        d1.humidity = 0.0f;
+        d1.value = 0.0f;
+        cache_[id] = d1;
+        return false;
+    } 
 
     SensorData d;
     d.id = id;
@@ -148,6 +153,8 @@ bool SensorManager::refreshSensor(const std::string& id) {
     d.value = it->second->getValue(); // 新增：更新核心值
     d.status = it->second->getStatus();
     d.lastUpdateTime = getCurrentTimeStr();
+
+    //std::cout << "temperature: " << d.temperature << ", humidity: " << d.humidity << ", value: " << d.value << "\n";
     cache_[id] = d;
     return true;
 }
@@ -173,4 +180,14 @@ void SensorManager::refreshLoop() {
         if (!running_.load()) break;
         refreshAllSensors();
     }
+}
+
+SensorList SensorManager::getAllSensorData() {
+    refreshAllSensors();
+    SensorList result;
+    std::lock_guard<std::mutex> lk(mu_);
+    for (const auto& pair : cache_) {
+        result.sensors.push_back(pair.second); // ← 填充 .sensors
+    }
+    return result;
 }
