@@ -42,6 +42,7 @@ void OperateValveTask::run(TaskContext& ctx)
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
+/*
 void GetPLCDeviceTask::run(TaskContext& ctx)
 {
     PLCDeviceState status = ctx.devMgr->getPLCDeviceStatus(deviceId_);
@@ -80,7 +81,7 @@ void GetSensorDataTask::run(TaskContext& ctx)
     ctx.publisher->publish(RESULT_GET_SENSOR_DATA_TOPIC, j.dump());
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
-
+*/
 void GetDeviceStatusTask::run(TaskContext& ctx)
 {
     DeviceStatus status = ctx.devMgr->getStatus();
