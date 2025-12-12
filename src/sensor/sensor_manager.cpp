@@ -90,12 +90,19 @@ std::optional<SensorData> SensorManager::getSensorDataRealTime(const std::string
     std::lock_guard<std::mutex> lk(mu_);
     auto it = sensors_.find(id);
     if (it == sensors_.end()) return std::nullopt;
-    
+    SensorData d;
     if (!it->second->readData()) {
-        return std::nullopt;
+        d.id =id;
+        d.type = it->second->getType();
+        d.status = SensorStatus::OFFLINE;
+        d.temperature = 0.0f;
+        d.humidity = 0.0f;
+        d.value = 0.0f;
+        d.lastUpdateTime = getCurrentTimeStr();
+        return d;
     }
     
-    SensorData d;
+    
     d.id = id;
     d.type = it->second->getType(); // 新增：记录类型
     d.temperature = it->second->getTemperatureC();
@@ -114,7 +121,7 @@ std::optional<SensorData> SensorManager::getSensorDataCached(const std::string& 
     if (it != cache_.end()) {
         return it->second;
     }
-    return std::nullopt;
+    return getSensorDataRealTime(id);
 }
 
 SensorList SensorManager::getAllSensorData() {

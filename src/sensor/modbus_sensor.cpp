@@ -163,7 +163,7 @@ bool ModbusSensor::init() {
     // 恢复阻塞模式
     fcntl(serial_fd_, F_SETFL, 0);
 
-    status_ = SensorStatus::NORMAL;
+    status_ = SensorStatus::OFFLINE;
     return true;
 }
 
@@ -180,7 +180,7 @@ bool ModbusSensor::readData() {
         return true;
     }
 
-    if (serial_fd_ < 0 || status_ == SensorStatus::OFFLINE) {
+    if (serial_fd_ < 0 ) {
         return false;
     }
 
