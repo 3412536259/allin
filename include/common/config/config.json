@@ -66,7 +66,7 @@
           "name": "车间温湿度传感器",
           "type": "modbus",
           "serial_config": {
-            "port": "/dev/ttyS5",
+            "port": "/dev/ttyS3",
             "baud_rate": 9600,
             "parity": "none",
             "stop_bits": 1
