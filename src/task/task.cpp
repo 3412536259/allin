@@ -81,6 +81,26 @@ void GetSensorDataTask::run(TaskContext& ctx)
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
+//ztl
+std::string parseStatusByte(uint16_t statusByte) {
+    std::string description = "Status: 0x" + std::to_string(statusByte) + " (" + std::to_string(statusByte) + ")";
+    
+    // 解析状态字节的可能含义
+    // if (statusByte == 0) {
+    //     description = "No status information available";
+    // } else if (statusByte == 514) { //514 is 0x0202
+    //     description = "Normal operation status(514 is 0x0202)";
+    // } else if (statusByte & 0x0001) {
+    //     description += "Locked-rotor";
+    // } else if (statusByte & 0x0002) {
+    //     description += "Current Protection";
+    // }
+    
+    return description;
+}
+//ztl 
+
+
 void CarControlTask::run(TaskContext& ctx)
 {
     if (!validatePayload(payload_)) {
@@ -110,6 +130,7 @@ void CarControlTask::run(TaskContext& ctx)
     jsonResponse["motor2"] = result.motor2;
     jsonResponse["status_byte"] = result.statusByte;
     jsonResponse["message"] = result.message;
+    jsonResponse["status_description"] = parseStatusByte(result.statusByte);//ztl
     
     publishResult(ctx.publisher, jsonResponse);
     

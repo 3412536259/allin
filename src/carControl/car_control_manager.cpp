@@ -107,7 +107,12 @@ CarControlResult CarControlManager::operate(const std::string& id, int motor1, i
 
     // 返回结果，包括响应时间
     res.success = true;
-    res.message.clear();
+    //res.message.clear();
+    if (anyReply) {
+        res.message = "Car control command executed successfully with response";
+    } else {
+        res.message = "Car control command executed successfully (no response received)";
+    }
     res.motor1 = motor1;  // 回传发送的命令值，而非解析的值
     res.motor2 = motor2;
     res.statusByte = anyReply ? static_cast<uint16_t>(lastSt.statusByte) : 0;
