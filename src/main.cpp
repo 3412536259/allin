@@ -11,18 +11,18 @@
 #include <memory>
 #include <thread>
 #include "WebService.h"
-const std::string MODELPATH = "/home/ztl/workspace/allin/model/yolov8n_3568_i8.rknn";
-const std::string CONFIGPATH = "/home/ztl/workspace/allin/include/common/config/config.json";
+#include "device_status_reporter.h"
+#include "mqtt_topics.h"
+const std::string MODELPATH = "/home/ztl/workspace/allin/allin/model/yolov8n3576_i8.rknn";
+const std::string CONFIGPATH = "/home/ztl/workspace/allin/allin/include/common/config/config.json";
 // const std::string MODELPATH = "/home/ztl/workspace/allin/model/yolov8n3576_i8.rknn";
 // const std::string CONFIGPATH = "/home/ztl/workspace/allin/include/common/config/config.json";
 int main()
 {
-     av_log_set_level(AV_LOG_QUIET);
+    av_log_set_level(AV_LOG_QUIET);
     ConfigParser::getInstance().loadFromFile(CONFIGPATH);
     std::shared_ptr<IDeviceManager> ideviceManager = std::make_shared<DeviceManager>();
-    // std::this_thread::sleep_for(std::chrono::seconds(5)); //等待设备注册初始化完成
-    // ideviceManager->getStatus();
-    // std::this_thread::sleep_for(std::chrono::seconds(5)); 
+
     JobScheduler jobscheduler(8,ideviceManager.get());
     MqttCommandDispatcher cmdDispatcher(jobscheduler);  //根据接收的主题来选择调用的处理任务，需要依赖jobscheduler的接口提交任务
     MqttService mqtt("mqtt://broker.emqx.io:1883", "edge-box", &cmdDispatcher); //需要依赖cmdDispatcher分发相应任务
@@ -40,6 +40,11 @@ int main()
     ai.start();    
     
     
+    //定时上报设备状态启动
+    DeviceStatusReporter reporter(ideviceManager.get(),&mqttPublisher);
+    reporter.startAutoReport(RESULT_GET_ALL_DEVICE_STATUS_TOPIC,15);
+
+
     std::cout << "System running..." << std::endl;
     while (true) { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
