@@ -128,13 +128,14 @@ void GetDeviceStatusTask::run(TaskContext& ctx)
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
+
 void CarControlTask::run(TaskContext& ctx)
 {
     if (!validatePayload(payload_)) {
         nlohmann::json errorResult;
         errorResult["success"] = false;
         errorResult["error"] = "Invalid payload parameters";
-        publishResult(ctx.publisher, errorResult);
+        ctx.publisher->publish(RESULT_OPERATE_CAR_TOPIC, errorResult.dump());
         return;
     }
     
@@ -155,12 +156,30 @@ void CarControlTask::run(TaskContext& ctx)
     jsonResponse["carcontrol_id"] = carId;
     jsonResponse["motor1"] = result.motor1;
     jsonResponse["motor2"] = result.motor2;
+    
+    //ztl
+    // 状态映射逻辑
+    int status = 0;
+    uint16_t statusByte = result.statusByte;
+    if (statusByte == 514) { // 0x0202
+        status = 0; // 正常
+    } else if (statusByte == 0) {
+        status = -1; // 无响应
+    } else if (statusByte == 0x0303) { // 00000011 00000011
+        status = 1; // 电机堵转
+    } else if (statusByte == 0x0C0C) { // 00000012 00000012 (十六进制 0x0C = 十进制 12)
+        status = 2; // 过流保护
+    }
+    
+    jsonResponse["status"] = status;
+    //ztl
+    
     jsonResponse["status_byte"] = result.statusByte;
     jsonResponse["message"] = result.message;
     
-    publishResult(ctx.publisher, jsonResponse);
+    ctx.publisher->publish(RESULT_OPERATE_CAR_TOPIC, jsonResponse.dump());
     
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 bool CarControlTask::validatePayload(const nlohmann::json& payload)
@@ -182,11 +201,4 @@ bool CarControlTask::validatePayload(const nlohmann::json& payload)
     }
     
     return true;
-}
-
-void CarControlTask::publishResult(ITaskResultPublisher* publisher, const nlohmann::json& result)
-{
-    if (publisher) {
-        publisher->publish("device/carcontrol/result", result.dump());
-    }
 }

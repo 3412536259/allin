@@ -72,7 +72,7 @@ json WebController::handleHttp(const std::string& path, const json& payload)
     // -------------------------------
     // 3) 车控制 → 提交任务
     // -------------------------------
-    if (path.find("/device/control/carcontrol") != std::string::npos) {
+    if (path.find("/device/carControl") != std::string::npos) {
 
         auto task = std::make_shared<CarControlTask>(payload);
         int id = scheduler_->submit(task, "http");

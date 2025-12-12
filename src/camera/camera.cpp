@@ -6,7 +6,7 @@
 extern "C" {
 #include <libavutil/time.h>
 }
-const std::string ROOT_DIR = "/home/ztl/workspace/allin/allin/videos/";
+const std::string ROOT_DIR = "/home/ztl/workspace/allin/videos/";
 const std::string VIDEOFORMAT = "mp4";
 const int SEGMENTDURATIONSEC = 60;
 

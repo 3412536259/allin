@@ -107,10 +107,17 @@ CarControlResult CarControlManager::operate(const std::string& id, int motor1, i
 
     // 返回结果，包括响应时间
     res.success = true;
-    res.message.clear();
+    //res.message.clear();
     res.motor1 = motor1;  // 回传发送的命令值，而非解析的值
     res.motor2 = motor2;
     res.statusByte = anyReply ? static_cast<uint16_t>(lastSt.statusByte) : 0;
+    //ztl
+    if (anyReply) {
+        res.message = "Car control command executed successfully with response";
+    } else {
+        res.message = "Car control command executed failed (no response received)";
+        res.statusByte = -1;
+    }//ztl
     // 如果之前没有设置responseTimeUs，则在这里设置超时值
     if (res.responseTimeUs == 0 && anyReply) {
         auto endTime = std::chrono::high_resolution_clock::now();
