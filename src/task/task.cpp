@@ -127,25 +127,6 @@ void GetDeviceStatusTask::run(TaskContext& ctx)
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
-//ztl
-std::string parseStatusByte(uint16_t statusByte) {
-    std::string description = "Status: 0x" + std::to_string(statusByte) + " (" + std::to_string(statusByte) + ")";
-    
-    // 瑙ｆ瀽鐘舵�佸瓧鑺傜殑鍙兘鍚箟
-    // if (statusByte == 0) {
-    //     description = "No status information available";
-    // } else if (statusByte == 514) { //514 is 0x0202
-    //     description = "Normal operation status(514 is 0x0202)";
-    // } else if (statusByte & 0x0001) {
-    //     description += "Locked-rotor";
-    // } else if (statusByte & 0x0002) {
-    //     description += "Current Protection";
-    // }
-    
-    return description;
-}
-//ztl 
-
 
 void CarControlTask::run(TaskContext& ctx)
 {
@@ -174,9 +155,26 @@ void CarControlTask::run(TaskContext& ctx)
     jsonResponse["carcontrol_id"] = carId;
     jsonResponse["motor1"] = result.motor1;
     jsonResponse["motor2"] = result.motor2;
+    
+    //ztl
+    // 状态映射逻辑
+    int status = 0;
+    uint16_t statusByte = result.statusByte;
+    if (statusByte == 514) { // 0x0202
+        status = 0; // 正常
+    } else if (statusByte == 0) {
+        status = -1; // 无响应
+    } else if (statusByte == 0x0303) { // 00000011 00000011
+        status = 1; // 电机堵转
+    } else if (statusByte == 0x0C0C) { // 00000012 00000012 (十六进制 0x0C = 十进制 12)
+        status = 2; // 过流保护
+    }
+    
+    jsonResponse["status"] = status;
+    //ztl
+    
     jsonResponse["status_byte"] = result.statusByte;
     jsonResponse["message"] = result.message;
-    jsonResponse["status_description"] = parseStatusByte(result.statusByte);
     
     ctx.publisher->publish(RESULT_OPERATE_CAR_TOPIC, jsonResponse.dump());
     
