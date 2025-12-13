@@ -4,7 +4,7 @@
 
 using json = nlohmann::json;
 
-static const std::string TEMP_FILE_PATH = "temp.json";
+static const std::string TEMP_FILE_PATH = "/home/ztl/workspace/allin/include/common/config/temp.json";
 static const std::string CONFIG_FILE_PATH = "/home/ztl/workspace/allin/include/common/config/config.json";
 
 // 写入temp.json
