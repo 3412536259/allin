@@ -42,6 +42,40 @@ void OperateValveTask::run(TaskContext& ctx)
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
+void OperateValueWithVerifyTask::run(TaskContext& ctx)
+{
+    auto result = ctx.devMgr->operatePlcWithVerify(deviceId_, cmd_, sensorId_, cameraId_);
+    nlohmann::json j;
+    if(!result.isSuccess){
+        //j["isSuccess"] = result.isSuccess;
+        j["deviceId"] = deviceId_;
+        j["message"] = result.plcresult.message;
+        j["deviceStatus"] = result.plcresult.status;
+
+        if(result.camData.integrity){
+            std::vector<unsigned char> outJpeg;
+            image_buffer_t out_image;
+            ImageProcessor::avframeToRGB(result.camData.frame.frame.get(),640,640,&out_image);
+            ImageProcessor::compressToJpeg(&out_image,outJpeg);
+            std::string imageBase64 = ImageProcessor::jpegToBase64(outJpeg);
+
+            j["cameraId"] = cameraId_;
+            j["imageBase"] = imageBase64;
+        }
+        j["sensorId"] = sensorId_;
+        j["temperature"] = result.sensorData.data.temperature;
+        j["humidity"] = result.sensorData.data.humidity;
+    }
+    else{
+        j["deviceId"] = deviceId_;
+        j["message"] = result.plcresult.message;
+        j["deviceStatus"] = result.plcresult.status;
+    }
+
+    ctx.publisher->publish(RESULT_OPERATE_PLC_WITH_VERIFY_TOPIC, j.dump());
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
 void GetPLCDeviceTask::run(TaskContext& ctx)
 {
     PLCDeviceState status = ctx.devMgr->getPLCDeviceStatus(deviceId_);
@@ -157,17 +191,17 @@ void CarControlTask::run(TaskContext& ctx)
     jsonResponse["motor2"] = result.motor2;
     
     //ztl
-    // ×´Ì¬Ó³ÉäÂß¼­
+    // ×´Ì¬Ó³ï¿½ï¿½ï¿½ß¼ï¿½
     int status = 0;
     uint16_t statusByte = result.statusByte;
     if (statusByte == 514) { // 0x0202
-        status = 0; // Õý³£
+        status = 0; // ï¿½ï¿½ï¿½ï¿½
     } else if (statusByte == 0) {
-        status = -1; // ÎÞÏìÓ¦
+        status = -1; // ï¿½ï¿½ï¿½ï¿½Ó¦
     } else if (statusByte == 0x0303) { // 00000011 00000011
-        status = 1; // µç»ú¶Â×ª
-    } else if (statusByte == 0x0C0C) { // 00000012 00000012 (Ê®Áù½øÖÆ 0x0C = Ê®½øÖÆ 12)
-        status = 2; // ¹ýÁ÷±£»¤
+        status = 1; // ï¿½ï¿½ï¿½ï¿½ï¿½×ª
+    } else if (statusByte == 0x0C0C) { // 00000012 00000012 (Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 0x0C = Ê®ï¿½ï¿½ï¿½ï¿½ 12)
+        status = 2; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     }
     
     jsonResponse["status"] = status;
