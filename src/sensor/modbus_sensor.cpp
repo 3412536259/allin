@@ -218,11 +218,11 @@ bool ModbusSensor::readData() {
 
     // 6. 解析响应
     if (bytes_read >= 9) {
-        uint16_t tempRaw = (resp[3] << 8) | resp[4];
-        uint16_t humRaw = (resp[5] << 8) | resp[6];
+        uint16_t tempRaw = (resp[5] << 8) | resp[6];
+        uint16_t humRaw = (resp[3] << 8) | resp[4];
         temperatureC_ = tempRaw / 10.0f;
         humidityPct_ = humRaw / 10.0f;
-        std::cout<<"[ModbusSensor] Temperature: "<<temperatureC_<<" C"<<std::endl;
+        // std::cout<<"[ModbusSensor] Temperature: "<<temperatureC_<<" C"<<std::endl;
         // std::cout<<"[ModbusSensor] Humidity: "<<humidityPct_<<" %"<<std::endl;
         status_ = SensorStatus::NORMAL;
         return true;
