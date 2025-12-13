@@ -37,6 +37,9 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
     else if(topic == GET_ALL_DEVICE_STATUS_TOPIC){
         handleGetAllDeviceStatus(j);
     }
+    else if(topic == OPERATE_PLC_WITH_VERIFY_TOPIC){
+        handleOperatePlcWithVerify(j);
+    }
     else {
         std::cout << "Unknown topic: " << topic << std::endl;
     }
@@ -119,6 +122,7 @@ void MqttCommandDispatcher::handleOperateCar(const nlohmann::json& j)
               << " motor1=" << motor1 
               << " motor2=" << motor2 << std::endl;
 }
+
 void MqttCommandDispatcher::handleGetAllDeviceStatus(const nlohmann::json& j)
 {
     std::cout << "1111111111111111111111" << std::endl;
@@ -126,4 +130,19 @@ void MqttCommandDispatcher::handleGetAllDeviceStatus(const nlohmann::json& j)
     int id = scheduler_.submit(task, "mqtt");
 
     std::cout << "submitted GetDeviceStatusTask id=" << id << std::endl;
+}
+
+void MqttCommandDispatcher::handleOperatePlcWithVerify(const nlohmann::json& j){
+    std::cout<<"111111111111111111111111111111"<<std::endl;
+    if(!j.contains("deviceId") || !j.contains("action") || !j.contains("sensorId") || !j.contains("cameraId")) return;
+    std::string deviceId = j["deviceId"];
+    std::string cmd = j["action"];
+    std::string sensorId = j["sensorId"];
+    std::string cameraId = j["cameraId"];
+    auto task =  std::make_shared<OperateValueWithVerifyTask>(deviceId, cmd, sensorId, cameraId);
+    int id = scheduler_.submit(task, "mqtt");
+
+    std::cout << "Submitted OperatePlcWithVerify id=" << id 
+              << " for device=" << deviceId << " operation=" << cmd 
+              << " sensor=" << sensorId << " camera=" << cameraId <<std::endl;
 }

@@ -6,6 +6,8 @@
 #include "idevice_manager.h"
 #include "iplc_manager.h"
 #include "icar_control_manager.h"
+#include "device_info.h"
+
 class ICarControlManager;
 class DeviceManager : public IDeviceManager{
 public:
@@ -20,7 +22,7 @@ public:
     
     void operateCamera() override;
     OperatePLC operatePlc(const std::string &deviceId, const std::string &cmd) override;
-    // OperatePLCWithVerify operatePlcWithVerify(const std::string& deviceId, const std::string& cmd, const std::string& sensorId, const std::string& cameraId) override;
+    OperatePLCWithVerify operatePlcWithVerify(const std::string& deviceId, const std::string& cmd, const std::string& sensorId, const std::string& cameraId) override;
     PLCDeviceState getPLCDeviceStatus(const std::string& deviceId) override;
     RealSensorData getSensorData(const std::string& sensorId) override;
     CarControlResult operateCarControl(const std::string& carControlId, int motor1, int motor2) override;

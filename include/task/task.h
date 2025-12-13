@@ -29,6 +29,21 @@ private:
     std::string cmd_;
 };
 /*
+
+class OperateValueWithVerifyTask : public ITask
+{
+public:
+    OperateValueWithVerifyTask(std::string deviceId, std::string cmd, std::string sensorId, std::string cameraId)
+        : deviceId_(deviceId), cmd_(cmd), sensorId_(sensorId), cameraId_(cameraId){}
+    std::string name() const override { return "OperateValueWithVerify";}
+    void run(TaskContext& ctx) override;
+private:
+    std::string deviceId_;
+    std::string cmd_;
+    std::string sensorId_;
+    std::string cameraId_;
+};
+
 class GetPLCDeviceTask : public ITask
 {
 public:

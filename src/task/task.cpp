@@ -54,6 +54,40 @@ void OperateValveTask::run(TaskContext& ctx)
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
+void OperateValueWithVerifyTask::run(TaskContext& ctx)
+{
+    auto result = ctx.devMgr->operatePlcWithVerify(deviceId_, cmd_, sensorId_, cameraId_);
+    nlohmann::json j;
+    if(!result.isSuccess){
+        //j["isSuccess"] = result.isSuccess;
+        j["deviceId"] = deviceId_;
+        j["message"] = result.plcresult.message;
+        j["deviceStatus"] = result.plcresult.status;
+
+        if(result.camData.integrity){
+            std::vector<unsigned char> outJpeg;
+            image_buffer_t out_image;
+            ImageProcessor::avframeToRGB(result.camData.frame.frame.get(),640,640,&out_image);
+            ImageProcessor::compressToJpeg(&out_image,outJpeg);
+            std::string imageBase64 = ImageProcessor::jpegToBase64(outJpeg);
+
+            j["cameraId"] = cameraId_;
+            j["imageBase"] = imageBase64;
+        }
+        j["sensorId"] = sensorId_;
+        j["temperature"] = result.sensorData.data.temperature;
+        j["humidity"] = result.sensorData.data.humidity;
+    }
+    else{
+        j["deviceId"] = deviceId_;
+        j["message"] = result.plcresult.message;
+        j["deviceStatus"] = result.plcresult.status;
+    }
+
+    ctx.publisher->publish(RESULT_OPERATE_PLC_WITH_VERIFY_TOPIC, j.dump());
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
 /*
 void GetPLCDeviceTask::run(TaskContext& ctx)
 {
