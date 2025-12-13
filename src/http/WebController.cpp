@@ -85,21 +85,21 @@ json WebController::handleHttp(const std::string& path, const json& payload)
     // -------------------------------
     // 4) get sensor → 提交任务
     // -------------------------------
-    if (path.find("/device/sensor/get") != std::string::npos) {
+    // if (path.find("/device/sensor/get") != std::string::npos) {
 
-        if (!payload.contains("sensorId")) {
-            resp["success"] = false;
-            resp["error"] = "missing sensorId";
-            return resp;
-        }
+    //     if (!payload.contains("sensorId")) {
+    //         resp["success"] = false;
+    //         resp["error"] = "missing sensorId";
+    //         return resp;
+    //     }
 
-        auto task = std::make_shared<GetSensorDataTask>(payload["sensorId"].get<std::string>());
-        int id = scheduler_->submit(task, "http");
+    //     auto task = std::make_shared<GetSensorDataTask>(payload["sensorId"].get<std::string>());
+    //     int id = scheduler_->submit(task, "http");
 
-        resp["success"] = true;
-        resp["task_id"] = id;
-        return resp;
-    }
+    //     resp["success"] = true;
+    //     resp["task_id"] = id;
+    //     return resp;
+    // }
 
     // 获取全部状态
     if(path.find("/device/getAll") != std::string::npos) {
