@@ -59,6 +59,11 @@ struct OperatePLCWithVerify{
     bool isSuccess = false;
 };
 
+struct UpdateConfigResult{
+    bool isSuccess = false;
+    std::string message;
+};
+
 
 
 #endif

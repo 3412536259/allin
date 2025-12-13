@@ -28,7 +28,7 @@ private:
     std::string deviceId_;
     std::string cmd_;
 };
-/*
+
 
 class OperateValueWithVerifyTask : public ITask
 {
@@ -43,7 +43,7 @@ private:
     std::string sensorId_;
     std::string cameraId_;
 };
-
+/*
 class GetPLCDeviceTask : public ITask
 {
 public:
@@ -88,5 +88,15 @@ public:
     GetDeviceStatusTask() {}
     std::string name() const override { return "GetDeviceStatus";}
     void run(TaskContext& ctx) override;
+};
+
+class UpdateConfigTask : public ITask
+{
+public:
+    UpdateConfigTask(const std::string& JsonStr) : JsonStr_(JsonStr) {}
+    std::string name() const override { return "UpdateConfig"; }
+    void run(TaskContext& ctx) override;
+private:
+    std::string JsonStr_;
 };
 #endif

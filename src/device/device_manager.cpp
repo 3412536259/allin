@@ -10,6 +10,7 @@ DeviceManager::DeviceManager()
     sensorManager_ = std::make_shared<SensorManager>();
     plcManager_ = std::make_shared<PLCManager>();
     carControlManager_ = std::make_shared<CarControlManager>();
+    configUpdater_ = std::make_shared<ConfigUpdater>();
 }
 
 DeviceManager::~DeviceManager()
@@ -253,12 +254,6 @@ CarControlResult DeviceManager::operateCarControl(const std::string& carControlI
     return carControlManager_->operate(carControlId, motor1, motor2);
 }
 
-
-
-void DeviceManager::updateConfig()
-{
-
-}
 RealSensorData DeviceManager::getSensorData(const std::string& sensorId)
 {
     RealSensorData rsd;
@@ -277,4 +272,16 @@ RealSensorData DeviceManager::getSensorData(const std::string& sensorId)
         rsd.data = *optc;
     }
     return rsd;
+}
+
+UpdateConfigResult DeviceManager::configUpdate(const std::string& JsonStr)
+{
+    UpdateConfigResult result;
+    if(!configUpdater_) {
+        result.message = "no configUpdater_";
+        return result;
+    } 
+
+    result = configUpdater_->updateConfig(JsonStr);
+    return result;
 }

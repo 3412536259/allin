@@ -24,7 +24,7 @@ private:
     void handleOperateCar(const nlohmann::json& j);
     void handleGetAllDeviceStatus(const nlohmann::json& j);
     void handleOperatePlcWithVerify(const nlohmann::json& j);
-
+    void handleConfigUpdate(const nlohmann::json& j);
 };
 
 

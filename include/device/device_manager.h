@@ -4,6 +4,7 @@
 #include "icamera_manager.h"
 #include "isensor_manager.h"
 #include "idevice_manager.h"
+#include "update_config.h"
 #include "iplc_manager.h"
 #include "icar_control_manager.h"
 #include "device_info.h"
@@ -26,14 +27,14 @@ public:
     PLCDeviceState getPLCDeviceStatus(const std::string& deviceId) override;
     RealSensorData getSensorData(const std::string& sensorId) override;
     CarControlResult operateCarControl(const std::string& carControlId, int motor1, int motor2) override;
-    void updateConfig() override;
+    UpdateConfigResult configUpdate(const std::string& JsonStr) override;
 
 private:
     std::shared_ptr<ICameraManager> cameraManager_;
     std::shared_ptr<IPLCManager> plcManager_;
     std::shared_ptr<ISensorManager> sensorManager_;
     std::shared_ptr<ICarControlManager> carControlManager_;
-
+    std::shared_ptr<ConfigUpdater> configUpdater_;
 };
 
 #endif

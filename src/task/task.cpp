@@ -49,7 +49,6 @@ void OperateValveTask::run(TaskContext& ctx)
     j["deviceId"] = deviceId_;
     j["message"] = res.message;
     j["status"] = res.status;
-    DeviceConfigRoot cfg = ConfigParser::getInstance().getConfig();
     ctx.publisher->publish(RESULT_OPERATE_PLC_TOPIC, j.dump());
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
@@ -257,4 +256,18 @@ bool CarControlTask::validatePayload(const nlohmann::json& payload)
     }
     
     return true;
+}
+
+void UpdateConfigTask::run(TaskContext& ctx){
+    {
+        nlohmann::json ack;
+        ack["success"] = true;
+        ctx.publisher->publish(RESULT_UPDATE_CONFIG, ack.dump());
+    }
+    UpdateConfigResult res = ctx.devMgr->configUpdate(JsonStr_);
+    nlohmann::json j;
+    if(!res.isSuccess) j["code"] = "update failed";
+    j["message"] = res.message;
+    ctx.publisher->publish(RESULT_UPDATE_CONFIG, j.dump());
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 }

@@ -49,6 +49,7 @@ set(SRC_FILES
     ai/ai_model_service.cpp
     carControl/car_control.cpp
     carControl/car_control_manager.cpp
+    config/update_config.cpp
 )
 
 # -------------------------- 2. 生成主程序可执行文件 --------------------------
@@ -77,6 +78,7 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/common/threads
     ${CMAKE_SOURCE_DIR}/include/common/yolo8
     ${CMAKE_SOURCE_DIR}/include/common/plc_utils
+    ${CMAKE_SOURCE_DIR}/include/config
     ${CMAKE_SOURCE_DIR}/third_party/mqtt
 
     ${CMAKE_SOURCE_DIR}/third_party/json

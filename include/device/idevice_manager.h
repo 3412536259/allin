@@ -20,8 +20,7 @@ public:
     virtual PLCDeviceState getPLCDeviceStatus(const std::string& deviceId) = 0;
     virtual RealSensorData getSensorData(const std::string& sensorId) = 0;
     virtual CarControlResult operateCarControl(const std::string& carControlId, int motor1, int motor2) = 0;
-
-    virtual void updateConfig() = 0; //更新配置
+    virtual UpdateConfigResult configUpdate(const std::string& JsonStr) = 0;
 
 };
 
