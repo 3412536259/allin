@@ -7,6 +7,12 @@
 #include "mqtt_topics.h"
 void GetCameraRealImageTask::run(TaskContext& ctx)
 {
+    {
+        nlohmann::json ack;
+        ack["success"] = true;
+        ack["cameraId"] = camId_;
+        ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, ack.dump());
+    }
     RealImage image = ctx.devMgr->getRealImage(camId_);
     image_buffer_t out_image;
     std::vector<unsigned char> outJpeg;
@@ -31,6 +37,12 @@ void GetCameraRealImageTask::run(TaskContext& ctx)
 
 void OperateValveTask::run(TaskContext& ctx)
 {
+    {
+        nlohmann::json ack;
+        ack["success"] = true;
+        ack["deviceId"] = deviceId_;
+        ctx.publisher->publish(RESULT_OPERATE_PLC_TOPIC, ack.dump());
+    }
     OperatePLC res = ctx.devMgr->operatePlc(deviceId_, cmd_);
     nlohmann::json j;
     if(!res.integrity) j["code"] = "operate failed";
@@ -84,6 +96,11 @@ void GetSensorDataTask::run(TaskContext& ctx)
 */
 void GetDeviceStatusTask::run(TaskContext& ctx)
 {
+    {
+        nlohmann::json ack;
+        ack["success"] = true;  // ç”±äºŽæ˜¯èŽ·å–æ‰€æœ‰è®¾å¤‡çš„ï¼Œæ‰€ä»¥ä¸éœ€è¦è¿”å›žè®¾å¤‡ä¿¡æ¯
+        ctx.publisher->publish(RESULT_GET_ALL_DEVICE_STATUS_TOPIC, ack.dump());
+    }
     DeviceStatus status = ctx.devMgr->getStatus();
     nlohmann::json j;
     auto& device = j["device"];
@@ -131,6 +148,11 @@ void GetDeviceStatusTask::run(TaskContext& ctx)
 
 void CarControlTask::run(TaskContext& ctx)
 {
+    {
+        nlohmann::json ack;
+        ack["success"] = true;  // æ²¡æä¾›å°è½¦çš„ä¿¡æ¯
+        ctx.publisher->publish(RESULT_OPERATE_CAR_TOPIC, ack.dump());
+    }
     if (!validatePayload(payload_)) {
         nlohmann::json errorResult;
         errorResult["success"] = false;
@@ -158,17 +180,17 @@ void CarControlTask::run(TaskContext& ctx)
     jsonResponse["motor2"] = result.motor2;
     
     //ztl
-    // ×´Ì¬Ó³ÉäÂß¼­
+    // ×´Ì¬Ó³ï¿½ï¿½ï¿½ß¼ï¿½
     int status = 0;
     uint16_t statusByte = result.statusByte;
     if (statusByte == 514) { // 0x0202
-        status = 0; // Õý³£
+        status = 0; // ï¿½ï¿½ï¿½ï¿½
     } else if (statusByte == 0) {
-        status = -1; // ÎÞÏìÓ¦
+        status = -1; // ï¿½ï¿½ï¿½ï¿½Ó¦
     } else if (statusByte == 0x0303) { // 00000011 00000011
-        status = 1; // µç»ú¶Â×ª
-    } else if (statusByte == 0x0C0C) { // 00000012 00000012 (Ê®Áù½øÖÆ 0x0C = Ê®½øÖÆ 12)
-        status = 2; // ¹ýÁ÷±£»¤
+        status = 1; // ï¿½ï¿½ï¿½ï¿½ï¿½×ª
+    } else if (statusByte == 0x0C0C) { // 00000012 00000012 (Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 0x0C = Ê®ï¿½ï¿½ï¿½ï¿½ 12)
+        status = 2; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     }
     
     jsonResponse["status"] = status;

@@ -81,7 +81,7 @@ json WebController::handleHttp(const std::string& path, const json& payload)
         resp["task_id"] = id;
         return resp;
     }
-
+    /*
     // -------------------------------
     // 4) get sensor → 提交任务
     // -------------------------------
@@ -100,7 +100,7 @@ json WebController::handleHttp(const std::string& path, const json& payload)
         resp["task_id"] = id;
         return resp;
     }
-
+    */
     // 获取全部状态
     if(path.find("/device/getAll") != std::string::npos) {
         auto task = std::make_shared<GetDeviceStatusTask>();

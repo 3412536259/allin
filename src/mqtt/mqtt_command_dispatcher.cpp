@@ -27,9 +27,10 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
     else if (topic == UPDATE_CONFIG_TOPIC) {
         handleUpdateConfig(j);
     }
+    /*
     else if(topic == GET_SENSOR_DATA_TOPIC) {
         handleGetSensorData(j);
-    }
+    }*/
     else if (topic == OPERATE_CAR_TOPIC) {
         handleOperateCar(j);
     }
@@ -64,6 +65,7 @@ void MqttCommandDispatcher::handleOperatePlc(const nlohmann::json& j)
     std::cout << "Submitted OperatePLC id=" << id 
               << " for device=" << deviceId << " operation=" << cmd << std::endl;
 }
+/*
 void MqttCommandDispatcher::handleGetPLCDeviceStatus(const nlohmann::json& j){
     if(!j.contains("deviceId")) return;
     std::string deviceId = j["deviceId"];
@@ -73,6 +75,7 @@ void MqttCommandDispatcher::handleGetPLCDeviceStatus(const nlohmann::json& j){
     std::cout << "Submitted GetPLCDeviceStatus id=" << id 
               << " for device=" << deviceId << std::endl;
 }
+
 void MqttCommandDispatcher::handleGetSensorData(const nlohmann::json& j)
 {
     if(!j.contains("sensorId")) return;
@@ -83,6 +86,7 @@ void MqttCommandDispatcher::handleGetSensorData(const nlohmann::json& j)
     std::cout << "Submitted GetSensorDataTask id=" << id 
               << " for sensor=" << sensorId << std::endl;
 }
+*/
 void MqttCommandDispatcher::handleUpdateConfig(const nlohmann::json& j)
 {
 

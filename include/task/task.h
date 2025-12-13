@@ -28,7 +28,7 @@ private:
     std::string deviceId_;
     std::string cmd_;
 };
-
+/*
 class GetPLCDeviceTask : public ITask
 {
 public:
@@ -50,7 +50,7 @@ public:
 private:
     std::string sensorId_;
 };
-
+*/
 class CarControlTask : public ITask
 {
 public:
