@@ -2,9 +2,10 @@
 #include "FileUtils.h"
 #include "logger.h"
 #include <filesystem>
+#include <iostream>
 namespace fs = std::filesystem;
 SegmentManager::SegmentManager(const std::string& dir, const std::string& format, int durationSec)
-    : dir_(dir), format_(format), durationSec_(durationSec), segmentIndex_(0) {
+    : dir_(dir), format_(format), durationSec_(durationSec), segmentIndex_(0) {  
     lastStart_ = std::chrono::steady_clock::now();
 }
 
@@ -12,6 +13,17 @@ bool SegmentManager::needNewSegment() {
     auto now = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - lastStart_).count();
     return elapsed >= durationSec_;
+}
+
+static int toDateInt(std::chrono::system_clock::time_point tp)
+{
+    std::time_t tt = std::chrono::system_clock::to_time_t(tp);
+    std::tm local{};
+    localtime_r(&tt, &local);
+
+    return (local.tm_year + 1900) * 10000
+         + (local.tm_mon + 1) * 100
+         + local.tm_mday;
 }
 
 
@@ -24,22 +36,24 @@ void SegmentManager::cleanExpiredFiles(int retainDays)
     }
 
     auto now = system_clock::now();
-    auto expireTime = now - hours(24 * retainDays);
+    auto expireTp = now - hours(24 * retainDays);
+    int expireDate = toDateInt(expireTp);
 
     for (const auto& entry : fs::directory_iterator(dir_)) {
-        if (!entry.is_regular_file()) continue;
+        if (!entry.is_directory()) continue;
 
-        auto ftime = fs::last_write_time(entry);
-        auto sctp = time_point_cast<system_clock::duration>(
-                        ftime - fs::file_time_type::clock::now() + now
-                    );
+        std::string dateStr = entry.path().filename().string();
+        if (dateStr.size() != 8) continue;
 
-        if (sctp < expireTime) {
+        int dirDate = std::stoi(dateStr);
+
+        if (dirDate < expireDate) {
             try {
-                fs::remove(entry);
-                LOG_INFO("Deleted expired video: " + entry.path().string());
+                fs::remove_all(entry.path());
+                LOG_INFO("Deleted expired directory: " + entry.path().string());
             } catch (const std::exception& e) {
-                LOG_WARNING("Failed to delete: " + entry.path().string()
+                LOG_WARNING("Failed to delete directory: "
+                            + entry.path().string()
                             + " error=" + e.what());
             }
         }
