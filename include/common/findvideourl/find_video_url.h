@@ -8,9 +8,10 @@
 
 namespace fs = std::filesystem;
 
+const std::string baseDir = "/home/ztl/workspace/allin/videos";
+const std::string baseUrl = "http://127.0.0.1:8081/videos";
+
 std::string findVideoUrl(
-    const std::string& baseDir,   // /data
-    const std::string& baseUrl,   // http://ip:port/videos
     const std::string& channel,   // 10
     const std::string& date,      // 20251213
     const std::string& timeStr    // 11:06
