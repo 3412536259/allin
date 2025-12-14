@@ -5,6 +5,7 @@
 #include "config_info.h"
 #include "config_parser.h"
 #include "mqtt_topics.h"
+#include "find_video_url.h"
 void GetCameraRealImageTask::run(TaskContext& ctx)
 {
     {
@@ -269,5 +270,25 @@ void UpdateConfigTask::run(TaskContext& ctx){
     if(!res.isSuccess) j["code"] = "update failed";
     j["message"] = res.message;
     ctx.publisher->publish(RESULT_UPDATE_CONFIG, j.dump());
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+void DownloadVideoTask::run(TaskContext& ctx){
+    {
+        nlohmann::json ack;
+        ack["success"] = true;
+        ctx.publisher->publish(RESULT_DOWNLOAD_VIDEO, ack.dump());
+    }
+    nlohmann::json j;
+    std::string videoPath = findVideoUrl(channel_, date_, time_);
+    if(videoPath.empty()){
+        j["success"] = false;
+        j["message"] = "video file not found";
+        ctx.publisher->publish(RESULT_DOWNLOAD_VIDEO, j.dump());
+        return;
+    }
+    j["success"] = true;
+    j["videoPath"] = videoPath;
+    ctx.publisher->publish(RESULT_DOWNLOAD_VIDEO, j.dump());
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }

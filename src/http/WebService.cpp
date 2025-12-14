@@ -8,8 +8,9 @@
 #include <iostream>
 #include <sstream>
 
-using nlohmann::json;
 
+using nlohmann::json;
+const std::string DOWNLOAD_URL_ROOT_PATH = "/videos/";
 
 WebService::WebService(const std::string& configPath, int port, IDeviceManager* devMgr, JobScheduler* scheduler)
     : m_controller(configPath, devMgr, scheduler), m_port(port) {}
@@ -103,6 +104,26 @@ void WebService::handleClient(int client_fd) {
         std::istringstream rl(requestLine);
         rl >> method >> path >> httpver;
     }
+
+    if (method == "GET" && path.rfind(DOWNLOAD_URL_ROOT_PATH, 0) == 0) { 
+        std::cout << "Handling static file request: " << path << std::endl;
+
+        // 调用 WebController 中的静态文件处理逻辑
+        if (m_controller.handleStaticFile(client_fd, path)) {
+            // 文件流已发送，成功！关闭连接并退出。
+            ::shutdown(client_fd, SHUT_RDWR);
+            ::close(client_fd);
+            return; 
+        } else {
+            // 文件不存在或处理失败，发送 404 响应
+            std::string not_found_resp = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+            send(client_fd, not_found_resp.c_str(), not_found_resp.size(), 0);
+            ::shutdown(client_fd, SHUT_RDWR);
+            ::close(client_fd);
+            return;
+        }
+    }
+
     std::string::size_type pos = request.find("Content-Length:");
     size_t content_length = 0;
     if (pos != std::string::npos) {
