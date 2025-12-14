@@ -93,11 +93,11 @@ json WebController::handleHttp(const std::string& path, const json& payload)
             return resp;
         }
 
-        auto task = std::make_shared<GetSensorDataTask>(payload["sensorId"].get<std::string>());
-        int id = scheduler_->submit(task, "http");
+        // auto task = std::make_shared<GetSensorDataTask>(payload["sensorId"].get<std::string>());
+        // int id = scheduler_->submit(task, "http");
 
-        resp["success"] = true;
-        resp["task_id"] = id;
+        // resp["success"] = true;
+        // resp["task_id"] = id;
         return resp;
     }
 
