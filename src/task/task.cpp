@@ -7,6 +7,10 @@
 #include "mqtt_topics.h"
 void GetCameraRealImageTask::run(TaskContext& ctx)
 {
+    nlohmann::json j;
+    j["commandCode"] = "0000 0200";
+    ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, j.dump());
+
     {
         nlohmann::json ack;
         ack["success"] = true;
@@ -37,6 +41,7 @@ void GetCameraRealImageTask::run(TaskContext& ctx)
 
 void OperateValveTask::run(TaskContext& ctx)
 {
+
     {
         nlohmann::json ack;
         ack["success"] = true;
@@ -46,6 +51,8 @@ void OperateValveTask::run(TaskContext& ctx)
     OperatePLC res = ctx.devMgr->operatePlc(deviceId_, cmd_);
     nlohmann::json j;
     if(!res.integrity) j["code"] = "operate failed";
+    if(cmd_ == "ON") j["commandCode"] = "0000 0100";
+    else if(cmd_ == "OFF") j["commandCode"] = "0000 0101";
     j["deviceId"] = deviceId_;
     j["message"] = res.message;
     j["status"] = res.status;
@@ -55,8 +62,11 @@ void OperateValveTask::run(TaskContext& ctx)
 
 void OperateValueWithVerifyTask::run(TaskContext& ctx)
 {
+
     auto result = ctx.devMgr->operatePlcWithVerify(deviceId_, cmd_, sensorId_, cameraId_);
     nlohmann::json j;
+    if(cmd_ == "ON") j["commandCode"] = "0000 0100";
+    else if(cmd_ == "OFF") j["commandCode"] = "0000 0101";
     if(!result.isSuccess){
         //j["isSuccess"] = result.isSuccess;
         j["deviceId"] = deviceId_;
@@ -129,15 +139,18 @@ void GetSensorDataTask::run(TaskContext& ctx)
 */
 void GetDeviceStatusTask::run(TaskContext& ctx)
 {
+    
     {
         nlohmann::json ack;
         ack["success"] = true;  // 由于是获取所有设备的，所以不需要返回设备信息
         ctx.publisher->publish(RESULT_GET_ALL_DEVICE_STATUS_TOPIC, ack.dump());
     }
     DeviceStatus status = ctx.devMgr->getStatus();
-    nlohmann::json j;
-    auto& device = j["device"];
 
+    nlohmann::json j;
+    j["commandCode"] = "0000 0001";
+    auto& device = j["device"];
+    
     for(const auto& camStatus : status.cameraStatusList.cameraStatus){
         device["cameras"].push_back({
             {"cameraId",camStatus.camera_id},
@@ -259,6 +272,8 @@ bool CarControlTask::validatePayload(const nlohmann::json& payload)
 }
 
 void UpdateConfigTask::run(TaskContext& ctx){
+    
+
     {
         nlohmann::json ack;
         ack["success"] = true;
@@ -266,6 +281,7 @@ void UpdateConfigTask::run(TaskContext& ctx){
     }
     UpdateConfigResult res = ctx.devMgr->configUpdate(JsonStr_);
     nlohmann::json j;
+    j["commandCode"] = "0000 0050";
     if(!res.isSuccess) j["code"] = "update failed";
     j["message"] = res.message;
     ctx.publisher->publish(RESULT_UPDATE_CONFIG, j.dump());

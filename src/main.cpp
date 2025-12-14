@@ -13,10 +13,10 @@
 #include "WebService.h"
 #include "device_status_reporter.h"
 #include "mqtt_topics.h"
-const std::string MODELPATH = "/home/ztl/workspace/allin/allin/model/yolov8n3576_i8.rknn";
-const std::string CONFIGPATH = "/home/ztl/workspace/allin/allin/include/common/config/config.json";
-// const std::string MODELPATH = "/home/ztl/workspace/allin/model/yolov8n_3568_i8.rknn";
-// const std::string CONFIGPATH = "/home/ztl/workspace/allin/include/common/config/config.json";
+// const std::string MODELPATH = "/home/ztl/workspace/allin/allin/model/yolov8n3576_i8.rknn";
+// const std::string CONFIGPATH = "/home/ztl/workspace/allin/allin/include/common/config/config.json";
+const std::string MODELPATH = "/home/ztl/workspace/allin/model/yolov8n_3588_i8.rknn";
+const std::string CONFIGPATH = "/home/ztl/workspace/allin/include/common/config/config.json";
 int main()
 {
     av_log_set_level(AV_LOG_QUIET);
