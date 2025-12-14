@@ -111,8 +111,9 @@ void Camera::pullKeyFrameLoop()
     {
         if (segMgr.needNewSegment()) {
             storage->closeStorage();
-
+            //std::cout << 1 << std::endl;
             segMgr.cleanExpiredFiles(7);
+            //std::cout << 2 << std::endl;
             storage = segMgr.createSegment(videoCapture_.getFormatContext());
             tsAdjuster.reset();
             if (!storage) break;

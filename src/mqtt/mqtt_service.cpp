@@ -27,6 +27,8 @@ void MqttService::start()
         client_.subscribe(GET_SENSOR_DATA_TOPIC, 1);
         client_.subscribe(OPERATE_CAR_TOPIC, 1);
         client_.subscribe(GET_ALL_DEVICE_STATUS_TOPIC, 1);
+        client_.subscribe(OPERATE_PLC_WITH_VERIFY_TOPIC, 1);
+        client_.subscribe(UPDATE_CONFIG, 1);
 
         std::cout << "MQTT connected & subscribed." << std::endl;
     }catch(const mqtt::exception& e){
@@ -57,6 +59,8 @@ void MqttService::connection_lost(const std::string& cause)
             client_.subscribe(GET_SENSOR_DATA_TOPIC, 1);
             client_.subscribe(OPERATE_CAR_TOPIC, 1);
             client_.subscribe(GET_ALL_DEVICE_STATUS_TOPIC, 1);
+            client_.subscribe(OPERATE_PLC_WITH_VERIFY_TOPIC, 1);
+            client_.subscribe(UPDATE_CONFIG, 1);
 
             return;
         }

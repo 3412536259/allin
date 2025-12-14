@@ -27,14 +27,20 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
     else if (topic == UPDATE_CONFIG_TOPIC) {
         handleUpdateConfig(j);
     }
-    else if(topic == GET_SENSOR_DATA_TOPIC) {
-        handleGetSensorData(j);
-    }
+    // else if(topic == GET_SENSOR_DATA_TOPIC) {
+    //     handleGetSensorData(j);
+    // }
     else if (topic == OPERATE_CAR_TOPIC) {
         handleOperateCar(j);
     }
     else if(topic == GET_ALL_DEVICE_STATUS_TOPIC){
         handleGetAllDeviceStatus(j);
+    }
+    else if(topic == OPERATE_PLC_WITH_VERIFY_TOPIC){
+        handleOperatePlcWithVerify(j);
+    }
+    else if(topic == UPDATE_CONFIG){
+        handleConfigUpdate(j);
     }
     else {
         std::cout << "Unknown topic: " << topic << std::endl;
@@ -64,25 +70,25 @@ void MqttCommandDispatcher::handleOperatePlc(const nlohmann::json& j)
     std::cout << "Submitted OperatePLC id=" << id 
               << " for device=" << deviceId << " operation=" << cmd << std::endl;
 }
-void MqttCommandDispatcher::handleGetPLCDeviceStatus(const nlohmann::json& j){
-    if(!j.contains("deviceId")) return;
-    std::string deviceId = j["deviceId"];
-    // auto task = std::make_shared<GetPLCDeviceTask>(deviceId);
-    // int id = scheduler_.submit(task, "mqtt");
+// void MqttCommandDispatcher::handleGetPLCDeviceStatus(const nlohmann::json& j){
+//     if(!j.contains("deviceId")) return;
+//     std::string deviceId = j["deviceId"];
+//     auto task = std::make_shared<GetPLCDeviceTask>(deviceId);
+//     int id = scheduler_.submit(task, "mqtt");
 
-    // std::cout << "Submitted GetPLCDeviceStatus id=" << id 
-    //           << " for device=" << deviceId << std::endl;
-}
-void MqttCommandDispatcher::handleGetSensorData(const nlohmann::json& j)
-{
-    if(!j.contains("sensorId")) return;
-    std::string sensorId = j["sensorId"];
-    // auto task = std::make_shared<GetSensorDataTask>(sensorId);
-    // int id = scheduler_.submit(task, "mqtt");
+//     std::cout << "Submitted GetPLCDeviceStatus id=" << id 
+//               << " for device=" << deviceId << std::endl;
+// }
+// void MqttCommandDispatcher::handleGetSensorData(const nlohmann::json& j)
+// {
+//     if(!j.contains("sensorId")) return;
+//     std::string sensorId = j["sensorId"];
+//     auto task = std::make_shared<GetSensorDataTask>(sensorId);
+//     int id = scheduler_.submit(task, "mqtt");
 
-    // std::cout << "Submitted GetSensorDataTask id=" << id 
-    //           << " for sensor=" << sensorId << std::endl;
-}
+//     std::cout << "Submitted GetSensorDataTask id=" << id 
+//               << " for sensor=" << sensorId << std::endl;
+// }
 void MqttCommandDispatcher::handleUpdateConfig(const nlohmann::json& j)
 {
 
@@ -115,11 +121,35 @@ void MqttCommandDispatcher::handleOperateCar(const nlohmann::json& j)
               << " motor1=" << motor1 
               << " motor2=" << motor2 << std::endl;
 }
+
 void MqttCommandDispatcher::handleGetAllDeviceStatus(const nlohmann::json& j)
 {
-    std::cout << "1111111111111111111111" << std::endl;
     auto task = std::make_shared<GetDeviceStatusTask>();
     int id = scheduler_.submit(task, "mqtt");
 
     std::cout << "submitted GetDeviceStatusTask id=" << id << std::endl;
+}
+
+void MqttCommandDispatcher::handleOperatePlcWithVerify(const nlohmann::json& j){
+    if(!j.contains("deviceId") || !j.contains("action") || !j.contains("sensorId") || !j.contains("cameraId")) return;
+    std::string deviceId = j["deviceId"];
+    std::string cmd = j["action"];
+    std::string sensorId = j["sensorId"];
+    std::string cameraId = j["cameraId"];
+    auto task =  std::make_shared<OperateValueWithVerifyTask>(deviceId, cmd, sensorId, cameraId);
+    int id = scheduler_.submit(task, "mqtt");
+
+    std::cout << "Submitted OperatePlcWithVerify id=" << id 
+              << " for device=" << deviceId << " operation=" << cmd 
+              << " sensor=" << sensorId << " camera=" << cameraId <<std::endl;
+}
+
+void MqttCommandDispatcher::handleConfigUpdate(const nlohmann::json& j){
+    if(!j.contains("new_config_data")) return;
+    std::string newConfigJson = j.at("new_config_data").get<std::string>();
+    
+    auto task = std::make_shared<UpdateConfigTask>(newConfigJson);
+    int id = scheduler_.submit(task, "mqtt");
+
+    std::cout<<"Submitted UpdateConfigTask id=" <<id<<std::endl;
 }

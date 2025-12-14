@@ -26,6 +26,7 @@ private:
 private:
     std::string modelPath_;
     bool initialized_ = false;
+    bool postprocess_inited_ = false;
     rknn_app_context_t rknn_app_ctx_;
     const int model_input_width_ = 640;
     const int model_input_height_ = 640;
