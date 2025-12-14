@@ -89,10 +89,6 @@ void MqttCommandDispatcher::handleOperatePlc(const nlohmann::json& j)
 //     std::cout << "Submitted GetSensorDataTask id=" << id 
 //               << " for sensor=" << sensorId << std::endl;
 // }
-void MqttCommandDispatcher::handleUpdateConfig(const nlohmann::json& j)
-{
-
-}
 
 void MqttCommandDispatcher::handleOperateCar(const nlohmann::json& j)
 {
