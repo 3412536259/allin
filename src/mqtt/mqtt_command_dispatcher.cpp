@@ -24,9 +24,6 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
     else if (topic == OPERATE_PLC_TOPIC) {
         handleOperatePlc(j);
     }
-    else if (topic == UPDATE_CONFIG_TOPIC) {
-        handleUpdateConfig(j);
-    }
     // else if(topic == GET_SENSOR_DATA_TOPIC) {
     //     handleGetSensorData(j);
     // }

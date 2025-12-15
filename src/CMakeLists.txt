@@ -13,8 +13,8 @@ set(MQTT_LIBS
 
 # -------------------------- 1. 收集src目录源文件 --------------------------
 set(SRC_FILES
-    #testDemo/taskTest.cpp
-    main.cpp
+    testDemo/taskTest.cpp
+    #main.cpp
     device/device_manager.cpp
     plc/serial_plc_connector.cpp
     plc/gateway_tcp_connector.cpp
@@ -78,6 +78,7 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/common/threads
     ${CMAKE_SOURCE_DIR}/include/common/yolo8
     ${CMAKE_SOURCE_DIR}/include/common/plc_utils
+    ${CMAKE_SOURCE_DIR}/include/common/findvideourl
     ${CMAKE_SOURCE_DIR}/include/config
     ${CMAKE_SOURCE_DIR}/third_party/mqtt
 
