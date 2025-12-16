@@ -1,6 +1,7 @@
 #include "mqtt_service.h"
 #include "mqtt_topics.h"
 #include <iostream>
+#include "logger.h"
 
 // const std::string GET_REAL_IMAGE_TOPIC = "device/camera/getRealImage";
 // const std::string OPERATE_PLC_TOPIC = "device/plc/operate";
@@ -31,8 +32,10 @@ void MqttService::start()
         client_.subscribe(UPDATE_CONFIG, 1);
 
         std::cout << "MQTT connected & subscribed." << std::endl;
+        LOG_INFO("MQTT connected & subscribed.");
     }catch(const mqtt::exception& e){
         std::cerr << "[MQTT] Connect failed: " << e.what() << std::endl;
+    LOG_ERROR(("MQTT connect failed: " + std::string(e.what())).c_str());   
         //初始化重连
         connection_lost("initial connect failed");
     }
@@ -42,15 +45,17 @@ void MqttService::start()
 void MqttService::connection_lost(const std::string& cause)
 {
     std::cout << "[MQTT] Connection lost: " << cause << std::endl;
+    LOG_ERROR(("MQTT connection lost: " + cause).c_str());
     int retryCount = 0;
     const int maxRetries = 5; // 最大重试10次
     while (retryCount < maxRetries)
     {
         try {
             std::cout << "[MQTT] Reconnecting... (retry " << retryCount + 1 << "/" << maxRetries << ")" << std::endl;
-
+            LOG_INFO(("MQTT reconnecting... (retry " + std::to_string(retryCount + 1) + "/" + std::to_string(maxRetries)).c_str());
             client_.reconnect()->wait();
             std::cout << "[MQTT] Reconnected!" << std::endl;
+            LOG_INFO("MQTT reconnected.");
 
             // 重新订阅主题
             client_.subscribe(GET_REAL_IMAGE_TOPIC, 1);
@@ -66,12 +71,14 @@ void MqttService::connection_lost(const std::string& cause)
         }
         catch (const mqtt::exception& e) {
             std::cerr << "[MQTT] Reconnect failed: " << e.what() << std::endl;
+            LOG_ERROR(("MQTT reconnect failed: " + std::string(e.what())).c_str());
             retryCount++;
             std::this_thread::sleep_for(std::chrono::seconds(2));
         }
     }
 
     std::cerr << "[MQTT] Max retries reached, exit reconnect loop" << std::endl;
+    LOG_ERROR("MQTT max retries reached, exit reconnect loop.");
 }
 
 void MqttService::message_arrived(mqtt::const_message_ptr msg)
@@ -92,5 +99,6 @@ void MqttService::publish(const std::string& topic,
     }
     catch (const mqtt::exception& e) {
         std::cerr << "[MQTT] Publish failed: " << e.what() << std::endl;
+        LOG_ERROR(("MQTT publish failed: " + std::string(e.what())).c_str());
     }
 }

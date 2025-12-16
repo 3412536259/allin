@@ -4,7 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <mqtt/async_client.h>
-#include <nlohmann/json.hpp>
+#include "json.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -12,28 +12,57 @@ using namespace std::chrono;
 
 const string TEST_BROKER_ADDRESS = "tcp://broker.emqx.io:1883";
 const string TEST_CLIENT_ID = "mqtt_test_client_" + to_string(time(nullptr));
-const string TEST_TOPIC = "device/control/carcontrol";
-const string RESPONSE_TOPIC = "device/carcontrol/result";
+const string TEST_TOPIC = "1/device/carControl";
+const string RESPONSE_TOPIC = "1/device/carControl/result";
 
 class MqttTestCallback : public virtual mqtt::callback {
 public:
-    MqttTestCallback() : received_(false), success_(false) {}
+    MqttTestCallback() : message_count_(0) {}
 
     void connection_lost(const string& cause) override {
         cout << "Connection lost: " << cause << endl;
     }
 
     void message_arrived(mqtt::const_message_ptr msg) override {
-        cout << "Received response: " << msg->to_string() << endl;
+        message_count_++;
+        cout << "Received message " << message_count_ << ": " << msg->to_string() << endl;
         
         try {
             auto response = json::parse(msg->to_string());
-            response_ = response;
-            success_ = response["success"];
-            received_ = true;
+            all_messages_.push_back(response);
             
-            if (response.contains("status_description")) {
-                cout << "Status description: " << response["status_description"] << endl;
+            // 检查消息类型
+            if (response.size() == 1 && response.contains("success")) {
+                cout << "Processing acknowledgment message" << endl;
+                acknowledgment_messages_.push_back(response);
+            } 
+            // 检查是否为详细结果消息
+            else if (response.contains("carcontrol_id") && response.contains("motor1") && response.contains("motor2") && 
+                     response.contains("status") && response.contains("status_byte") && response.contains("success")) {
+                cout << "Processing detailed result message" << endl;
+                result_messages_.push_back(response);
+                
+                // 解析并记录详细结果
+                cout << "Detailed result: " << endl;
+                cout << "  carcontrol_id: " << response["carcontrol_id"] << endl;
+                cout << "  motor1: " << response["motor1"] << endl;
+                cout << "  motor2: " << response["motor2"] << endl;
+                cout << "  status: " << response["status"] << endl;
+                cout << "  status_byte: " << response["status_byte"] << endl;
+                cout << "  success: " << response["success"] << endl;
+                if (response.contains("message")) {
+                    cout << "  message: " << response["message"] << endl;
+                }
+            }
+            // 检查是否为命令切换反馈消息
+            else if (response.contains("message") && response["message"].is_string() && 
+                     response["message"].get<string>().find("Executing new command") != string::npos) {
+                cout << "Processing command switch feedback message" << endl;
+                switch_messages_.push_back(response);
+            }
+            // 未知消息格式
+            else {
+                cout << "Received unknown message format" << endl;
             }
         } catch (const exception& e) {
             cout << "Error parsing response: " << e.what() << endl;
@@ -44,11 +73,19 @@ public:
 
     bool wait_for_response(int timeout_ms = 5000) {
         auto start = high_resolution_clock::now();
-        while (!received_) {
+        int prev_message_count = -1;
+        
+        // 等待至少有一条结果消息，或者超时
+        while (result_messages_.empty() && message_count_ < prev_message_count + 5) {
+            prev_message_count = message_count_;
             auto now = high_resolution_clock::now();
             auto duration = duration_cast<milliseconds>(now - start).count();
             if (duration > timeout_ms) {
-                cout << "Timeout waiting for response" << endl;
+                cout << "Timeout waiting for responses" << endl;
+                cout << "  Total messages received: " << message_count_ << endl;
+                cout << "  Acknowledgment messages: " << acknowledgment_messages_.size() << endl;
+                cout << "  Result messages: " << result_messages_.size() << endl;
+                cout << "  Switch messages: " << switch_messages_.size() << endl;
                 return false;
             }
             this_thread::sleep_for(milliseconds(100));
@@ -56,14 +93,43 @@ public:
         return true;
     }
 
-    json get_response() const { return response_; }
-    bool is_success() const { return success_; }
-    void reset() { received_ = false; success_ = false; response_.clear(); }
+    // 获取所有收到的消息
+    const vector<json>& get_all_messages() const { return all_messages_; }
+    
+    // 获取确认消息列表
+    const vector<json>& get_acknowledgment_messages() const { return acknowledgment_messages_; }
+    
+    // 获取结果消息列表
+    const vector<json>& get_result_messages() const { return result_messages_; }
+    
+    // 获取命令切换消息列表
+    const vector<json>& get_switch_messages() const { return switch_messages_; }
+    
+    // 获取最后一条结果消息的success值
+    bool is_last_result_success() const {
+        if (result_messages_.empty()) {
+            return false;
+        }
+        return result_messages_.back()["success"];
+    }
+    
+    // 获取消息总数
+    int get_message_count() const { return message_count_; }
+    
+    void reset() {
+        message_count_ = 0;
+        all_messages_.clear();
+        acknowledgment_messages_.clear();
+        result_messages_.clear();
+        switch_messages_.clear();
+    }
 
 private:
-    bool received_;
-    bool success_;
-    json response_;
+    int message_count_;                 // 收到的消息总数
+    vector<json> all_messages_;         // 所有收到的消息
+    vector<json> acknowledgment_messages_; // 确认消息列表
+    vector<json> result_messages_;      // 结果消息列表
+    vector<json> switch_messages_;      // 命令切换消息列表
 };
 
 struct TestCase {
@@ -119,19 +185,25 @@ public:
         }
 
         if (!callback_.wait_for_response()) {
+            cout << "Test result: FAIL" << endl;
+            cout << "Reason: Timeout waiting for response messages" << endl;
             return false;
         }
 
-        bool actual_success = callback_.is_success();
-        bool test_passed = (actual_success == test_case.expected_success);
-
+        // 验证结果消息：检查最后一条结果消息的success字段是否与预期一致
+        bool last_msg_success = callback_.is_last_result_success();
+        bool test_passed = (last_msg_success == test_case.expected_success);
+        
         cout << "Test result: " << (test_passed ? "PASS" : "FAIL") << endl;
-        cout << "Expected success: " << test_case.expected_success << ", Actual success: " << actual_success << endl;
+        cout << "Expected success: " << test_case.expected_success << ", Actual success: " << last_msg_success << endl;
 
         if (!test_passed) {
-            auto response = callback_.get_response();
-            if (response.contains("message")) {
-                cout << "Error message: " << response["message"] << endl;
+            cout << "Error: Result message validation failed" << endl;
+            if (!callback_.get_result_messages().empty()) {
+                auto response = callback_.get_result_messages().back();
+                if (response.contains("message")) {
+                    cout << "Error message: " << response["message"] << endl;
+                }
             }
         }
 
@@ -151,6 +223,104 @@ public:
         }
 
         generate_report(test_cases, results);
+    }
+    
+    // 测试命令覆盖功能：快速连续发送两条命令
+    bool run_command_override_test() {
+        cout << "\n====================================================" << endl;
+        cout << "Running test: Command Override Test" << endl;
+        cout << "Description: Testing command override functionality by sending two commands in quick succession" << endl;
+        
+        // 准备两条测试命令
+        json cmd1 = {{"carcontrol_id", "carcontrol001"}, {"motor1", 100}, {"motor2", 100}}; 
+        json cmd2 ={{"carcontrol_id", "carcontrol001"}, {"motor1", 200}, {"motor2", 200}}; 
+        
+        cout << "Command 1: " << cmd1.dump() << endl;
+        cout << "Command 2: " << cmd2.dump() << endl;
+        
+        // 重置回调状态
+        callback_.reset();
+        
+        try {
+            // 发送第一条命令
+            auto msg1 = mqtt::make_message(TEST_TOPIC, cmd1.dump(), 1, false);
+            client_.publish(msg1)->wait();
+            cout << "Command 1 published" << endl;
+            
+            // 短暂延迟（确保第一条命令开始执行但未完成）
+            this_thread::sleep_for(milliseconds(100));
+            
+            // 发送第二条命令
+            auto msg2 = mqtt::make_message(TEST_TOPIC, cmd2.dump(), 1, false);
+            client_.publish(msg2)->wait();
+            cout << "Command 2 published" << endl;
+            
+            // 等待响应
+            if (!callback_.wait_for_response(8000)) { // 延长超时时间，因为要处理多条消息
+                cout << "Test result: FAIL" << endl;
+                cout << "Reason: Timeout waiting for responses" << endl;
+                return false;
+            }
+            
+            // 验证命令覆盖功能
+            cout << "\nCommand Override Test Results:" << endl;
+            cout << "====================================================" << endl;
+            cout << "Total messages received: " << callback_.get_message_count() << endl;
+            cout << "Acknowledgment messages: " << callback_.get_acknowledgment_messages().size() << endl;
+            cout << "Result messages: " << callback_.get_result_messages().size() << endl;
+            cout << "Command switch messages: " << callback_.get_switch_messages().size() << endl;
+            
+            // 检查是否收到了命令切换消息
+            bool has_switch_message = !callback_.get_switch_messages().empty();
+            cout << "Has command switch feedback: " << (has_switch_message ? "YES" : "NO") << endl;
+            
+            // 检查最后一条结果消息的motor值是否与第二条命令一致
+            bool motor_values_match = false;
+            if (!callback_.get_result_messages().empty()) {
+                auto last_result = callback_.get_result_messages().back();
+                int actual_motor1 = last_result["motor1"];
+                int actual_motor2 = last_result["motor2"];
+                cout << "Last result motor1: " << actual_motor1 << " (expected: " << cmd2["motor1"] << ")" << endl;
+                cout << "Last result motor2: " << actual_motor2 << " (expected: " << cmd2["motor2"] << ")" << endl;
+                motor_values_match = (actual_motor1 == cmd2["motor1"]) && (actual_motor2 == cmd2["motor2"]);
+            }
+            
+            // 验证第二条命令是否成功执行
+            bool last_result_success = callback_.is_last_result_success();
+            cout << "Last result success: " << (last_result_success ? "YES" : "NO") << endl;
+            
+            // 综合判断测试结果
+            bool test_passed = has_switch_message && motor_values_match && last_result_success;
+            
+            cout << "\nTest result: " << (test_passed ? "PASS" : "FAIL") << endl;
+            if (test_passed) {
+                cout << "Command override functionality verified successfully!" << endl;
+                cout << "- First command was terminated by second command" << endl;
+                cout << "- Second command was executed successfully" << endl;
+                cout << "- Command switch feedback was received" << endl;
+            } else {
+                cout << "Command override test failed!" << endl;
+                if (!has_switch_message) {
+                    cout << "Reason: No command switch feedback message received" << endl;
+                }
+                if (!motor_values_match) {
+                    cout << "Reason: Motor values in last result do not match second command" << endl;
+                }
+                if (!last_result_success) {
+                    cout << "Reason: Last result was not successful" << endl;
+                }
+            }
+            
+            cout << "====================================================" << endl;
+            return test_passed;
+            
+        } catch (const mqtt::exception& e) {
+            cout << "Test result: FAIL" << endl;
+            cout << "Error: " << e.what() << endl;
+            return false;
+        }
+        
+        
     }
 
 private:
@@ -272,6 +442,14 @@ private:
             "Testing with additional non-required fields"
         });
 
+        // 新增测试用例：验证两条消息格式的处理
+        test_cases.push_back({
+            "Two-message response format",
+            {{"carcontrol_id", "carcontrol001"}, {"motor1", 100}, {"motor2", 200}},
+            true,
+            "Testing two-message response format: acknowledgment + detailed result"
+        });
+
         return test_cases;
     }
 
@@ -310,7 +488,13 @@ int main() {
         return 1;
     }
 
-    test.run_all_tests();
+    // 运行所有常规测试用例
+    //test.run_all_tests();
+    
+    // 运行命令覆盖测试
+    bool override_test_result = test.run_command_override_test();
+    cout << "Command override test result: " << (override_test_result ? "PASS" : "FAIL") << endl;
+    
     test.disconnect();
 
     return 0;

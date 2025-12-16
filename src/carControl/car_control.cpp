@@ -4,6 +4,7 @@
 #include <termios.h>
 #include <cstring>
 #include <iostream>
+#include "logger.h"
 #include <errno.h>
 
 static inline uint16_t make_u16(uint8_t hi, uint8_t lo){ return (static_cast<uint16_t>(hi)<<8) | lo; }
@@ -17,6 +18,7 @@ bool CarControlDriver::init(const std::string& port, int baud)
     serial_fd_ = open(port.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
     if (serial_fd_ < 0) {
         std::cerr << "CarControl: open serial failed: " << strerror(errno) << std::endl;
+        LOG_ERROR("CarControl: open serial failed: " + std::string(strerror(errno)));
         return false;
     }
 
@@ -24,6 +26,7 @@ bool CarControlDriver::init(const std::string& port, int baud)
     memset(&tty, 0, sizeof(tty));
     if (tcgetattr(serial_fd_, &tty) != 0) {
         std::cerr << "CarControl: tcgetattr failed: " << strerror(errno) << std::endl;
+        LOG_ERROR("CarControl: tcgetattr failed: " + std::string(strerror(errno)));
         close(serial_fd_);
         serial_fd_ = -1;
         return false;
@@ -96,6 +99,7 @@ bool CarControlDriver::sendControl(int16_t motor1, int16_t motor2)
     ssize_t n = write(serial_fd_, frame, sizeof(frame));
     if (n != (ssize_t)sizeof(frame)) {
         std::cerr << "CarControl: write failed: " << strerror(errno) << std::endl;
+        LOG_ERROR("CarControl: write failed: " + std::string(strerror(errno)));
         return false;
     }
     tcdrain(serial_fd_);
@@ -110,6 +114,7 @@ bool CarControlDriver::readStatus(MotorStatus& out)
     if (n < 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) return false;
         std::cerr << "CarControl: read error: " << strerror(errno) << std::endl;
+        LOG_ERROR("CarControl: read error: " + std::string(strerror(errno)));
         return false;
     }
     if (n < 2) return false; // 至少需要2个字节才有意义

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <atomic>
 
 struct MotorStatus {
     int16_t motor1 = 0; // -1500..1500
@@ -22,7 +23,6 @@ public:
 
     // read a single status frame from device (blocking read with timeout)
     bool readStatus(MotorStatus& out);
-
 private:
     int serial_fd_ = -1;
     std::string port_; 

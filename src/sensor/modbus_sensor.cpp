@@ -4,6 +4,7 @@
 #include <cstdlib>   // 新增：rand() 依赖（simulateData 用）
 #include <cstring>   // 新增：memset 依赖
 #include <cerrno>  
+#include "logger.h"
 
 speed_t ModbusSensor::baudToSpeed(int baud) {
     switch (baud) {
@@ -107,6 +108,7 @@ bool ModbusSensor::init() {
     serial_fd_ = open(device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (serial_fd_ < 0) {
         std::cerr << "[ModbusSensor] 串口打开失败：" << strerror(errno) << std::endl;
+        LOG_ERROR(std::string("串口打开失败：") + strerror(errno));
         status_ = SensorStatus::OFFLINE;
         return false;
     }
@@ -116,6 +118,7 @@ bool ModbusSensor::init() {
     memset(&tty, 0, sizeof(tty));
     if (tcgetattr(serial_fd_, &tty) != 0) {
         std::cerr << "[ModbusSensor] 获取串口属性失败：" << strerror(errno) << std::endl;
+        LOG_ERROR(std::string("获取串口属性失败：") + strerror(errno));
         close(serial_fd_);
         serial_fd_ = -1;
         status_ = SensorStatus::OFFLINE;
@@ -154,6 +157,7 @@ bool ModbusSensor::init() {
     // 应用配置
     if (tcsetattr(serial_fd_, TCSANOW, &tty) != 0) {
         std::cerr << "[ModbusSensor] 配置串口属性失败：" << strerror(errno) << std::endl;
+        LOG_ERROR(std::string("配置串口属性失败：") + strerror(errno));
         close(serial_fd_);
         serial_fd_ = -1;
         status_ = SensorStatus::OFFLINE;
@@ -194,6 +198,7 @@ bool ModbusSensor::readData() {
     ssize_t bytes_written = write(serial_fd_, req, sizeof(req));
     if (bytes_written < 0 || (size_t)bytes_written != sizeof(req)) {
         std::cerr << "[ModbusSensor] 发送数据失败：" << strerror(errno) << std::endl;
+        LOG_ERROR(std::string("发送数据失败：") + strerror(errno));
         status_ = SensorStatus::OFFLINE;
         return false;
     }
@@ -206,11 +211,13 @@ bool ModbusSensor::readData() {
     ssize_t bytes_read = read(serial_fd_, resp, sizeof(resp));
     if (bytes_read < 0) {
         std::cerr << "[ModbusSensor] 读取数据失败：" << strerror(errno) << std::endl;
+        LOG_ERROR(std::string("读取数据失败：") + strerror(errno));
         status_ = SensorStatus::ABNORMAL;
         return false;
     }
     if (bytes_read == 0) {
         std::cerr << "[ModbusSensor] 未收到响应" << std::endl;
+        LOG_ERROR("[ModbusSensor] 未收到响应");
         status_ = SensorStatus::ABNORMAL;
         return false;
     }
@@ -228,6 +235,7 @@ bool ModbusSensor::readData() {
         return true;
     } else {
         std::cerr << "[ModbusSensor] 响应长度不足：" << bytes_read << "字节" << std::endl;
+        LOG_ERROR("[ModbusSensor] 响应长度不足：" + std::to_string(bytes_read) + "字节");
         status_ = SensorStatus::ABNORMAL;
         return false;
     }

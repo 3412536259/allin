@@ -1,5 +1,6 @@
 #include "mqtt_command_dispatcher.h"
 #include "mqtt_topics.h"
+#include "logger.h"
 // const std::string GET_REAL_IMAGE_TOPIC = "device/camera/getRealImage";
 // const std::string OPERATE_PLC_TOPIC = "device/plc/operate";
 // const std::string UPDATE_CONFIG_TOPIC = "device/config/update";
@@ -15,6 +16,7 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
         j = nlohmann::json::parse(payload);
     }catch(...){
         std::cerr << "Invalid JSON: " << payload << std::endl;
+        LOG_ERROR("Invalid JSON: " + payload);
         return;
     }
     // 用 MQTT topic 决定任务类型
@@ -44,6 +46,7 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
     }
     else {
         std::cout << "Unknown topic: " << topic << std::endl;
+        LOG_ERROR("Unknown topic: " + topic);
     }
 }
 
@@ -58,6 +61,7 @@ void MqttCommandDispatcher::handleGetRealImage(const nlohmann::json& j)
 
     std::cout << "Submitted GetRealImageTask id=" << id 
               << " for cam=" << camId << std::endl;
+    LOG_INFO("Submitted GetRealImageTask id=" + std::to_string(id) + " for cam=" + camId);
 }
 void MqttCommandDispatcher::handleOperatePlc(const nlohmann::json& j)
 {
@@ -69,6 +73,7 @@ void MqttCommandDispatcher::handleOperatePlc(const nlohmann::json& j)
 
     std::cout << "Submitted OperatePLC id=" << id 
               << " for device=" << deviceId << " operation=" << cmd << std::endl;
+    LOG_INFO("Submitted OperatePLC id=" + std::to_string(id) + " for device=" + deviceId + " operation=" + cmd);
 }
 // void MqttCommandDispatcher::handleGetPLCDeviceStatus(const nlohmann::json& j){
 //     if(!j.contains("deviceId")) return;
@@ -96,12 +101,12 @@ void MqttCommandDispatcher::handleUpdateConfig(const nlohmann::json& j)
 
 void MqttCommandDispatcher::handleOperateCar(const nlohmann::json& j)
 {
-    if (!j.contains("carcontrol_id") && !j.contains("motor1") && !j.contains("motor2")) {
+    if (!j.contains("carcontrolId") && !j.contains("motor1") && !j.contains("motor2")) {
         std::cerr << "Invalid car control command: missing required fields" << std::endl;
         return;
     }
-    
-    std::string carId = j.value("carcontrol_id", std::string("carcontrol001"));
+
+    std::string carId = j.value("carcontrolId", std::string("carcontrol001"));
     int motor1 = j.value("motor1", 0);
     int motor2 = j.value("motor2", 0);
     
@@ -111,7 +116,8 @@ void MqttCommandDispatcher::handleOperateCar(const nlohmann::json& j)
     
     std::cout << "Handling car control command for car_id: " << carId 
               << ", motor1: " << motor1 << ", motor2: " << motor2 << std::endl;
-    
+    LOG_INFO("Handling car control command for car_id: " + carId + ", motor1: " + std::to_string(motor1) + ", motor2: " + std::to_string(motor2));
+
     // 创建并提交小车控制任务
     auto task = std::make_shared<CarControlTask>(j);
     int id = scheduler_.submit(task, "mqtt");
@@ -120,6 +126,8 @@ void MqttCommandDispatcher::handleOperateCar(const nlohmann::json& j)
               << " for car=" << carId 
               << " motor1=" << motor1 
               << " motor2=" << motor2 << std::endl;
+
+
 }
 
 void MqttCommandDispatcher::handleGetAllDeviceStatus(const nlohmann::json& j)
@@ -128,6 +136,7 @@ void MqttCommandDispatcher::handleGetAllDeviceStatus(const nlohmann::json& j)
     int id = scheduler_.submit(task, "mqtt");
 
     std::cout << "submitted GetDeviceStatusTask id=" << id << std::endl;
+    LOG_INFO("submitted GetDeviceStatusTask id=" + std::to_string(id));
 }
 
 void MqttCommandDispatcher::handleOperatePlcWithVerify(const nlohmann::json& j){
@@ -142,6 +151,7 @@ void MqttCommandDispatcher::handleOperatePlcWithVerify(const nlohmann::json& j){
     std::cout << "Submitted OperatePlcWithVerify id=" << id 
               << " for device=" << deviceId << " operation=" << cmd 
               << " sensor=" << sensorId << " camera=" << cameraId <<std::endl;
+    LOG_INFO("Submitted OperatePlcWithVerify id=" + std::to_string(id) + " for device=" + deviceId + " operation=" + cmd + " sensor=" + sensorId + " camera=" + cameraId);
 }
 
 void MqttCommandDispatcher::handleConfigUpdate(const nlohmann::json& j){
@@ -152,4 +162,5 @@ void MqttCommandDispatcher::handleConfigUpdate(const nlohmann::json& j){
     int id = scheduler_.submit(task, "mqtt");
 
     std::cout<<"Submitted UpdateConfigTask id=" <<id<<std::endl;
+    LOG_INFO("Submitted UpdateConfigTask id=" + std::to_string(id));
 }

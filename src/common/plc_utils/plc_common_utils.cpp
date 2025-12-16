@@ -1,6 +1,6 @@
 #include "plc_common_utils.h"
 #include <iostream>
-
+#include"logger.h"
 /**
  * @brief 计算 Modbus RTU 规范的 CRC-16/MODBUS 校验码。
  * @param data 待校验的字节数组 (不含CRC)
@@ -36,6 +36,8 @@ std::vector<char> HexStringToBytes(const std::string& hexFrame) {
                 bytes.push_back(static_cast<char>(std::stoul(byteString, nullptr, 16)));
             } catch (const std::exception& e) {
                 std::cerr << "Hex conversion error for byte: " << byteString << std::endl;
+                LOG_ERROR("Hex conversion error for byte: " + byteString);
+
             }
         }
     }

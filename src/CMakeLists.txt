@@ -13,7 +13,7 @@ set(MQTT_LIBS
 
 # -------------------------- 1. 收集src目录源文件 --------------------------
 set(SRC_FILES
-    #testDemo/taskTest.cpp
+    # testDemo/taskTest.cpp
     main.cpp
     device/device_manager.cpp
     plc/serial_plc_connector.cpp

@@ -1,5 +1,6 @@
 #include "camera_manager.h"
 #include "config_parser.h"
+#include "logger.h"
 #include <iostream>
 CameraManager::CameraManager()
 {
@@ -63,6 +64,7 @@ void CameraManager::start()
     if(!registerDevices())
     {   
         std::cout << "camera devices regist failed." << std::endl;
+        LOG_ERROR("camera devices regist failed.");
     }
     std::lock_guard<std::mutex> lock(mutex_);
     for(auto& camera : cameras_)
@@ -129,10 +131,12 @@ std::map<std::string, FrameData> CameraManager::getAllLastKeyFrames()
 
         if (kv.second->getLastKeyFrame(frame)) {
             result[id] = frame;  // 成功获取则加入 map
+
         } else {
             // 获取失败时可选择加入空帧或跳过
             std::cerr << "CameraManager: Failed to get keyframe for camera "
                       << id << std::endl;
+            
         }
     }
 
