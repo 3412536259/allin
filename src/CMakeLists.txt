@@ -78,6 +78,7 @@ target_include_directories(receive PUBLIC
     ${CMAKE_SOURCE_DIR}/include/common/threads
     ${CMAKE_SOURCE_DIR}/include/common/yolo8
     ${CMAKE_SOURCE_DIR}/include/common/plc_utils
+    ${CMAKE_SOURCE_DIR}/include/common/findvideourl
     ${CMAKE_SOURCE_DIR}/include/config
     ${CMAKE_SOURCE_DIR}/third_party/mqtt
 

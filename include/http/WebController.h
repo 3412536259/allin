@@ -16,6 +16,8 @@ public:
 
     json handleHttp(const std::string& path, const json& payload);
 
+    bool handleStaticFile(int client_fd, const std::string& relativePath);
+
 private:
     std::string boxId_;
     IDeviceManager* devMgr_ = nullptr;

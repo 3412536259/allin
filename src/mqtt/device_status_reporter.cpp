@@ -36,6 +36,7 @@ void DeviceStatusReporter::reportStatus(const std::string& topic)
 {
     DeviceStatus status = devMgr_->getStatus();
     nlohmann::json j;
+    j["commandCode"] = "0000 0001";
     auto& device = j["device"];
 
     // Cameras
