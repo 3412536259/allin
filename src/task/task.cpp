@@ -6,6 +6,7 @@
 #include "config_parser.h"
 #include "mqtt_topics.h"
 #include "find_video_url.h"
+#define BOX_ID  ConfigParser::getInstance().getConfig().boxId  
 void GetCameraRealImageTask::run(TaskContext& ctx)
 {
     nlohmann::json j;
@@ -150,6 +151,7 @@ void GetDeviceStatusTask::run(TaskContext& ctx)
 
     nlohmann::json j;
     j["commandCode"] = "0000 0001";
+    j["deviceId"]=BOX_ID;
     auto& device = j["device"];
     
     for(const auto& camStatus : status.cameraStatusList.cameraStatus){
@@ -199,7 +201,7 @@ void CarControlTask::run(TaskContext& ctx)
     {
         nlohmann::json ack;
         ack["success"] = true;  // 没提供小车的信息
-        ack["carcontrol_id"] = payload_["carcontrol_id"];
+        ack["carcontrolId"] = payload_["carcontrolId"];
         ctx.publisher->publish(RESULT_OPERATE_CAR_TOPIC, ack.dump());
     }
     if (!validatePayload(payload_)) {
@@ -210,7 +212,7 @@ void CarControlTask::run(TaskContext& ctx)
         return;
     }
     
-    std::string carId = payload_.value("carcontrol_id", std::string("carcontrol001"));
+    std::string carId = payload_.value("carcontrolId", std::string("carcontrol001"));
     int motor1 = payload_.value("motor1", 0);
     int motor2 = payload_.value("motor2", 0);
     
@@ -224,7 +226,7 @@ void CarControlTask::run(TaskContext& ctx)
     
     nlohmann::json jsonResponse;
     jsonResponse["success"] = result.success;
-    jsonResponse["carcontrol_id"] = carId;
+    jsonResponse["carcontrolId"] = carId;
     jsonResponse["motor1"] = result.motor1;
     jsonResponse["motor2"] = result.motor2;
     
@@ -245,8 +247,8 @@ void CarControlTask::run(TaskContext& ctx)
     jsonResponse["status"] = status;
     //ztl
     
-    jsonResponse["status_byte"] = result.statusByte;
-    jsonResponse["message"] = result.message;
+    // jsonResponse["status_byte"] = result.statusByte;
+    // jsonResponse["message"] = result.message;
     
     ctx.publisher->publish(RESULT_OPERATE_CAR_TOPIC, jsonResponse.dump());
     
@@ -266,10 +268,7 @@ bool CarControlTask::validatePayload(const nlohmann::json& payload)
     if (payload.contains("motor2") && !payload["motor2"].is_number_integer()) {
         return false;
     }
-    
-    if (payload.contains("car_id") && !payload["car_id"].is_string()) {
-        return false;
-    }
+
     
     return true;
 }
@@ -285,6 +284,7 @@ void UpdateConfigTask::run(TaskContext& ctx){
     UpdateConfigResult res = ctx.devMgr->configUpdate(JsonStr_);
     nlohmann::json j;
     j["commandCode"] = "0000 0050";
+    j["deviceId"] = BOX_ID;
     if(!res.isSuccess) j["code"] = "update failed";
     j["message"] = res.message;
     ctx.publisher->publish(RESULT_UPDATE_CONFIG, j.dump());
