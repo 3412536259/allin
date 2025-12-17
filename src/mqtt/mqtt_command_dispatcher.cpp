@@ -49,9 +49,9 @@ void MqttCommandDispatcher::onMessage(const std::string& topic, const std::strin
 
 void MqttCommandDispatcher::handleGetRealImage(const nlohmann::json& j)
 {
-    if (!j.contains("deviceId")) return;
+    if (!j.contains("cameraId")) return;
 
-    std::string camId = j["deviceId"];
+    std::string camId = j["cameraId"];
 
     auto task = std::make_shared<GetCameraRealImageTask>(camId);
     int id = scheduler_.submit(task, "mqtt");
