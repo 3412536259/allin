@@ -3,10 +3,11 @@
 #include <cstring>
 #include <ctime>
 #include "image_processor.h"
-const int INTERVAL_TIME = 4;
+#include "mqtt_topics.h"
+const int INTERVAL_TIME = 5;
 AIRecognizer::AIRecognizer( std::unique_ptr<IAIModelService> model,
-                            IDeviceManager* devMgr)
-    : modelService_(std::move(model)),devMgr_(devMgr){}
+                            IDeviceManager* devMgr,ITaskResultPublisher* publisher)
+    : modelService_(std::move(model)),devMgr_(devMgr),publisher_(publisher){}
 
 AIRecognizer::~AIRecognizer(){
     stop();
@@ -40,16 +41,24 @@ void AIRecognizer::processFrame(AVFrame* frame,const std::string& sourceCamera){
     bool hasObject = od_results.count > 0;
 
     if(hasObject){
+        std::vector<unsigned char> outJpeg;
         std::cout << "[AI] Detected object(s) on camera: " << sourceCamera 
                   << ", count=" << od_results.count << std::endl;
 
         // 4. 在 RGB 图上绘制框
         ImageProcessor::drawDetections(&rgb_image, od_results);
 
+        ImageProcessor::compressToJpeg(&rgb_image,outJpeg);
+
+        std::string imageBase64 = ImageProcessor::jpegToBase64(outJpeg);
+        nlohmann::json j;
+        j["cameraId"] =  sourceCamera;
+        j["image"] = imageBase64;
+
         // 5. 调用上传（保存图像 + 上传 MQTT/HTTP）
-        // if(resultHandler_){
-        //     resultHandler_->handleResult(&rgb_image, sourceCamera);
-        // }
+        if(publisher_){
+            publisher_->publish(RESULT_AI_ALARM_TOPIC,j.dump());
+        }
     }
     free(rgb_image.virt_addr);
 }
@@ -77,6 +86,7 @@ void AIRecognizer::consumeLoop() {
                 if(realImage.integrity)
                 {
                     run(realImage);
+                    std::this_thread::sleep_for(std::chrono::seconds(2));
                 }
             }
         }
