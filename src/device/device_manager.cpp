@@ -3,6 +3,7 @@
 #include "sensor_manager.h"
 #include "plc_manager.h"
 #include "car_control_manager.h"
+#include "logger.h"
 #include <iostream>
 DeviceManager::DeviceManager()
 {
@@ -63,6 +64,7 @@ RealImage DeviceManager::getRealImage(const std::string& camId)
     RealImage realImage;
     if (!cameraManager_) {
         std::cerr << "DeviceManager: cameraManager_ is null!" << std::endl;
+        LOG_ERROR("DeviceManager: cameraManager_ is null!");
         return realImage;
     }
     CameraStaticInfo info;
@@ -74,6 +76,7 @@ RealImage DeviceManager::getRealImage(const std::string& camId)
     bool ok = cameraManager_->getCameraLastKeyFrame(info, frame);
     if (!ok) {
         std::cerr << "DeviceManager: failed to get real image for camera "<< info.camera_id << std::endl;
+        LOG_ERROR("DeviceManager: failed to get real image for camera "+ info.camera_id);
         return realImage;
     }
     realImage.frame = frame;
@@ -84,7 +87,7 @@ RealImage DeviceManager::getRealImage(const std::string& camId)
 
     std::cout << "DeviceManager: Real image retrieved for camera " 
               << info.camera_id << ", timestamp=" << frame.timestamp << std::endl;
-
+    LOG_INFO("DeviceManager: Real image retrieved for camera " + info.camera_id);
     return realImage;
 }
 
@@ -135,6 +138,7 @@ OperatePLCWithVerify DeviceManager::operatePlcWithVerify(const std::string& devi
     OperatePLCWithVerify result;
     if(!plcManager_){
         std::cerr << "DeviceManager: plcManager is null!"<<std::endl;
+        LOG_ERROR("DeviceManager: plcManager is null!");
         return result;
     }
     OperateResult res = plcManager_->operate(deviceId,cmd);
@@ -191,12 +195,15 @@ OperatePLCWithVerify DeviceManager::operatePlcWithVerify(const std::string& devi
             auto now = std::chrono::steady_clock::now();
             if (now >= check_2s && now < check_4s) {
                 std::cout << "2秒检测点：当前湿度 = " << currentHumidity << "%（基准=" << initialHumidity << "%）" << std::endl;
+                LOG_INFO("2秒检测点：当前湿度 = " + std::to_string(currentHumidity) + "%（基准=" + std::to_string(initialHumidity) + "%）");
                 check_2s = timeout_time; // 避免重复打印2s检测日志
             } else if (now >= check_4s && now < check_8s) {
                 std::cout << "4秒检测点：当前湿度 = " << currentHumidity << "%（基准=" << initialHumidity << "%）" << std::endl;
+                LOG_INFO("4秒检测点：当前湿度 = " + std::to_string(currentHumidity) + "%（基准=" + std::to_string(initialHumidity) + "%）");
                 check_4s = timeout_time; // 避免重复打印4s检测日志
             } else if (now >= check_8s && now < timeout_time) {
                 std::cout << "8秒检测点：当前湿度 = " << currentHumidity << "%（基准=" << initialHumidity << "%）" << std::endl;
+                LOG_INFO("8秒检测点：当前湿度 = " + std::to_string(currentHumidity) + "%（基准=" + std::to_string(initialHumidity) + "%）");
                 check_8s = timeout_time; // 避免重复打印8s检测日志
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -234,6 +241,7 @@ PLCDeviceState DeviceManager::getPLCDeviceStatus(const std::string& deviceId)
     PLCDeviceState res;
     if(!plcManager_){
         std::cerr << "DeviceManager: plcManager is null!"<<std::endl;
+        LOG_ERROR("DeviceManager: plcManager is null!");
         return res;
     }
     PLCInfo status = plcManager_->getStatus(deviceId);

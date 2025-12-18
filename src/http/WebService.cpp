@@ -7,6 +7,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include "logger.h"
 
 
 using nlohmann::json;
@@ -25,6 +26,7 @@ bool WebService::start() {
     m_server_fd = ::socket(AF_INET, SOCK_STREAM, 0);
     if (m_server_fd < 0) {
         std::cerr << "WebService: Failed to create server socket" << std::endl;
+        LOG_ERROR("WebService: Failed to create server socket");
         return false;
     }
 
@@ -39,6 +41,7 @@ bool WebService::start() {
 
     if (bind(m_server_fd, (sockaddr*)&addr, sizeof(addr)) < 0) {
         std::cerr << "WebService: Failed to bind server socket" << std::endl;
+        LOG_ERROR("WebService: Failed to bind server socket");
         ::close(m_server_fd);
         m_server_fd = -1;
         return false;
@@ -46,6 +49,7 @@ bool WebService::start() {
 
     if (listen(m_server_fd, 4) < 0) {
         std::cerr << "WebService: Failed to listen on server socket" << std::endl;
+        LOG_ERROR("WebService: Failed to listen on server socket");
         ::close(m_server_fd);
         m_server_fd = -1;
         return false;
@@ -54,6 +58,7 @@ bool WebService::start() {
     m_running = true;
     m_thread = std::thread(&WebService::run, this);
     std::cout << "WebService listening on port " << m_port << std::endl;
+    LOG_INFO("WebService listening on port " + std::to_string(m_port));
     return true;
 }
 
@@ -74,7 +79,10 @@ void WebService::run() {
         socklen_t client_len = sizeof(client_addr);
         int client_fd = accept(m_server_fd, (sockaddr*)&client_addr, &client_len);
         if (client_fd < 0) {
-            if (m_running) std::cerr << "WebService: Accept failed" << std::endl;
+            if (m_running) {
+                std::cerr << "WebService: Accept failed" << std::endl;
+                LOG_ERROR("WebService: Accept failed");
+            }
             break;
         }
         std::thread(&WebService::handleClient, this, client_fd).detach();

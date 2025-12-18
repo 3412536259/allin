@@ -6,18 +6,19 @@
 #include "config_parser.h"
 #include "mqtt_topics.h"
 #include "find_video_url.h"
+#define BOX_ID  ConfigParser::getInstance().getConfig().boxId  
 void GetCameraRealImageTask::run(TaskContext& ctx)
 {
     nlohmann::json j;
-    j["commandCode"] = "0000 0200";
-    ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, j.dump());
+   
 
     {
         nlohmann::json ack;
         ack["success"] = true;
         ack["cameraId"] = camId_;
         ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, ack.dump());
-    }
+    } 
+    j["commandCode"] = "0000 0200";
     RealImage image = ctx.devMgr->getRealImage(camId_);
     image_buffer_t out_image;
     std::vector<unsigned char> outJpeg;
@@ -150,6 +151,7 @@ void GetDeviceStatusTask::run(TaskContext& ctx)
 
     nlohmann::json j;
     j["commandCode"] = "0000 0001";
+    j["deviceId"]=BOX_ID;
     auto& device = j["device"];
     
     for(const auto& camStatus : status.cameraStatusList.cameraStatus){
@@ -195,9 +197,11 @@ void GetDeviceStatusTask::run(TaskContext& ctx)
 
 void CarControlTask::run(TaskContext& ctx)
 {
+    
     {
         nlohmann::json ack;
         ack["success"] = true;  // 没提供小车的信息
+        ack["carcontrolId"] = payload_["carcontrolId"];
         ctx.publisher->publish(RESULT_OPERATE_CAR_TOPIC, ack.dump());
     }
     if (!validatePayload(payload_)) {
@@ -208,7 +212,7 @@ void CarControlTask::run(TaskContext& ctx)
         return;
     }
     
-    std::string carId = payload_.value("carcontrol_id", std::string("carcontrol001"));
+    std::string carId = payload_.value("carcontrolId", std::string("carcontrol001"));
     int motor1 = payload_.value("motor1", 0);
     int motor2 = payload_.value("motor2", 0);
     
@@ -222,29 +226,29 @@ void CarControlTask::run(TaskContext& ctx)
     
     nlohmann::json jsonResponse;
     jsonResponse["success"] = result.success;
-    jsonResponse["carcontrol_id"] = carId;
+    jsonResponse["carcontrolId"] = carId;
     jsonResponse["motor1"] = result.motor1;
     jsonResponse["motor2"] = result.motor2;
     
     //ztl
-    // ״̬ӳ���߼�
+    // 状态映射逻辑
     int status = 0;
     uint16_t statusByte = result.statusByte;
     if (statusByte == 514) { // 0x0202
-        status = 0; // ����
+        status = 0; // 正常
     } else if (statusByte == 0) {
-        status = -1; // ����Ӧ
+        status = -1; // 无响应(电机停转)
     } else if (statusByte == 0x0303) { // 00000011 00000011
-        status = 1; // �����ת
-    } else if (statusByte == 0x0C0C) { // 00000012 00000012 (ʮ������ 0x0C = ʮ���� 12)
-        status = 2; // ��������
+        status = 1; // 电机堵转
+    } else if (statusByte == 0x0C0C) { // 00000012 00000012  (十六进制 0x0C = 十进制 12)
+        status = 2; // 电流保护
     }
     
     jsonResponse["status"] = status;
     //ztl
     
-    jsonResponse["status_byte"] = result.statusByte;
-    jsonResponse["message"] = result.message;
+    // jsonResponse["status_byte"] = result.statusByte;
+    // jsonResponse["message"] = result.message;
     
     ctx.publisher->publish(RESULT_OPERATE_CAR_TOPIC, jsonResponse.dump());
     
@@ -264,10 +268,7 @@ bool CarControlTask::validatePayload(const nlohmann::json& payload)
     if (payload.contains("motor2") && !payload["motor2"].is_number_integer()) {
         return false;
     }
-    
-    if (payload.contains("car_id") && !payload["car_id"].is_string()) {
-        return false;
-    }
+
     
     return true;
 }
@@ -283,6 +284,7 @@ void UpdateConfigTask::run(TaskContext& ctx){
     UpdateConfigResult res = ctx.devMgr->configUpdate(JsonStr_);
     nlohmann::json j;
     j["commandCode"] = "0000 0050";
+    j["deviceId"] = BOX_ID;
     if(!res.isSuccess) j["code"] = "update failed";
     j["message"] = res.message;
     ctx.publisher->publish(RESULT_UPDATE_CONFIG, j.dump());

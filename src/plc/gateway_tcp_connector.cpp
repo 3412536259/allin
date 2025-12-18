@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include "logger.h"
 
 // -------------------------------------------------------------------
 // GatewayTCPConnector 类实现
@@ -21,6 +22,8 @@ GatewayTCPConnector::GatewayTCPConnector(const PLCConfig& config)
     // 对于网关，通常使用 Slave ID 0x01
     if (config_.plcId.empty()) { 
         std::cerr << "[GatewayTCP] WARNING: PLC ID is empty, connection might fail.\n";
+        LOG_WARNING("[GatewayTCP] PLC ID is empty, connection might fail.");
+
     }
 }
 
@@ -64,6 +67,7 @@ bool GatewayTCPConnector::connect() {
     std::lock_guard<std::mutex> lock(io_mutex_);
     if (socket_fd_ != -1) {
         std::cout << "[GatewayTCP:" << config_.plcId << "] Already connected." << std::endl;
+        LOG_INFO("[GatewayTCP] Already connected.");
         return true;
     }
 
@@ -85,6 +89,7 @@ bool GatewayTCPConnector::connect() {
     // 3. 连接成功
     status_ = "CONNECTED";
     std::cout << "[GatewayTCP:" << config_.plcId << "] Connection established (Gateway Online).\n";
+    LOG_INFO("[GatewayTCP] Connection established (Gateway Online).");
     return true;
 }
 
@@ -109,6 +114,7 @@ std::string GatewayTCPConnector::readRegister(const std::string& address) {
 
     if (status_ != "CONNECTED" || socket_fd_ == -1) {
         std::cout << "[GatewayTCP:" << config_.plcId << "] ERROR: Cannot read, Gateway is DISCONNECTED." << std::endl;
+        LOG_ERROR("[GatewayTCP] Cannot read, Gateway is DISCONNECTED.");
         return "ERROR";
     }
     
@@ -121,6 +127,7 @@ std::string GatewayTCPConnector::readRegister(const std::string& address) {
         addrBytes = addressToBytes(address);
     } catch (const std::invalid_argument& e) {
         std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: " << e.what() << std::endl;
+        LOG_ERROR("[GatewayTCP] " + std::string(e.what()));
         return "ERROR";
     }
 
@@ -136,7 +143,9 @@ std::string GatewayTCPConnector::readRegister(const std::string& address) {
     std::vector<char> readFrame = buildTCPFrame(readPDU, tid, unitId);
 
     std::cout << "[GatewayTCP:" << config_.plcId << "] Reading Device Status on Address " << address << ":\n";
+    LOG_INFO("[GatewayTCP] Reading Device Status on Address " + address);
     std::cout << "  -> TX Sent: " << BytesToHexString(readFrame) << " (" << readFrame.size() << " bytes)\n";
+    LOG_INFO("[GatewayTCP] TX Sent: " + BytesToHexString(readFrame));
     
     // 2. 帧交换
     if (sendToSocket(readFrame) == 0) return "ERROR";
@@ -151,6 +160,7 @@ std::string GatewayTCPConnector::readRegister(const std::string& address) {
     // 响应帧的第 9 字节是数据位
     std::string status = (response[9] & 0x01) ? "1" : "0";
     std::cout << "[GatewayTCP:" << config_.plcId << "] Read Success. (Status: " << status << ")\n";
+    LOG_INFO("[GatewayTCP] Read Success. (Status: " + status + ")");
     return status;
 }
 
@@ -162,6 +172,7 @@ bool GatewayTCPConnector::writeRegister(const std::string& address, const std::s
 
     if (status_ != "CONNECTED" || socket_fd_ == -1) {
         std::cout << "[GatewayTCP:" << config_.plcId << "] ERROR: Write failed, Gateway is DISCONNECTED." << std::endl;
+        LOG_ERROR("[GatewayTCP] Write failed, Gateway is DISCONNECTED.");
         return false;
     }
 
@@ -176,6 +187,7 @@ bool GatewayTCPConnector::writeRegister(const std::string& address, const std::s
         dataValue = { (char)0x00, (char)0x00 };
     } else {
         std::cerr << "[GatewayTCP:" << config_.plcId << "] Invalid write value: " << value << std::endl;
+        LOG_ERROR("[GatewayTCP] Invalid write value: " + value);
         return false;
     }
 
@@ -185,6 +197,7 @@ bool GatewayTCPConnector::writeRegister(const std::string& address, const std::s
         addrBytes = addressToBytes(address);
     } catch (const std::invalid_argument& e) {
         std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: " << e.what() << std::endl;
+        LOG_ERROR("[GatewayTCP] " + std::string(e.what()));
         return false;
     }
 
@@ -200,7 +213,9 @@ bool GatewayTCPConnector::writeRegister(const std::string& address, const std::s
     std::vector<char> writeFrame = buildTCPFrame(writePDU, tid, unitId);
 
     std::cout << "[GatewayTCP:" << config_.plcId << "] Writing Device Status on Address " << address << " with value " << value << ":\n";
+    LOG_INFO("[GatewayTCP] Writing Device Status on Address " + address + " with value " + value);
     std::cout << "  -> TX Sent: " << BytesToHexString(writeFrame) << " (" << writeFrame.size() << " bytes)\n";
+    LOG_INFO("[GatewayTCP] TX Sent: " + BytesToHexString(writeFrame));
     
     // 2. 帧交换
     if (sendToSocket(writeFrame) == 0) return false;
@@ -219,10 +234,12 @@ bool GatewayTCPConnector::writeRegister(const std::string& address, const std::s
 
     if (!isEchoMatch) {
         std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Write failed. PDU Echo frame mismatch.\n";
+        LOG_ERROR("[GatewayTCP] Write failed. PDU Echo frame mismatch.");
         return false;
     }
     
     std::cout << "[GatewayTCP:" << config_.plcId << "] Write Success. (Echo Match)\n";
+    LOG_INFO("[GatewayTCP] Write Success. (Echo Match)");
     return true;
 }
 
@@ -236,11 +253,13 @@ bool GatewayTCPConnector::writeRegister(const std::string& address, const std::s
 bool GatewayTCPConnector::openSocket() {
     const auto& netConfig = config_.gatewayConfig;
     std::cout << "[TCP I/O] Connecting to " << netConfig.gatewayIp << ":" << netConfig.gatewayPort << "..." << std::endl;
+    LOG_INFO("[TCP I/O] Connecting to " + netConfig.gatewayIp + ":" + std::to_string(netConfig.gatewayPort));
 
     // 1. 创建 socket
     socket_fd_ = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd_ < 0) {
         std::cerr << "[TCP I/O] ERROR: Failed to create socket (" << strerror(errno) << ").\n";
+        LOG_ERROR("[TCP I/O] Failed to create socket (" + std::string(strerror(errno)) + ")");
         return false;
     }
     
@@ -253,6 +272,7 @@ bool GatewayTCPConnector::openSocket() {
     // 3. 转换 IP 地址
     if (inet_pton(AF_INET, netConfig.gatewayIp.c_str(), &serv_addr.sin_addr) <= 0) {
         std::cerr << "[TCP I/O] ERROR: Invalid address or address not supported (" << netConfig.gatewayIp << ").\n";
+        LOG_ERROR("[TCP I/O] Invalid address or address not supported (" + netConfig.gatewayIp + ")");
         closeSocket();
         return false;
     }
@@ -268,11 +288,14 @@ bool GatewayTCPConnector::openSocket() {
     if (::connect(socket_fd_, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         std::cerr << "[TCP I/O] ERROR: Connection failed to " << netConfig.gatewayIp << ":" << netConfig.gatewayPort 
                   << " (" << strerror(errno) << ").\n";
+        LOG_ERROR("[TCP I/O] Connection failed to " + netConfig.gatewayIp + ":" + std::to_string(netConfig.gatewayPort) +
+                  " (" + std::string(strerror(errno)) + ")");
         closeSocket();
         return false;
     }
 
     std::cout << "[TCP I/O] Socket connected successfully (FD: " << socket_fd_ << ")" << std::endl;
+    LOG_INFO("[TCP I/O] Socket connected successfully (FD: " + std::to_string(socket_fd_) + ")");
     return true; 
 }
 
@@ -282,6 +305,7 @@ bool GatewayTCPConnector::openSocket() {
 void GatewayTCPConnector::closeSocket() {
     if (socket_fd_ != -1) {
         std::cout << "[TCP I/O] Closing socket (FD: " << socket_fd_ << ")." << std::endl;
+        LOG_INFO("[TCP I/O] Closing socket (FD: " + std::to_string(socket_fd_) + ")");
         close(socket_fd_); 
         socket_fd_ = -1;
     }
@@ -297,6 +321,7 @@ size_t GatewayTCPConnector::sendToSocket(const std::vector<char>& data) {
 
     if (bytesWritten < 0) {
         std::cerr << "[TCP I/O] ERROR: Send failed (" << strerror(errno) << ").\n";
+        LOG_ERROR("[TCP I/O] Send failed (" + std::string(strerror(errno)) + ")");
         return 0;
     }
     
@@ -327,6 +352,7 @@ std::vector<char> GatewayTCPConnector::readFromSocket(size_t expectedMinBytes, i
         } else if (bytesRead == 0) {
             // 连接关闭
             std::cout << "[TCP I/O] Connection closed by peer.\n";
+            LOG_INFO("[TCP I/O] Connection closed by peer.");
             return {};
         } else if (bytesRead < 0) {
             // 发生错误 (包括超时)
@@ -336,11 +362,13 @@ std::vector<char> GatewayTCPConnector::readFromSocket(size_t expectedMinBytes, i
                 if (std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::steady_clock::now() - startTime).count() >= timeout_ms) {
                     std::cout << "[TCP I/O] Read Timeout.\n";
+                    LOG_INFO("[TCP I/O] Read Timeout.");
                     break;
                 }
                 // 如果是 EAGAIN/EWOULDBLOCK 但未超时，可以继续等待，但由于设置了 SO_RCVTIMEO，这里通常就是超时了
             } else {
                 std::cerr << "[TCP I/O] ERROR: Read failed (" << strerror(errno) << ").\n";
+                LOG_ERROR("[TCP I/O] Read failed (" + std::string(strerror(errno)) + ")");
                 return {};
             }
         }
@@ -369,6 +397,7 @@ std::vector<char> GatewayTCPConnector::addressToBytes(const std::string& registe
 bool GatewayTCPConnector::validateResponse(const std::vector<char>& response, uint16_t transactionId, uint8_t expectedFuncCode, size_t expectedMinLength) const {
     if (response.empty()) {
         std::cout << "  <- RX Received: <Timeout/Empty>\n";
+        LOG_ERROR("[GatewayTCP:" + config_.plcId + "] ERROR: Received timeout or empty response.");
         return false;
     }
 
@@ -376,6 +405,7 @@ bool GatewayTCPConnector::validateResponse(const std::vector<char>& response, ui
 
     if (response.size() < expectedMinLength) {
         std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Response too short (" << response.size() << " bytes).\n";
+        LOG_ERROR("[GatewayTCP:" + config_.plcId + "] ERROR: Response too short (" + std::to_string(response.size()) + " bytes).");
         return false;
     }
     
@@ -383,12 +413,14 @@ bool GatewayTCPConnector::validateResponse(const std::vector<char>& response, ui
     uint16_t rxTid = (static_cast<uint8_t>(response[0]) << 8) | static_cast<uint8_t>(response[1]);
     if (rxTid != transactionId) {
         std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Transaction ID mismatch. Expected " << transactionId << ", Got " << rxTid << ".\n";
+        LOG_ERROR("[GatewayTCP:" + config_.plcId + "] ERROR: Transaction ID mismatch. Expected " + std::to_string(transactionId) + ", Got " + std::to_string(rxTid) + ".");
         return false;
     }
     
     // 2. 校验 Protocol ID (MBAP 字节 2, 3，必须为 0x0000)
     if (static_cast<uint8_t>(response[2]) != 0x00 || static_cast<uint8_t>(response[3]) != 0x00) {
         std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Protocol ID mismatch.\n";
+        LOG_ERROR("[GatewayTCP:" + config_.plcId + "] ERROR: Protocol ID mismatch.");
         return false;
     }
 
@@ -397,6 +429,7 @@ bool GatewayTCPConnector::validateResponse(const std::vector<char>& response, ui
     uint8_t rxUnitId = static_cast<uint8_t>(response[6]);
     if (rxUnitId != config_.slaveId) { 
         std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Unit ID mismatch. Expected " << (int)config_.slaveId << ", Got " << (int)rxUnitId << ".\n";
+        LOG_ERROR("[GatewayTCP:" + config_.plcId + "] ERROR: Unit ID mismatch. Expected " + std::to_string((int)config_.slaveId) + ", Got " + std::to_string((int)rxUnitId) + ".");
         return false;
     }
 
@@ -407,11 +440,13 @@ bool GatewayTCPConnector::validateResponse(const std::vector<char>& response, ui
         // 异常响应 (功能码最高位为1)
         uint8_t exceptionCode = static_cast<uint8_t>(response[8]);
         std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Modbus Exception Code " << (int)exceptionCode << " (Func: " << (int)funcCode << ").\n";
+        LOG_ERROR("[GatewayTCP:" + config_.plcId + "] ERROR: Modbus Exception Code " + std::to_string((int)exceptionCode) + " (Func: " + std::to_string((int)funcCode) + ").");
         return false;
     }
     
     if (funcCode != expectedFuncCode) {
         std::cerr << "[GatewayTCP:" << config_.plcId << "] ERROR: Function Code mismatch. Expected " << (int)expectedFuncCode << ", Got " << (int)funcCode << ".\n";
+        LOG_ERROR("[GatewayTCP:" + config_.plcId + "] ERROR: Function Code mismatch. Expected " + std::to_string((int)expectedFuncCode) + ", Got " + std::to_string((int)funcCode) + ".");
         return false;
     }
 
@@ -434,9 +469,12 @@ bool GatewayTCPConnector::performHealthCheck(uint8_t unitId) {
     std::cout << "[GatewayTCP:" << config_.plcId << "] Sending Health Check to determine Gateway Online Status:\n";
     std::cout << "  -> TX Sent: " << BytesToHexString(healthCheckFrame) << " (" << healthCheckFrame.size() << " bytes)\n";
 
+    LOG_INFO("[GatewayTCP:" + config_.plcId + "] Sending Health Check to determine Gateway Online Status.");
+    LOG_INFO("[GatewayTCP] TX Sent: " + BytesToHexString(healthCheckFrame));
     // 写入 Socket
     if (sendToSocket(healthCheckFrame) == 0) {
         std::cout << "[GatewayTCP:" << config_.plcId << "] Connection failed (Send error).\n";
+        LOG_ERROR("[GatewayTCP:" + config_.plcId + "] Connection failed (Send error).");
         return false;
     }
     
@@ -446,9 +484,11 @@ bool GatewayTCPConnector::performHealthCheck(uint8_t unitId) {
     // 校验逻辑
     if (!validateResponse(response, tid, FUNC_READ_COILS, MIN_RESPONSE_LENGTH)) {
         std::cout << "[GatewayTCP:" << config_.plcId << "] Connection failed (Gateway Offline/Invalid Check Response).\n";
+        LOG_ERROR("[GatewayTCP:" + config_.plcId + "] Connection failed (Gateway Offline/Invalid Check Response).");
         return false;
     }
     
     std::cout << "[GatewayTCP:" << config_.plcId << "] Health Check Success (Gateway Online)\n";
+    LOG_INFO("[GatewayTCP:" + config_.plcId + "] Health Check Success (Gateway Online)");
     return true;
 }

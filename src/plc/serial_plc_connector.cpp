@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <chrono>
+#include "logger.h"
 
 // -------------------------------------------------------------------
 // SerialPLCConnector 类实现
@@ -31,6 +32,7 @@ SerialPLCConnector::~SerialPLCConnector() {
 bool SerialPLCConnector::connect() {
     if (serialHandle_ != 0) {
         std::cout << "[SerialPLC:" << config_.plcId << "] Already connected." << std::endl;
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] PLC is already connected.");
         return true;
     }
 
@@ -52,6 +54,7 @@ bool SerialPLCConnector::connect() {
     // 3. 连接成功
     status_ = "CONNECTED";
     std::cout << "[SerialPLC:" << config_.plcId << "] Connection established (PLC Online).\n";
+    LOG_INFO("[SerialPLC:" + config_.plcId + "] PLC is connected (PLC Online).");
     return true;
 }
 
@@ -73,6 +76,7 @@ std::string SerialPLCConnector::getConnectionStatus() const {
 std::string SerialPLCConnector::readRegister(const std::string& address) {
     if (status_ != "CONNECTED" || serialHandle_ == 0) {
         std::cout << "[SerialPLC:" << config_.plcId << "] ERROR: Cannot read, PLC is DISCONNECTED." << std::endl;
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] PLC is not connected.");
         return "ERROR";
     }
     
@@ -85,6 +89,7 @@ std::string SerialPLCConnector::readRegister(const std::string& address) {
         addrBytes = addressToBytes(address);
     } catch (const std::invalid_argument& e) {
         std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: " << e.what() << std::endl;
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] PLC is not connected.");
         return "ERROR";
     }
 
@@ -97,7 +102,9 @@ std::string SerialPLCConnector::readRegister(const std::string& address) {
     std::vector<char> readFrame = buildModbusFrame(FUNC_READ_COILS, readData);
 
     std::cout << "[SerialPLC:" << config_.plcId << "] Reading Device Status on Address " << address << ":\n";
+    LOG_INFO("[SerialPLC:" + config_.plcId + "] PLC is connected (PLC Online).");
     std::cout << "  -> TX Sent: " << BytesToHexString(readFrame) << " (" << readFrame.size() << " bytes)\n";
+    LOG_INFO("[SerialPLC:" + config_.plcId + "] PLC is connected (PLC Online).");
     
     // 2. 帧交换
     std::vector<char> response = exchangeFrame(readFrame, MIN_RESPONSE_LENGTH, 2000);
@@ -111,6 +118,7 @@ std::string SerialPLCConnector::readRegister(const std::string& address) {
     // 对于单个线圈，数据位是 0x01 (ON) 或 0x00 (OFF)
     std::string status = (response[3] & 0x01) ? "1" : "0";
     std::cout << "[SerialPLC:" << config_.plcId << "] Read Success. (Status: " << status << ")\n";
+    LOG_INFO("[SerialPLC:" + config_.plcId + "] PLC is connected (PLC Online).");
     return status;
 }
 
@@ -121,6 +129,7 @@ std::string SerialPLCConnector::readRegister(const std::string& address) {
 bool SerialPLCConnector::writeRegister(const std::string& address, const std::string& value) {
     if (status_ != "CONNECTED" || serialHandle_ == 0) {
         std::cout << "[SerialPLC:" << config_.plcId << "] ERROR: Write failed, PLC is DISCONNECTED." << std::endl;
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] PLC is not connected.");
         return false;
     }
     
@@ -135,6 +144,7 @@ bool SerialPLCConnector::writeRegister(const std::string& address, const std::st
         dataValue = { (char)0x00, (char)0x00 }; // OFF: 00 00
     } else {
         std::cerr << "[SerialPLC:" << config_.plcId << "] Invalid write value: " << value << std::endl;
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] PLC is not connected.");
         return false;
     }
 
@@ -144,6 +154,7 @@ bool SerialPLCConnector::writeRegister(const std::string& address, const std::st
         addrBytes = addressToBytes(address);
     } catch (const std::invalid_argument& e) {
         std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: " << e.what() << std::endl;
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] PLC is not connected.");
         return false;
     }
 
@@ -157,7 +168,8 @@ bool SerialPLCConnector::writeRegister(const std::string& address, const std::st
 
     std::cout << "[SerialPLC:" << config_.plcId << "] Writing Device Status on Address " << address << " with value " << value << ":\n";
     std::cout << "  -> TX Sent: " << BytesToHexString(writeFrame) << " (" << writeFrame.size() << " bytes)\n";
-    
+    LOG_INFO("[SerialPLC:" + config_.plcId + "] PLC is connected (PLC Online).");
+
     // 2. 帧交换
     std::vector<char> response = exchangeFrame(writeFrame, EXPECTED_ECHO_LENGTH, 2000);
 
@@ -173,10 +185,12 @@ bool SerialPLCConnector::writeRegister(const std::string& address, const std::st
 
     if (!isEchoMatch) {
         std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Write failed. Echo frame mismatch.\n";
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] PLC is not connected.");
         return false;
     }
     
     std::cout << "[SerialPLC:" << config_.plcId << "] Write Success. (Echo Match)\n";
+    LOG_INFO("[SerialPLC:" + config_.plcId + "] PLC is connected (PLC Online).");
     return true;
 }
 
@@ -202,6 +216,7 @@ inline speed_t SerialPLCConnector::getBaudRateConstant(int baudRate) {
 bool SerialPLCConnector::openSerialPort() {
     const auto& serialConfig = config_.serialConfig;
     std::cout << "[Serial I/O] Opening port " << serialConfig.serial.port << " @ " << serialConfig.serial.baudRate << "..." << std::endl;
+    LOG_INFO("[Serial I/O] Opening port " + serialConfig.serial.port + " @ " + std::to_string(serialConfig.serial.baudRate));
     
     // 1. 打开串口文件
     // O_RDWR: 读写, O_NOCTTY: 不作为控制终端, O_NONBLOCK: 非阻塞 (用于 select)
@@ -209,6 +224,7 @@ bool SerialPLCConnector::openSerialPort() {
 
     if (serialHandle_ < 0) {
         std::cerr << "[Serial I/O] ERROR: Could not open port " << serialConfig.serial.port << " (" << strerror(errno) << ").\n";
+        LOG_ERROR("[Serial I/O] Could not open port " + serialConfig.serial.port + " (" + strerror(errno) + ").");
         return false;
     }
     
@@ -216,6 +232,7 @@ bool SerialPLCConnector::openSerialPort() {
     struct termios tty;
     if (tcgetattr(serialHandle_, &tty) != 0) { 
         std::cerr << "[Serial I/O] ERROR: tcgetattr failed (" << strerror(errno) << ").\n";
+        LOG_ERROR("[Serial I/O] tcgetattr failed (" + std::string(strerror(errno)) + ").");
         closeSerialPort();
         return false;
     }
@@ -224,6 +241,7 @@ bool SerialPLCConnector::openSerialPort() {
     speed_t speed = getBaudRateConstant(serialConfig.serial.baudRate);
     if (speed == B0) {
         std::cerr << "[Serial I/O] ERROR: Unsupported baud rate: " << serialConfig.serial.baudRate << std::endl;
+        LOG_ERROR("[Serial I/O] Unsupported baud rate: " + std::to_string(serialConfig.serial.baudRate));
         closeSerialPort();
         return false;
     }
@@ -274,6 +292,7 @@ bool SerialPLCConnector::openSerialPort() {
     // 10. 激活配置
     if (tcsetattr(serialHandle_, TCSANOW, &tty) != 0) { 
         std::cerr << "[Serial I/O] ERROR: tcsetattr failed (" << strerror(errno) << ").\n";
+        LOG_ERROR("[Serial I/O] tcsetattr failed (" + std::string(strerror(errno)) + ").");
         closeSerialPort();
         return false;
     }
@@ -282,6 +301,7 @@ bool SerialPLCConnector::openSerialPort() {
     // fcntl(serialHandle_, F_SETFL, 0); 
 
     std::cout << "[Serial I/O] Port opened and configured successfully (FD: " << serialHandle_ << ")" << std::endl;
+    LOG_INFO("[Serial I/O] Port opened and configured successfully (FD: " + std::to_string(serialHandle_) + ")");
     return true; 
 }
 
@@ -291,6 +311,7 @@ bool SerialPLCConnector::openSerialPort() {
 void SerialPLCConnector::closeSerialPort() {
     if (serialHandle_ > 0) {
         std::cout << "[Serial I/O] Closing port (FD: " << serialHandle_ << ")." << std::endl;
+        LOG_INFO("[Serial I/O] Closing port (FD: " + std::to_string(serialHandle_) + ").");
         close(serialHandle_); 
         serialHandle_ = 0;
     }
@@ -309,6 +330,7 @@ size_t SerialPLCConnector::writeToSerial(const std::vector<char>& data) {
 
     if (bytesWritten < 0) {
         std::cerr << "[Serial I/O] ERROR: Write failed (" << strerror(errno) << ").\n";
+        LOG_ERROR("[Serial I/O] Write failed (" + std::string(strerror(errno)) + ").");
         return 0;
     }
     
@@ -364,11 +386,13 @@ std::vector<char> SerialPLCConnector::readFromSerial(size_t expectedMinBytes, in
             } else if (bytesRead < 0) {
                 if (errno != EAGAIN && errno != EWOULDBLOCK) {
                     std::cerr << "[Serial I/O] ERROR: Read failed (" << strerror(errno) << ").\n";
+                    LOG_ERROR("[Serial I/O] Read failed (" + std::string(strerror(errno)) + ").");
                     return {};
                 }
             }
         } else if (sel < 0) {
             std::cerr << "[Serial I/O] ERROR: select failed (" << strerror(errno) << ").\n";
+            LOG_ERROR("[Serial I/O] select failed (" + std::string(strerror(errno)) + ").");
             return {};
         }
     }
@@ -404,6 +428,7 @@ std::vector<char> SerialPLCConnector::exchangeFrame(const std::vector<char>& txF
 
     if(response.empty()) {
         std::cout << "  <- RX Received: <Timeout/Error>\n";
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] ERROR: Response timeout/empty.");
     } else {
         std::cout << "  <- RX Received: " << BytesToHexString(response) << "\n";
         // 此处应校验CRC
@@ -415,16 +440,19 @@ std::vector<char> SerialPLCConnector::exchangeFrame(const std::vector<char>& txF
 bool SerialPLCConnector::validateResponse(const std::vector<char>& response, uint8_t expectedFuncCode, size_t expectedMinLength) const{
     if(response.empty()){
         std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Response timeout/empty.\n";
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] ERROR: Response timeout/empty.");
         return false;
     }
     if (response.size() < expectedMinLength) {
         std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Response too short (" << response.size() << " bytes).\n";
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] ERROR: Response too short (" + std::to_string(response.size()) + " bytes).");
         return false;
     }
     
     // 1. 校验 Slave ID
     if (static_cast<uint8_t>(response[0]) != config_.slaveId) {
         std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Slave ID mismatch. Expected " << (int)config_.slaveId << ", Got " << (int)response[0] << ".\n";
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] ERROR: Slave ID mismatch. Expected " + std::to_string(config_.slaveId) + ", Got " + std::to_string(response[0]) + ".");
         return false;
     }
 
@@ -434,12 +462,14 @@ bool SerialPLCConnector::validateResponse(const std::vector<char>& response, uin
         // 异常响应 (功能码最高位为1)
         uint8_t exceptionCode = static_cast<uint8_t>(response[2]);
         std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Modbus Exception Code " << (int)exceptionCode << " (Func: " << (int)funcCode << ").\n";
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] ERROR: Modbus Exception Code " + std::to_string(exceptionCode) + " (Func: " + std::to_string(funcCode) + ").");
         return false;
     }
     
     // 3. 校验功能码（检查是否为期望功能码）
     if (funcCode != expectedFuncCode) {
         std::cerr << "[SerialPLC:" << config_.plcId << "] ERROR: Function Code mismatch. Expected " << (int)expectedFuncCode << ", Got " << (int)funcCode << ".\n";
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] ERROR: Function Code mismatch. Expected " + std::to_string(expectedFuncCode) + ", Got " + std::to_string(funcCode) + ".");
         return false;
     }
 
@@ -460,12 +490,14 @@ bool SerialPLCConnector::performHealthCheck() {
     std::vector<char> healthCheckFrame = buildModbusFrame(FUNC_READ_COILS, checkData);
     
     std::cout << "[SerialPLC:" << config_.plcId << "] Sending Health Check to determine PLC Online Status:\n";
+    LOG_INFO("[SerialPLC:" + config_.plcId + "] Sending Health Check to determine PLC Online Status.");
     std::cout << "  -> TX Sent: " << BytesToHexString(healthCheckFrame) << " (" << healthCheckFrame.size() << " bytes)\n";
     
     std::vector<char> response = exchangeFrame(healthCheckFrame, MIN_RESPONSE_LENGTH, 2000); // 2000ms Timeout
 
     if (!validateResponse(response, FUNC_READ_COILS, MIN_RESPONSE_LENGTH)) {
         std::cout << "[SerialPLC:" << config_.plcId << "] Connection failed (PLC Offline/Invalid Check Response).\n";
+        LOG_ERROR("[SerialPLC:" + config_.plcId + "] Connection failed (PLC Offline/Invalid Check Response).");
         return false;
     }
     

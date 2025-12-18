@@ -3,6 +3,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <chrono>
+#include"logger.h"
 #include <thread>
 
 CarControlManager::CarControlManager()
@@ -24,6 +25,7 @@ bool CarControlManager::initFromConfig()
             ctx->cfg = cc;
             if (!ctx->driver.init(cc.serial.port, cc.serial.baudRate > 0 ? cc.serial.baudRate : 9600)) {
                 std::cerr << "CarControlManager: failed to open port for " << cc.id << "\n";
+                LOG_ERROR("CarControlManager: failed to open port for " + cc.id);
                 // still keep entry but mark not initialized
                 ctx->initialized = false;
             } else {
@@ -31,6 +33,7 @@ bool CarControlManager::initFromConfig()
             }
             devices_.emplace(cc.id, ctx);
             std::cout << "CarControlManager: loaded config for " << cc.id << "\n";
+            LOG_INFO("CarControlManager: loaded config for " + cc.id);
         }
         return true;
     } catch (...) {
@@ -111,13 +114,6 @@ CarControlResult CarControlManager::operate(const std::string& id, int motor1, i
     res.motor1 = motor1;  // 回传发送的命令值，而非解析的值
     res.motor2 = motor2;
     res.statusByte = anyReply ? static_cast<uint16_t>(lastSt.statusByte) : 0;
-    //ztl
-    if (anyReply) {
-        res.message = "Car control command executed successfully with response";
-    } else {
-        res.message = "Car control command executed failed (no response received)";
-        res.statusByte = -1;
-    }//ztl
     // 如果之前没有设置responseTimeUs，则在这里设置超时值
     if (res.responseTimeUs == 0 && anyReply) {
         auto endTime = std::chrono::high_resolution_clock::now();

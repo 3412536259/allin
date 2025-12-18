@@ -4,6 +4,7 @@
 #include <string>    // 新增：字符串拼接依赖
 #include <cerrno>    // 新增：strerror(errno) 依赖
 #include <cstring>
+#include "logger.h"
 
 bool GPIOSensor::exportGpio() {
     // 从 cfg_.serial.port 提取 GPIO 编号，例如 "gpio18" -> 18
@@ -49,6 +50,7 @@ int GPIOSensor::readGpioValue() {
 bool GPIOSensor::init() {
     if (!exportGpio()) {
         std::cerr << "[GPIOSensor:" << cfg_.id << "] Failed to export GPIO\n";
+        LOG_ERROR("[GPIOSensor:" + cfg_.id + "] Failed to export GPIO.");
         status_ = SensorStatus::OFFLINE;
         value_ = 0.0f;
         return false;
