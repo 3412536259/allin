@@ -1,6 +1,7 @@
 #include "update_config.h"
 #include <fstream>
 #include <cstdio>
+#include"logger.h"
 
 using json = nlohmann::json;
 
@@ -12,6 +13,7 @@ bool ConfigUpdater::writeToTempFile(const std::string& jsonMessage){
     std::ofstream tempFile(TEMP_FILE_PATH);
     if(!tempFile.is_open()){
         std::cerr<<"[UpdateConfig] Could not open temporary file for writing: "<<TEMP_FILE_PATH<<std::endl;
+        LOG_ERROR("[UpdateConfig] Could not open temporary file for writing: "+TEMP_FILE_PATH);
         return false;
     }
 
@@ -22,11 +24,13 @@ bool ConfigUpdater::writeToTempFile(const std::string& jsonMessage){
 
         if (tempFile.fail()) {
              std::cerr << "Error: I/O operation failed during file closing or writing." << std::endl;
+             LOG_ERROR("[UpdateConfig] Error: I/O operation failed during file closing or writing.");
              return false;
         }
         return true;
     } catch(const std::exception& e){
         std::cerr << "An unexpected error occurred during file writing: " << e.what() << std::endl;
+        LOG_ERROR(("[UpdateConfig] An unexpected error occurred during file writing: " + std::string(e.what())).c_str());
         if (tempFile.is_open()) tempFile.close();
         return false;
     }
@@ -40,9 +44,11 @@ bool ConfigUpdater::validateJsonFormat(json& outConfig){
 
         if(!outConfig.contains("device_config") || !outConfig.at("device_config").is_object()){
             std::cerr << "Validation failed: Missing or invalid 'device_config' root." << std::endl;
+            LOG_ERROR("[UpdateConfig] Validation failed: Missing or invalid 'device_config' root.");
             return false;
         }
         if(!outConfig.at("device_config").contains("devices") || !outConfig.at("device_config").at("devices").is_object()){
+            LOG_ERROR("[UpdateConfig] Validation failed: Missing or invalid 'devices' field.");
             std::cerr << "Validation failed: Missing or invalid 'devices' field." << std::endl;
             return false;
         }
@@ -50,9 +56,11 @@ bool ConfigUpdater::validateJsonFormat(json& outConfig){
         return true;
     }catch(const json::parse_error& e){
         std::cerr << "JSON Parse Error: " << e.what() << " at byte " << e.byte << std::endl;
+        LOG_ERROR(("[UpdateConfig] JSON Parse Error: " + std::string(e.what()) + " at byte " + std::to_string(e.byte)).c_str());
         return false;
     }catch (const std::exception& e) {
         std::cerr << "File I/O Error during JSON loading: " << e.what() << std::endl;
+        LOG_ERROR(("[UpdateConfig] File I/O Error during JSON loading: " + std::string(e.what())).c_str());
         return false;
     }
 }

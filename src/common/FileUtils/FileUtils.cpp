@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+#include "logger.h"
 
 namespace fs = std::filesystem;
 
@@ -15,6 +16,8 @@ std::string FileUtils::generateFileName(
     std::tm* tmNow = std::localtime(&now);
     if (!tmNow) {
         throw std::runtime_error("Failed to get local time");
+        LOG_ERROR("Failed to get local time");
+
     }
 
     // 3. 拼接完整目录路径：cameraDir + / + 日期目录（如 /data/videos/摄像头01/20251116）

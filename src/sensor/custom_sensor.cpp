@@ -6,6 +6,7 @@
 #include <fcntl.h>   
 #include <cstring>   
 #include <cerrno> 
+#include "logger.h"
 
 CustomProtocolSensor::CustomProtocolSensor(const SensorConfig& cfg) : cfg_(cfg) {}
 
@@ -34,6 +35,7 @@ bool CustomProtocolSensor::openSerial() {
 bool CustomProtocolSensor::init() {
     if (!openSerial()) {
         std::cerr << "[CustomSensor:" << cfg_.id << "] Serial open failed\n";
+        LOG_ERROR("[CustomSensor:" + cfg_.id + "] Serial open failed.");
         status_ = SensorStatus::OFFLINE;
         return false;
     }

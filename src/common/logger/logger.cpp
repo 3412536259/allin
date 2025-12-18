@@ -5,7 +5,7 @@
 
 Logger::Logger() : logFile() {
     // 默认日志路径：项目根目录下的log文件夹
-    logPath = "../log/dingchang3576.log";
+    logPath = "./log/dingchang3576.log";
     // 创建log文件夹（若不存在）
     system(("mkdir -p " + logPath.substr(0, logPath.find_last_of('/'))).c_str());
     // 打开日志文件（追加模式）

@@ -8,6 +8,7 @@
 #include <algorithm>          
 #include <cctype>    
 #include <optional>
+#include "logger.h"
 
 // 传感器工厂实现
 std::unique_ptr<ISensor> createSensor(const SensorConfig& config) {
@@ -33,12 +34,14 @@ SensorManager::SensorManager() {
     const DeviceConfigRoot& root = ConfigParser::getInstance().getConfig();
     if (root.sensors.empty()) {
         std::cerr << "[SensorManager] WARNING: No sensors in global config.\n";
+        LOG_WARNING("No sensors in global config.");
     } else {
         // 使用工厂创建传感器
         for (const auto& sconf : root.sensors) {
             auto sensor = createSensor(sconf);
             if (!sensor) {
                 std::cerr << "[SensorManager] Failed to create sensor: " << sconf.id << "\n";
+                LOG_ERROR("Failed to create sensor: " + sconf.id);
                 continue;
             }
 
@@ -59,6 +62,7 @@ SensorManager::SensorManager() {
                 cache_[sconf.id] = d;
             }
             std::cout << "[SensorManager] Loaded sensor " << sconf.id << "\n";
+            LOG_INFO("[SensorManager] Loaded sensor " + sconf.id);
         }
     }
     

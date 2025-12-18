@@ -5,10 +5,12 @@
 #include "turbojpeg.h"
 #include <fstream>
 #include "base64.h"
+#include "logger.h"
 
 bool ImageProcessor::avframeToRGB(AVFrame* frame, int width, int height, image_buffer_t* out_image) {
     if (!frame || !out_image || width <= 0 || height <= 0) {
         std::cerr << "Error: Invalid parameters" << std::endl;
+        LOG_ERROR("Error: Invalid parameters");
         return -1;
     }
 
@@ -17,12 +19,14 @@ bool ImageProcessor::avframeToRGB(AVFrame* frame, int width, int height, image_b
                                          SWS_BILINEAR, nullptr, nullptr, nullptr);
     if (!sws_ctx) {
         std::cerr << "Error: Failed to create SwsContext!" << std::endl;
+        LOG_ERROR("Error: Failed to create SwsContext!");
         return -1;
     }
 
     AVFrame* rgb_frame = av_frame_alloc();
     if (!rgb_frame) {
         std::cerr << "Error: Failed to allocate RGB AVFrame!" << std::endl;
+        LOG_ERROR("Error: Failed to allocate RGB AVFrame!");
         sws_freeContext(sws_ctx);
         return -1;
     }
@@ -33,6 +37,7 @@ bool ImageProcessor::avframeToRGB(AVFrame* frame, int width, int height, image_b
 
     if (av_frame_get_buffer(rgb_frame, 0) < 0) {
         std::cerr << "Error: Failed to allocate buffer for RGB AVFrame!" << std::endl;
+        LOG_ERROR("Error: Failed to allocate buffer for RGB AVFrame!");
         av_frame_free(&rgb_frame);
         sws_freeContext(sws_ctx);
         return -1;
@@ -41,6 +46,7 @@ bool ImageProcessor::avframeToRGB(AVFrame* frame, int width, int height, image_b
     if (sws_scale(sws_ctx, frame->data, frame->linesize, 0, frame->height,
                   rgb_frame->data, rgb_frame->linesize) <= 0) {
         std::cerr << "Error: sws_scale failed!" << std::endl;
+        LOG_ERROR("Error: sws_scale failed!");
         av_frame_free(&rgb_frame);
         sws_freeContext(sws_ctx);
         return -1;
@@ -62,6 +68,7 @@ bool ImageProcessor::avframeToRGB(AVFrame* frame, int width, int height, image_b
 void ImageProcessor::drawDetections(image_buffer_t* rgb_image,object_detect_result_list& results) {
     if(!rgb_image){
         std::cerr<<"Error: RGB image is null!"<<std::endl;
+        LOG_ERROR("Error: RGB image is null!");
         return;
     }
     for(int i=0; i<results.count; i++){
@@ -121,6 +128,7 @@ bool ImageProcessor::compressToJpeg(const image_buffer_t* rgb_image,std::vector<
     // 检查像素格式
     if (rgb_image->format != IMAGE_FORMAT_RGB888) {
         std::cerr << "Unsupported pixel format: " << rgb_image->format << std::endl;
+        LOG_ERROR("Unsupported pixel format: " + std::to_string(rgb_image->format));
         tjDestroy(handle);
         return false;
     }
@@ -130,6 +138,7 @@ bool ImageProcessor::compressToJpeg(const image_buffer_t* rgb_image,std::vector<
                       &jpegBuf, &jpegSize, jpegSubsamp, quality, flags);
     if (ret != 0 || jpegBuf == nullptr) {
         std::cerr << "JPEG compression failed!" << std::endl;
+        LOG_ERROR("JPEG compression failed!");
         tjDestroy(handle);
         return false;
     }
@@ -154,6 +163,7 @@ bool ImageProcessor::saveJpegToFile(const std::vector<unsigned char>& jpegData, 
     std::ofstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Failed to open file: " << filename << std::endl;
+        LOG_ERROR("Failed to open file: " + filename);
         return false;
     }
 

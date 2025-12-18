@@ -2,6 +2,8 @@
 #include <chrono>
 #include <iostream>
 #include <json.hpp>
+#include "config_parser.h"
+#define BOX_ID  ConfigParser::getInstance().getConfig().boxId  
 DeviceStatusReporter::DeviceStatusReporter(IDeviceManager* devMgr,
                                            ITaskResultPublisher* publisher)
     : devMgr_(devMgr), publisher_(publisher) {}
@@ -37,6 +39,7 @@ void DeviceStatusReporter::reportStatus(const std::string& topic)
     DeviceStatus status = devMgr_->getStatus();
     nlohmann::json j;
     j["commandCode"] = "0000 0001";
+    j["deviceId"]=BOX_ID;
     auto& device = j["device"];
 
     // Cameras

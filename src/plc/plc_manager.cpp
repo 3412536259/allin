@@ -4,6 +4,7 @@
 #include "serial_plc_connector.h"
 #include "solenoid_valve_plc_device.h"
 #include "gateway_tcp_connector.h"
+#include "logger.h"
 
 // --- PLCManager 实现 ---
 
@@ -26,6 +27,8 @@ PLCManager::PLCManager() : stopThread_(false) {
         else{
             std::cerr << "[PLCManager] WARNING: Unknown connection type '" << plcConfig.connectionType 
                       << "' for PLC ID: " << plcConfig.plcId << "\n";
+            LOG_WARNING("[PLCManager] WARNING: Unknown connection type '" + plcConfig.connectionType + 
+                        "' for PLC ID: " + plcConfig.plcId);
             continue; // 跳过未知连接类型
         }
         plcConnectors_[plcConfig.plcId] = std::move(connector);
@@ -39,6 +42,7 @@ PLCManager::PLCManager() : stopThread_(false) {
 
     if(plcConfigs_.empty()){
         std::cerr << "[PLCManager] WARNING: No PLC configurations found in singleton data.\n";
+        LOG_ERROR("[PLCManager] WARNING: No PLC configurations found in singleton data.\n");
         // 即使没有 PLC 配置，管理器仍可初始化成功，但功能受限
     }
 
@@ -78,11 +82,13 @@ void PLCManager::periodStatusRefresh(){
 
 void PLCManager::initializeDevices(){
     std::cout << "[PLCManager] Initializing devices...\n";
+    LOG_INFO("[PLCManager] Initializing devices...");
     for(const auto& [deviceId, deviceConfig] : deviceConfigs_){
         // 1.找到对应的PLC连接器
         auto itConnector = plcConnectors_.find(deviceConfig.plcId);
         if(itConnector == plcConnectors_.end()){
             std::cerr << "[PLCManager] ERROR: No connector found for device ID: " << deviceConfig.id << "\n";
+            LOG_ERROR("[PLCManager] ERROR: No connector found for device ID: " + deviceConfig.id);
             continue;
         }
         PLCConnector* connector = itConnector->second.get();
@@ -95,12 +101,15 @@ void PLCManager::initializeDevices(){
         else{
             std::cerr << "[PLCManager] WARNING: Unknown device type '" << deviceConfig.deviceType 
                       << "' for device ID: " << deviceConfig.id << "\n";
+            LOG_WARNING("[PLCManager] WARNING: Unknown device type '" + deviceConfig.deviceType + 
+                        "' for device ID: " + deviceConfig.id);
             continue;
         }
         // 3.存储设备实例（如果需要的话，可以扩展PLCManager以管理设备实例）
         devices_[deviceId] = std::move(deviceInstance);
     }
     std::cout << "[PLCManager] Device initialization complete. Total devices: " << devices_.size() << "\n";
+    LOG_INFO("[PLCManager] Device initialization complete. Total devices: " + std::to_string(devices_.size()));
 }
 
 bool PLCManager::isCacheExpired(std::chrono::steady_clock::time_point cacheTime) {
@@ -197,12 +206,14 @@ PLCInfo PLCManager::getPLCStatusInternal(const std::string& plcId){
         if(it != statusCache_.end() && !isCacheExpired(it->second.lastChecked)){
             // 缓存命中且未过期，直接返回
             std::cout << "[Cache Hit] for PLC: " << plcId << std::endl;
+            LOG_INFO("[PLCManager] Cache Hit for PLC: " + plcId);
             return it->second.info;
         }
     }
 
     // 2.缓存失效，执行硬件查询
     std::cout << "[Cache Miss/Expired] Querying PLC: " << plcId << std::endl;
+    LOG_INFO("[PLCManager] Cache Miss/Expired Querying PLC: " + plcId);
     return queryHardwareStatus(plcId);
 }
 
@@ -233,6 +244,7 @@ OperateResult PLCManager::operate(const std::string& deviceId, const std::string
              statusCache_.erase(itConfig->second.plcId);
         } else {
              std::cerr << "[PLCManager] WARNING: Could not find config for device ID " << deviceId << " to clear cache.\n";
+             LOG_ERROR("[PLCManager] WARNING: Could not find config for device ID " + deviceId + " to clear cache.");
         }
     }
 
