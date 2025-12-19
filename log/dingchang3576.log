@@ -285152,3 +285152,19 @@ NFO] [SerialPLC:plc_01] PLC is co[2025-12-19 17:17:48] [WARNING] Failed to read 
 [2025-12-19 18:38:02] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
 [2025-12-19 18:38:02] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
 [2025-12-19 18:38:02] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 18:38:04] [ERROR] [ModbusSensor] 响应长度不足：5字节
+[2025-12-19 18:38:06] [INFO] [PLCManager] Cache Hit for PLC: plc_01
+[2025-12-19 18:38:06] [INFO] [PLCManager] Cache Hit for PLC: plc_02
+[2025-12-19 18:38:06] [ERROR] [ModbusSensor] 响应长度不足：5字节
+[2025-12-19 18:38:06] [ERROR] MQTT publish failed: MQTT error [-3]: Disconnected
+[2025-12-19 18:38:07] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 18:38:07] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 18:38:07] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 18:38:10] [ERROR] [ModbusSensor] 响应长度不足：5字节
+[2025-12-19 18:38:12] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 18:38:12] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 18:38:12] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 18:38:15] [ERROR] [ModbusSensor] 响应长度不足：5字节
+[2025-12-19 18:38:17] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 18:38:17] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 18:38:17] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
