@@ -285934,3 +285934,106 @@ INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
 [2025-12-19 19:08:08] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
 [2025-12-19 19:08:08] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
 [2025-12-19 19:08:09] [INFO] Written 11800 packets total
+[2025-12-19 19:08:10] [INFO] Written 11800 packets total
+[2025-12-19 19:08:13] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:13] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:13] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:17] [INFO] Written 12000 packets total
+[2025-12-19 19:08:18] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:18] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:18] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:18] [INFO] Written 12000 packets total
+[2025-12-19 19:08:19] [INFO] Video storage closed. Total packets: 1500, file: /home/ztl/workspace/allin/videos/10/20251219/19_07.mp4
+[2025-12-19 19:08:19] [INFO] Input codec: hevc
+[2025-12-19 19:08:19] [INFO] Input time_base: 1/90000
+[2025-12-19 19:08:19] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-19 19:08:19] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/10/20251219/19_08.mp4
+[2025-12-19 19:08:19] [INFO] Started new segment #9: /home/ztl/workspace/allin/videos/10/20251219/19_08.mp4
+[2025-12-19 19:08:19] [INFO] Video storage closed. Total packets: 1500, file: /home/ztl/workspace/allin/videos/2/20251219/19_07.mp4
+[2025-12-19 19:08:19] [INFO] Input codec: hevc
+[2025-12-19 19:08:19] [INFO] Input time_base: 1/90000
+[2025-12-19 19:08:19] [INFO] Frame rate: 299/12 ≈ 24.916667 fps
+[2025-12-19 19:08:19] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/2/20251219/19_08.mp4
+[2025-12-19 19:08:19] [INFO] Started new segment #9: /home/ztl/workspace/allin/videos/2/20251219/19_08.mp4
+[2025-12-19 19:08:21] [INFO] [PLCManager] Cache Hit for PLC: plc_01
+[2025-12-19 19:08:21] [INFO] [PLCManager] Cache Hit for PLC: plc_02
+[2025-12-19 19:08:21] [ERROR] MQTT publish failed: MQTT error [-3]: Disconnected
+[2025-12-19 19:08:23] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:23] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:23] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:25] [INFO] Written 12200 packets total
+[2025-12-19 19:08:26] [INFO] Written 12200 packets total
+[2025-12-19 19:08:28] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:28] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:28] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:33] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:33] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:33] [INFO] Written 12400 packets total
+[2025-12-19 19:08:33] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:35] [INFO] Written 12400 packets total
+[2025-12-19 19:08:36] [INFO] [PLCManager] Cache Hit for PLC: plc_01
+[2025-12-19 19:08:36] [INFO] [PLCManager] Cache Hit for PLC: plc_02
+[2025-12-19 19:08:36] [ERROR] MQTT publish failed: MQTT error [-3]: Disconnected
+[2025-12-19 19:08:38] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:38] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:38] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:41] [INFO] Written 12600 packets total
+[2025-12-19 19:08:43] [INFO] Written 12600 packets total
+[2025-12-19 19:08:43] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:43] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:43] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:48] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:48] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:48] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:49] [INFO] Written 12800 packets total
+[2025-12-19 19:08:51] [INFO] Written 12800 packets total
+[2025-12-19 19:08:51] [INFO] [PLCManager] Cache Hit for PLC: plc_01
+[2025-12-19 19:08:51] [INFO] [PLCManager] Cache Hit for PLC: plc_02
+[2025-12-19 19:08:51] [ERROR] MQTT publish failed: MQTT error [-3]: Disconnected
+[2025-12-19 19:08:53] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:53] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:54] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:57] [INFO] Written 13000 packets total
+[2025-12-19 19:08:59] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:59] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:59] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:08:59] [INFO] Written 13000 packets total
+[2025-12-19 19:09:04] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:04] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:04] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:05] [INFO] Written 13200 packets total
+[2025-12-19 19:09:06] [INFO] [PLCManager] Cache Hit for PLC: plc_01
+[2025-12-19 19:09:06] [INFO] [PLCManager] Cache Hit for PLC: plc_02
+[2025-12-19 19:09:06] [ERROR] MQTT publish failed: MQTT error [-3]: Disconnected
+[2025-12-19 19:09:07] [INFO] Written 13200 packets total
+[2025-12-19 19:09:09] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:09] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:09] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:13] [INFO] Written 13400 packets total
+[2025-12-19 19:09:14] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:14] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:14] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:15] [INFO] Written 13400 packets total
+[2025-12-19 19:09:19] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:19] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:19] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:19] [INFO] Video storage closed. Total packets: 1503, file: /home/ztl/workspace/allin/videos/10/20251219/19_08.mp4
+[2025-12-19 19:09:19] [INFO] Input codec: hevc
+[2025-12-19 19:09:19] [INFO] Input time_base: 1/90000
+[2025-12-19 19:09:19] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-19 19:09:19] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/10/20251219/19_09.mp4
+[2025-12-19 19:09:19] [INFO] Started new segment #10: /home/ztl/workspace/allin/videos/10/20251219/19_09.mp4
+[2025-12-19 19:09:19] [INFO] Video storage closed. Total packets: 1500, file: /home/ztl/workspace/allin/videos/2/20251219/19_08.mp4
+[2025-12-19 19:09:19] [INFO] Input codec: hevc
+[2025-12-19 19:09:19] [INFO] Input time_base: 1/90000
+[2025-12-19 19:09:19] [INFO] Frame rate: 299/12 ≈ 24.916667 fps
+[2025-12-19 19:09:19] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/2/20251219/19_09.mp4
+[2025-12-19 19:09:19] [INFO] Started new segment #10: /home/ztl/workspace/allin/videos/2/20251219/19_09.mp4
+[2025-12-19 19:09:21] [INFO] [PLCManager] Cache Hit for PLC: plc_01
+[2025-12-19 19:09:21] [INFO] [PLCManager] Cache Hit for PLC: plc_02
+[2025-12-19 19:09:21] [ERROR] MQTT publish failed: MQTT error [-3]: Disconnected
+[2025-12-19 19:09:21] [INFO] Written 13600 packets total
+[2025-12-19 19:09:23] [INFO] Written 13600 packets total
+[2025-12-19 19:09:24] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:24] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+[2025-12-19 19:09:24] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
