@@ -13,7 +13,7 @@ public:
                 ICommandDispatcher* dispatcher);
 
     void start();
-
+    bool ensureConnected();
     void connection_lost(const std::string& cause) override; //断连时触发
     void message_arrived(mqtt::const_message_ptr msg) override; //收到消息时触发
     void delivery_complete(mqtt::delivery_token_ptr tok) override {} //消息发布完成时触发
