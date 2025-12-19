@@ -27,10 +27,12 @@ void GetCameraRealImageTask::run(TaskContext& ctx)
         std::string imageBase64 = ImageProcessor::jpegToBase64(outJpeg);
         j["cameraId"] =  camId_;
         j["image"] = imageBase64;
+        j["commandCode"] = "0000 0200";
         ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, j.dump());
     }
     else{
         j["code"] = "no image";
+        j["commandCode"] = "0000 0200";
         ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, j.dump());
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));

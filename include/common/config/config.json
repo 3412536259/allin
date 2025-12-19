@@ -63,7 +63,7 @@
       "sensor": [
         {
           "id": "sensor001",
-          "name": "车间温湿度传感器",
+          "name": "农场温湿度传感器",
           "type": "modbus",
           "serial_config": {
             "port": "/dev/ttyS5",

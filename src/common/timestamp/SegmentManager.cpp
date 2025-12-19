@@ -26,6 +26,15 @@ static int toDateInt(std::chrono::system_clock::time_point tp)
          + local.tm_mday;
 }
 
+// helper: convert filesystem file_time_type to system_clock::time_point
+static std::chrono::system_clock::time_point fileTimeToSystemClock(const fs::file_time_type& ft)
+{
+    using namespace std::chrono;
+    // approximate conversion by offset from fs clock to system clock
+    auto now_sys = system_clock::now();
+    auto now_fs = fs::file_time_type::clock::now();
+    return time_point_cast<system_clock::duration>(now_sys + (ft - now_fs));
+}
 
 void SegmentManager::cleanExpiredFiles(int retainDays)
 {
@@ -56,6 +65,46 @@ void SegmentManager::cleanExpiredFiles(int retainDays)
                             + entry.path().string()
                             + " error=" + e.what());
             }
+        }
+    }
+}
+
+void SegmentManager::cleanExpiredFilesHours(int retainHours)
+{
+    using namespace std::chrono;
+    if (!fs::exists(dir_) || !fs::is_directory(dir_)) return;
+
+    auto now = system_clock::now();
+    auto cutoff = now - hours(retainHours);
+
+    for (const auto& entry : fs::directory_iterator(dir_)) {
+        if (!entry.is_directory()) continue;
+        // iterate files recursively and delete based on last_write_time
+        for (const auto& f : fs::recursive_directory_iterator(entry.path(), fs::directory_options::skip_permission_denied)) {
+            try {
+                if (!f.is_regular_file()) continue;
+                auto ftime = fs::last_write_time(f.path());
+                auto ftime_sys = fileTimeToSystemClock(ftime);
+                if (ftime_sys < cutoff) {
+                    try {
+                        fs::remove(f.path());
+                        LOG_INFO("Deleted expired file: " + f.path().string());
+                    } catch (const std::exception& e) {
+                        LOG_WARNING(std::string("Failed to delete file: ") + f.path().string() + " error=" + e.what());
+                    }
+                }
+            } catch (const std::exception& e) {
+                LOG_WARNING(std::string("Failed to inspect file: ") + e.what());
+            }
+        }
+        // try to remove empty directories
+        try {
+            if (fs::is_empty(entry.path())) {
+                fs::remove(entry.path());
+                LOG_INFO("Removed empty directory: " + entry.path().string());
+            }
+        } catch (...) {
+            // ignore
         }
     }
 }
