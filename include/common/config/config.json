@@ -2,7 +2,7 @@
   "device_config": {
     "version": "1.0",
     "description": "设备配置（含PLC直连/网关连接两种类型）",
-    "box": "1",
+    "box": "2",
     "devices": {
       "camera": [
         {
@@ -63,7 +63,7 @@
       "sensor": [
         {
           "id": "sensor001",
-          "name": "车间温湿度传感器",
+          "name": "农场温湿度传感器",
           "type": "modbus",
           "serial_config": {
             "port": "/dev/ttyS5",

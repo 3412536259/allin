@@ -106,6 +106,23 @@ void Camera::pullKeyFrameLoop()
         return;
     }
 
+    // Hourly cleaner settings: retain files older than HOURLY_CLEAN_RETAIN_HOURS and check every HOURLY_CLEAN_INTERVAL_HOURS
+    const int HOURLY_CLEAN_RETAIN_HOURS = 4; // 删除 4 小时以前的文件
+    const int HOURLY_CLEAN_INTERVAL_HOURS = 1; // 每 1 小时检查一次
+
+    std::thread hourlyCleaner;
+    hourlyCleaner = std::thread([&segMgr, this, HOURLY_CLEAN_RETAIN_HOURS, HOURLY_CLEAN_INTERVAL_HOURS]() {
+        while (isRunning_) {
+            // sleep in small increments so we can exit promptly when stopping
+            int sleepSeconds = HOURLY_CLEAN_INTERVAL_HOURS * 3600;
+            for (int i = 0; i < sleepSeconds && isRunning_; ++i) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+            if (!isRunning_) break;
+            segMgr.cleanExpiredFilesHours(HOURLY_CLEAN_RETAIN_HOURS);
+        }
+    });
+
     int totalPackets = 0;
     while(isRunning_)
     {
@@ -151,7 +168,11 @@ void Camera::pullKeyFrameLoop()
     av_packet_free(&packet);
     av_frame_free(&frame);
     videoCapture_.closeStream();
+
+    // signal cleaner to stop and join thread (if started)
     isRunning_ = false;
+    if (hourlyCleaner.joinable()) hourlyCleaner.join();
+
     {
         std::lock_guard<std::mutex> lock(statusMutex_);
         cameraStatus_.online_status = CameraOnlineStatus::OFFLINE;

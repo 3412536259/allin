@@ -12,6 +12,7 @@ public:
 
     bool needNewSegment();
     void cleanExpiredFiles(int retainDays);
+    void cleanExpiredFilesHours(int retainHours);
     std::unique_ptr<VideoStorage> createSegment(AVFormatContext* inputCtx);
 
 private:

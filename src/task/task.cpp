@@ -9,16 +9,13 @@
 #define BOX_ID  ConfigParser::getInstance().getConfig().boxId  
 void GetCameraRealImageTask::run(TaskContext& ctx)
 {
-    nlohmann::json j;
-   
-
     {
         nlohmann::json ack;
         ack["success"] = true;
         ack["cameraId"] = camId_;
         ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, ack.dump());
     } 
-    j["commandCode"] = "0000 0200";
+    nlohmann::json j;
     RealImage image = ctx.devMgr->getRealImage(camId_);
     image_buffer_t out_image;
     std::vector<unsigned char> outJpeg;
@@ -27,14 +24,14 @@ void GetCameraRealImageTask::run(TaskContext& ctx)
         ImageProcessor::avframeToRGB(image.frame.frame.get(),640,640,&out_image);
         ImageProcessor::compressToJpeg(&out_image,outJpeg);
         std::string imageBase64 = ImageProcessor::jpegToBase64(outJpeg);
-        nlohmann::json j;
         j["cameraId"] =  camId_;
         j["image"] = imageBase64;
+        j["commandCode"] = "0000 0200";
         ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, j.dump());
     }
     else{
-        nlohmann::json j;
         j["code"] = "no image";
+        j["commandCode"] = "0000 0200";
         ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, j.dump());
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));

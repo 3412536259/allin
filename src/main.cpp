@@ -25,7 +25,7 @@ int main()
 
     JobScheduler jobscheduler(8,ideviceManager.get());
     MqttCommandDispatcher cmdDispatcher(jobscheduler);  //根据接收的主题来选择调用的处理任务，需要依赖jobscheduler的接口提交任务
-    MqttService mqtt("mqtt://broker.emqx.io:1883", "edge-box", &cmdDispatcher); //需要依赖cmdDispatcher分发相应任务
+    MqttService mqtt("tcp://10.65.4.132:7883", "edge-box", &cmdDispatcher); //需要依赖cmdDispatcher分发相应任务
     MqttPublisher mqttPublisher(&mqtt);
     HttpPublisher httpPublisher("http://127.0.0.1:8080/report");
     jobscheduler.setMqttPublisher(&mqttPublisher); //依赖publisher的唯一原因是需要将publisher传入Taskcontext供具体task调用
@@ -35,9 +35,9 @@ int main()
     ws.start();
     
     //AI ---------------------------
-    auto model = std::make_unique<AIModelService>(MODELPATH);
-    AIRecognizer ai(std::move(model),ideviceManager.get());
-    ai.start();    
+    //auto model = std::make_unique<AIModelService>(MODELPATH);
+    //AIRecognizer ai(std::move(model),ideviceManager.get());
+    //ai.start();    
     
     
     //定时上报设备状态启动
