@@ -24,5 +24,7 @@
 #define RESULT_OPERATE_PLC_WITH_VERIFY_TOPIC   BOX_ID + "/device/plc/operateWithVerify/result"
 #define RESULT_UPDATE_CONFIG                   BOX_ID + "/device/config/result"
 #define RESULT_DOWNLOAD_VIDEO                  BOX_ID + "device/video/download/result"
+#define RESULT_AI_ALARM_TOPIC                  BOX_ID + "/device/camera/aiAlarm/result"
+
 
 #endif // DEVICE_TOPICS_H

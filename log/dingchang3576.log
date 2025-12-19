@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [2025-12-17 19:21:07] [INFO] === VideoRecorder Started ===
 2025-12-17 19:21:07] [INFO] === VideoRecorder Started ===
 [2025-12-17 19:21:07] [INFO] === VideoRecorder Started ===
@@ -285168,3 +285169,156 @@ NFO] [SerialPLC:plc_01] PLC is co[2025-12-19 17:17:48] [WARNING] Failed to read 
 [2025-12-19 18:38:17] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
 [2025-12-19 18:38:17] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
 [2025-12-19 18:38:17] [INFO] [SerialPLC:plc_01] PLC is connected (PLC Online).
+=======
+[2025-12-18 14:04:58] [INFO] === VideoRecorder Started ===
+[2025-12-18 14:04:58] [INFO] === VideoRecorder Started ===
+[2025-12-18 14:04:58] [INFO] Opening RTSP stream: rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/201
+[2025-12-18 14:04:58] [INFO] Opening RTSP stream: rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/201
+[2025-12-18 14:04:58] [INFO] Opening RTSP stream: rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/101
+[2025-12-18 14:04:59] [INFO] RTSP stream opened successfully. Video stream index: 0
+[2025-12-18 14:04:59] [INFO] Input codec: hevc
+[2025-12-18 14:04:59] [INFO] Input time_base: 1/90000
+[2025-12-18 14:04:59] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 14:04:59] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/10/20251218/14_04.mp4
+[2025-12-18 14:04:59] [INFO] Started new segment #1: /home/ztl/workspace/allin/videos/10/20251218/14_04.mp4
+[2025-12-18 14:04:59] [INFO] RTSP stream opened successfully. Video stream index: 0
+[2025-12-18 14:04:59] [INFO] Input codec: hevc
+[2025-12-18 14:04:59] [INFO] Input time_base: 1/90000
+[2025-12-18 14:04:59] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 14:04:59] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/2/20251218/14_04.mp4
+[2025-12-18 14:04:59] [INFO] Started new segment #1: /home/ztl/workspace/allin/videos/2/20251218/14_04.mp4
+[2025-12-18 14:05:07] [INFO] Written 200 packets total
+[2025-12-18 14:05:07] [INFO] Written 200 packets total
+[2025-12-18 14:05:15] [INFO] Written 400 packets total
+[2025-12-18 14:05:15] [INFO] Written 400 packets total
+[2025-12-18 14:05:23] [INFO] Written 600 packets total
+[2025-12-18 14:05:23] [INFO] Written 600 packets total
+[2025-12-18 14:05:23] [INFO] Written 600 packets total
+[2025-12-18 14:05:31] [INFO] Written 800 packets total
+[2025-12-18 14:05:31] [INFO] Written 800 packets total
+[2025-12-18 14:05:39] [INFO] Written 1000 packets total
+[2025-12-18 14:05:39] [INFO] Written 1000 packets total
+[2025-12-18 14:05:47] [INFO] Written 1200 packets total
+[2025-12-18 14:05:47] [INFO] Written 1200 packets total
+[2025-12-18 14:05:55] [INFO] Written 1400 packets total
+[2025-12-18 14:05:55] [INFO] Written 1400 packets total
+[2025-12-18 14:05:59] [INFO] Video storage closed. Total packets: 1523, file: /home/ztl/workspace/allin/videos/10/20251218/14_04.mp4
+[2025-12-18 14:05:59] [INFO] Input codec: hevc
+[2025-12-18 14:05:59] [INFO] Input time_base: 1/90000
+[2025-12-18 14:05:59] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 14:05:59] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/10/20251218/14_05.mp4
+[2025-12-18 14:05:59] [INFO] Started new segment #2: /home/ztl/workspace/allin/videos/10/20251218/14_05.mp4
+[2025-12-18 14:05:59] [INFO] Video storage closed. Total packets: 1524, file: /home/ztl/workspace/allin/videos/2/20251218/14_04.mp4
+[2025-12-18 14:05:59] [INFO] Input codec: hevc
+[2025-12-18 14:05:59] [INFO] Input time_base: 1/90000
+[2025-12-18 14:05:59] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 14:05:59] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/2/20251218/14_05.mp4
+[2025-12-18 14:05:59] [INFO] Started new segment #2: /home/ztl/workspace/allin/videos/2/20251218/14_05.mp4
+[2025-12-18 14:06:03] [INFO] Written 1600 packets total
+[2025-12-18 14:06:03] [INFO] Written 1600 packets total
+[2025-12-18 14:06:11] [INFO] Written 1800 packets total
+[2025-12-18 14:06:11] [INFO] Written 1800 packets total
+[2025-12-18 14:06:19] [INFO] Written 2000 packets total
+[2025-12-18 14:06:19] [INFO] Written 2000 packets total
+[2025-12-18 14:06:27] [INFO] Written 2200 packets total
+[2025-12-18 14:06:27] [INFO] Written 2200 packets total
+[2025-12-18 15:21:33] [INFO] === VideoRecorder Started ===
+[2025-12-18 15:21:33] [INFO] Opening RTSP stream: rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/101
+[2025-12-18 15:21:33] [INFO] === VideoRecorder Started ===
+[2025-12-18 15:21:33] [INFO] Opening RTSP stream: rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/201
+[2025-12-18 15:21:34] [INFO] RTSP stream opened successfully. Video stream index: 0
+[2025-12-18 15:21:34] [INFO] Input codec: hevc
+[2025-12-18 15:21:34] [INFO] Input time_base: 1/90000
+[2025-12-18 15:21:34] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 15:21:34] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/2/20251218/15_21.mp4
+[2025-12-18 15:21:34] [INFO] Started new segment #1: /home/ztl/workspace/allin/videos/2/20251218/15_21.mp4
+[2025-12-18 15:21:34] [INFO] RTSP stream opened successfully. Video stream index: 0
+[2025-12-18 15:21:34] [INFO] Input codec: hevc
+[2025-12-18 15:21:34] [INFO] Input time_base: 1/90000
+[2025-12-18 15:21:34] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 15:21:34] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/10/20251218/15_21.mp4
+[2025-12-18 15:21:34] [INFO] Started new segment #1: /home/ztl/workspace/allin/videos/10/20251218/15_21.mp4
+[2025-12-18 15:21:41] [INFO] Written 200 packets total
+[2025-12-18 15:21:41] [INFO] Written 200 packets total
+[2025-12-18 15:21:49] [INFO] Written 400 packets total
+[2025-12-18 15:21:49] [INFO] Written 400 packets total
+[2025-12-18 15:21:57] [INFO] Written 600 packets total
+[2025-12-18 15:21:57] [INFO] Written 600 packets total
+[2025-12-18 15:21:57] [INFO] Written 600 packets total
+[2025-12-18 15:22:05] [INFO] Written 800 packets total
+[2025-12-18 15:22:05] [INFO] Written 800 packets total
+[2025-12-18 15:22:13] [INFO] Written 1000 packets total
+[2025-12-18 15:22:13] [INFO] Written 1000 packets total
+[2025-12-18 15:22:21] [INFO] Written 1200 packets total
+[2025-12-18 15:22:21] [INFO] Written 1200 packets total
+[2025-12-18 15:22:29] [INFO] Written 1400 packets total
+[2025-12-18 15:22:29] [INFO] Written 1400 packets total
+[2025-12-18 15:22:34] [INFO] Video storage closed. Total packets: 1524, file: /home/ztl/workspace/allin/videos/2/20251218/15_21.mp4
+[2025-12-18 15:22:34] [INFO] Video storage closed. Total packets: 1523, file: /home/ztl/workspace/allin/videos/10/20251218/15_21.mp4
+[2025-12-18 15:22:34] [INFO] Input codec: hevc
+[2025-12-18 15:22:34] [INFO] Input time_base: 1/90000
+[2025-12-18 15:22:34] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 15:22:34] [INFO] Input codec: hevc
+[2025-12-18 15:22:34] [INFO] Input time_base: 1/90000
+[2025-12-18 15:22:34] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 15:22:34] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/2/20251218/15_22.mp4
+[2025-12-18 15:22:34] [INFO] Started new segment #2: /home/ztl/workspace/allin/videos/2/20251218/15_22.mp4
+[2025-12-18 15:22:34] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/10/20251218/15_22.mp4
+[2025-12-18 15:22:34] [INFO] Started new segment #2: /home/ztl/workspace/allin/videos/10/20251218/15_22.mp4
+[2025-12-18 15:22:37] [INFO] Written 1600 packets total
+[2025-12-18 15:22:37] [INFO] Written 1600 packets total
+[2025-12-18 15:22:45] [INFO] Written 1800 packets total
+[2025-12-18 15:22:45] [INFO] Written 1800 packets total
+[2025-12-18 15:23:03] [INFO] === VideoRecorder Started ===
+[2025-12-18 15:23:03] [INFO] === VideoRecorder Started ===
+[2025-12-18 15:23:03] [INFO] === VideoRecorder Started ===
+[2025-12-18 15:23:03] [INFO] Opening RTSP stream: rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/101
+[2025-12-18 15:23:03] [INFO] Opening RTSP stream: rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/101
+[2025-12-18 15:23:03] [INFO] Opening RTSP stream: rtsp://admin:Wlkjaqxy411@10.9.255.21:554/Streaming/Channels/201
+[2025-12-18 15:23:04] [INFO] RTSP stream opened successfully. Video stream index: 0
+[2025-12-18 15:23:04] [INFO] Input codec: hevc
+[2025-12-18 15:23:04] [INFO] Input time_base: 1/90000
+[2025-12-18 15:23:04] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 15:23:04] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/10/20251218/15_23.mp4
+[2025-12-18 15:23:04] [INFO] Started new segment #1: /home/ztl/workspace/allin/videos/10/20251218/15_23.mp4
+[2025-12-18 15:23:04] [INFO] RTSP stream opened successfully. Video stream index: 0
+[2025-12-18 15:23:04] [INFO] Input codec: hevc
+[2025-12-18 15:23:04] [INFO] Input time_base: 1/90000
+[2025-12-18 15:23:04] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 15:23:04] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/2/20251218/15_23.mp4
+[2025-12-18 15:23:04] [INFO] Started new segment #1: /home/ztl/workspace/allin/videos/2/20251218/15_23.mp4
+[2025-12-18 15:23:11] [INFO] Written 200 packets total
+[2025-12-18 15:23:11] [INFO] Written 200 packets total
+[2025-12-18 15:23:19] [INFO] Written 400 packets total
+[2025-12-18 15:23:19] [INFO] Written 400 packets total
+[2025-12-18 15:23:27] [INFO] Written 600 packets total
+[2025-12-18 15:23:27] [INFO] Written 600 packets total
+[2025-12-18 15:23:35] [INFO] Written 800 packets total
+[2025-12-18 15:23:35] [INFO] Written 800 packets total
+[2025-12-18 15:23:43] [INFO] Written 1000 packets total
+[2025-12-18 15:23:43] [INFO] Written 1000 packets total
+[2025-12-18 15:23:51] [INFO] Written 1200 packets total
+[2025-12-18 15:23:51] [INFO] Written 1200 packets total
+[2025-12-18 15:23:59] [INFO] Written 1400 packets total
+[2025-12-18 15:23:59] [INFO] Written 1400 packets total
+[2025-12-18 15:24:04] [INFO] Video storage closed. Total packets: 1523, file: /home/ztl/workspace/allin/videos/10/20251218/15_23.mp4
+[2025-12-18 15:24:04] [INFO] Input codec: hevc
+[2025-12-18 15:24:04] [INFO] Input time_base: 1/90000
+[2025-12-18 15:24:04] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 15:24:04] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/10/20251218/15_24.mp4
+[2025-12-18 15:24:04] [INFO] Started new segment #2: /home/ztl/workspace/allin/videos/10/20251218/15_24.mp4
+[2025-12-18 15:24:04] [INFO] Video storage closed. Total packets: 1522, file: /home/ztl/workspace/allin/videos/2/20251218/15_23.mp4
+[2025-12-18 15:24:04] [INFO] Input codec: hevc
+[2025-12-18 15:24:04] [INFO] Input time_base: 1/90000
+[2025-12-18 15:24:04] [INFO] Frame rate: 25/1 ≈ 25.000000 fps
+[2025-12-18 15:24:04] [INFO] Video storage initialized (REMUX mode - no re-encoding): /home/ztl/workspace/allin/videos/2/20251218/15_24.mp4
+[2025-12-18 15:24:04] [INFO] Started new segment #2: /home/ztl/workspace/allin/videos/2/20251218/15_24.mp4
+[2025-12-18 15:24:07] [INFO] Written 1600 packets total
+[2025-12-18 15:24:07] [INFO] Written 1600 packets total
+[2025-12-18 15:24:15] [INFO] Written 1800 packets total
+[2025-12-18 15:24:15] [INFO] Written 1800 packets total
+[2025-12-18 15:24:23] [INFO] Written 2000 packets total
+[2025-12-18 15:24:23] [INFO] Written 2000 packets total
+[2025-12-18 15:24:31] [INFO] Written 2200 packets total
+[2025-12-18 15:24:31] [INFO] Written 2200 packets total
+>>>>>>> d6d5f373631bf60f9944605c3c6a65ba818264f8

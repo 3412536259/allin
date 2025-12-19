@@ -14,8 +14,9 @@ void GetCameraRealImageTask::run(TaskContext& ctx)
         ack["success"] = true;
         ack["cameraId"] = camId_;
         ctx.publisher->publish(RESULT_GET_REAL_IMAGE_TOPIC, ack.dump());
-    } 
+    }
     nlohmann::json j;
+    j["commandCode"] = "0000 0200";
     RealImage image = ctx.devMgr->getRealImage(camId_);
     image_buffer_t out_image;
     std::vector<unsigned char> outJpeg;
