@@ -34,7 +34,7 @@ json WebController::handleHttp(const std::string& path, const json& payload)
     // -------------------------------
     // 1) Camera getRealImage  → 提交任务
     // -------------------------------
-    if (path.find("/device/camera") != std::string::npos) {
+    if (path.find("/device/camera/getRealImage") != std::string::npos) {
         std::string camId = payload.value("cameraId", payload.value("cameraId", ""));
         if (camId.empty()) {
             resp["success"] = false;
