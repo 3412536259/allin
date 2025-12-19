@@ -93,6 +93,11 @@ void MqttService::publish(const std::string& topic,
                           int qos,
                           bool retained)
 {
+    if (!ensureConnected()) {
+        LOG_ERROR("MQTT publish aborted: not connected");
+        return;
+    }
+
     try {
         auto msg = mqtt::make_message(topic, payload, qos, retained);
         client_.publish(msg);
@@ -100,5 +105,34 @@ void MqttService::publish(const std::string& topic,
     catch (const mqtt::exception& e) {
         std::cerr << "[MQTT] Publish failed: " << e.what() << std::endl;
         LOG_ERROR(("MQTT publish failed: " + std::string(e.what())).c_str());
+    }
+}
+
+
+bool MqttService::ensureConnected()
+{
+    if (client_.is_connected())
+        return true;
+
+    try {
+        LOG_INFO("MQTT not connected, trying to reconnect...");
+        client_.reconnect()->wait();
+
+        // 重新订阅
+        client_.subscribe(GET_REAL_IMAGE_TOPIC, 1);
+        client_.subscribe(OPERATE_PLC_TOPIC, 1);
+        client_.subscribe(UPDATE_CONFIG_TOPIC, 1);
+        client_.subscribe(GET_SENSOR_DATA_TOPIC, 1);
+        client_.subscribe(OPERATE_CAR_TOPIC, 1);
+        client_.subscribe(GET_ALL_DEVICE_STATUS_TOPIC, 1);
+        client_.subscribe(OPERATE_PLC_WITH_VERIFY_TOPIC, 1);
+        client_.subscribe(UPDATE_CONFIG, 1);
+
+        LOG_INFO("MQTT reconnect success.");
+        return true;
+    }
+    catch (const mqtt::exception& e) {
+        LOG_ERROR(("MQTT ensureConnected failed: " + std::string(e.what())).c_str());
+        return false;
     }
 }
