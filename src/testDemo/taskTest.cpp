@@ -35,9 +35,9 @@ int main()
     ws.start();
     
     //AI ---------------------------
-    auto model = std::make_unique<AIModelService>(MODELPATH);
-    AIRecognizer ai(std::move(model),ideviceManager.get(),&mqttPublisher);
-    ai.start();    
+    // auto model = std::make_unique<AIModelService>(MODELPATH);
+    // AIRecognizer ai(std::move(model),ideviceManager.get(),&mqttPublisher);
+    // ai.start();    
     
     
     //定时上报设备状态启动
