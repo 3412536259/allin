@@ -28,6 +28,7 @@ private:
     VideoCapture videoCapture_;    
     std::mutex keyFrameMutex_;
     std::mutex statusMutex_;
+    std::thread hourlyCleaner_;
     
 };
 
