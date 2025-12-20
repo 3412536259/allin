@@ -38,7 +38,8 @@ bool Camera::stop()
     isRunning_ = false;
     if (pullThread_.joinable())
         pullThread_.join();
-
+    if (hourlyCleaner_.joinable())
+        hourlyCleaner_.join();
     videoCapture_.closeStream();
     std::lock_guard<std::mutex> lock(statusMutex_);
     cameraStatus_.online_status = CameraOnlineStatus::OFFLINE;
@@ -106,22 +107,27 @@ void Camera::pullKeyFrameLoop()
         return;
     }
 
-    // Hourly cleaner settings: retain files older than HOURLY_CLEAN_RETAIN_HOURS and check every HOURLY_CLEAN_INTERVAL_HOURS
-    const int HOURLY_CLEAN_RETAIN_HOURS = 4; // 删除 4 小时以前的文件
-    const int HOURLY_CLEAN_INTERVAL_HOURS = 1; // 每 1 小时检查一次
 
-    std::thread hourlyCleaner;
-    hourlyCleaner = std::thread([&segMgr, this, HOURLY_CLEAN_RETAIN_HOURS, HOURLY_CLEAN_INTERVAL_HOURS]() {
-        while (isRunning_) {
-            // sleep in small increments so we can exit promptly when stopping
-            int sleepSeconds = HOURLY_CLEAN_INTERVAL_HOURS * 3600;
-            for (int i = 0; i < sleepSeconds && isRunning_; ++i) {
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-            }
-            if (!isRunning_) break;
-            segMgr.cleanExpiredFilesHours(HOURLY_CLEAN_RETAIN_HOURS);
+
+    hourlyCleaner_ = std::thread([&segMgr, this]() {
+    const int HOURLY_CLEAN_RETAIN_HOURS = 4;
+    const int CLEAN_INTERVAL_SEC = 3600; // 1小时
+    
+    while (isRunning_) {
+        // 分段休眠以便及时响应停止信号
+        for (int i = 0; i < CLEAN_INTERVAL_SEC && isRunning_; ++i) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
-    });
+
+        if (!isRunning_) break;
+        
+        try {
+            segMgr.cleanExpiredFilesHours(HOURLY_CLEAN_RETAIN_HOURS);
+        } catch (const std::exception& e) {
+            LOG_ERROR("Error in hourly cleanup: " + std::string(e.what()));
+        }
+    }
+});
 
     int totalPackets = 0;
     while(isRunning_)
@@ -168,15 +174,6 @@ void Camera::pullKeyFrameLoop()
     av_packet_free(&packet);
     av_frame_free(&frame);
     videoCapture_.closeStream();
-
-    // signal cleaner to stop and join thread (if started)
-    isRunning_ = false;
-    if (hourlyCleaner.joinable()) hourlyCleaner.join();
-
-    {
-        std::lock_guard<std::mutex> lock(statusMutex_);
-        cameraStatus_.online_status = CameraOnlineStatus::OFFLINE;
-    }
 
     LOG_INFO("=== VideoRecorder Finished ===");
 }
