@@ -6,10 +6,21 @@
 #include <iostream>
 #include "logger.h"
 #include <errno.h>
+#include <sstream>
+#include <iomanip> 
 
 static inline uint16_t make_u16(uint8_t hi, uint8_t lo){ return (static_cast<uint16_t>(hi)<<8) | lo; }
 static inline int16_t to_signed16(uint16_t v){ return *reinterpret_cast<int16_t*>(&v); }
 
+static std::string bytesToHex(const uint8_t* bytes, size_t len) {
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+    for (size_t i = 0; i < len; ++i) {
+        if (i > 0) ss << " ";
+        ss << std::setw(2) << static_cast<int>(bytes[i]);
+    }
+    return ss.str();
+}
 CarControlDriver::~CarControlDriver(){ closeSerial(); }
 
 bool CarControlDriver::init(const std::string& port, int baud)
@@ -96,7 +107,17 @@ bool CarControlDriver::sendControl(int16_t motor1, int16_t motor2)
     frame[6] = v2 & 0xFF;
     frame[7] = 0x00; // reserved
 
+
+    std::string hexStr = bytesToHex(frame, sizeof(frame));
+    std::cout << "CarControl: Sending frame - Motor1: " << motor1 << ", Motor2: " << motor2 
+              << ", Frame: " << hexStr << std::endl;
+    LOG_INFO("CarControl: Sending frame - Motor1: " + std::to_string(motor1) + 
+             ", Motor2: " + std::to_string(motor2) + ", Frame: " + hexStr);
+
     ssize_t n = write(serial_fd_, frame, sizeof(frame));
+
+
+
     if (n != (ssize_t)sizeof(frame)) {
         std::cerr << "CarControl: write failed: " << strerror(errno) << std::endl;
         LOG_ERROR("CarControl: write failed: " + std::string(strerror(errno)));
@@ -119,6 +140,19 @@ bool CarControlDriver::readStatus(MotorStatus& out)
     }
     if (n < 2) return false; // 至少需要2个字节才有意义
 
+    // 如果读到的帧全部为 0，通常表示无设备或空噪声，应视为无响应（返回 false）
+    bool allZero = true;
+    for (ssize_t i = 0; i < n; ++i) {
+        if (buf[i] != 0) { allZero = false; break; }
+    }
+    if (allZero) {
+        LOG_INFO("CarControl: all-zero frame received -> treat as no reply (device likely not connected)");
+        return false;
+    }
+
+    std::string hexStr = bytesToHex(buf, n);
+    std::cout << "CarControl: Received frame: " << hexStr << " (" << n << " bytes)" << std::endl;
+    LOG_INFO("CarControl: Received frame: " + hexStr + " (" + std::to_string(n) + " bytes)");
     // 只解析前两个字节作为状态字节
     out.statusByte = (static_cast<uint16_t>(buf[0]) << 8) | static_cast<uint16_t>(buf[1]);
     

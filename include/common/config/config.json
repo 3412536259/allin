@@ -2,7 +2,7 @@
   "device_config": {
     "version": "1.0",
     "description": "设备配置（含PLC直连/网关连接两种类型）",
-    "box": "2",
+    "box": "1",
     "devices": {
       "camera": [
         {
@@ -108,7 +108,7 @@
           "parity": "none",
           "stop_bits": 1
           },
-        "send_window_ms": 600,
+        "send_window_ms": 10000,
         "send_interval_ms": 80,
         "operate_timeout_ms": 1500
         }

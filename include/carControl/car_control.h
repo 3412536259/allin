@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <atomic>
+#include"logger.h"
 
 struct MotorStatus {
     int16_t motor1 = 0; // -1500..1500

@@ -262,6 +262,20 @@ CarControlResult DeviceManager::operateCarControl(const std::string& carControlI
     return carControlManager_->operate(carControlId, motor1, motor2);
 }
 
+void DeviceManager::cancelCarControl(const std::string& carControlId)
+{
+    if (!carControlManager_) return;
+    try {
+        carControlManager_->interrupt(carControlId);
+    } catch(...) {}
+}
+
+int DeviceManager::getCarControlLastStatus(const std::string& carControlId)
+{
+    if (!carControlManager_) return -1;
+    try { return carControlManager_->getLastStatus(carControlId); } catch(...) { return -1; }
+}
+
 RealSensorData DeviceManager::getSensorData(const std::string& sensorId)
 {
     RealSensorData rsd;

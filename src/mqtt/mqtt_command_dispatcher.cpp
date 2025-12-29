@@ -111,11 +111,12 @@ void MqttCommandDispatcher::handleOperateCar(const nlohmann::json& j)
               << ", motor1: " << motor1 << ", motor2: " << motor2 << std::endl;
     LOG_INFO("Handling car control command for car_id: " + carId + ", motor1: " + std::to_string(motor1) + ", motor2: " + std::to_string(motor2));
 
-    // 创建并提交小车控制任务
+    // 创建并提交小车控制任务：先请求设备层中断可能正在执行的命令，然后提交新任务
     auto task = std::make_shared<CarControlTask>(j);
-    int id = scheduler_.submit(task, "mqtt");
-    
-    std::cout << "Submitted CarControlTask id=" << id 
+    scheduler_.cancelCarControl(carId);
+    int taskId = scheduler_.submit(task, "mqtt");
+
+    std::cout << "Submitted CarControlTask id=" << taskId
               << " for car=" << carId 
               << " motor1=" << motor1 
               << " motor2=" << motor2 << std::endl;

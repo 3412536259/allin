@@ -232,16 +232,17 @@ void CarControlTask::run(TaskContext& ctx)
     // 状态映射逻辑
     int status = 0;
     uint16_t statusByte = result.statusByte;
-    if (statusByte == 514) { // 0x0202
+    // UINT16_MAX (0xFFFF) 表示未收到任何回复，应映射为 -1
+    if (statusByte == UINT16_MAX) {
+        status = -1; // 无响应
+    } else if (statusByte == 0) { // 00 00
         status = 0; // 正常
-    } else if (statusByte == 0) {
-        status = -1; // 无响应(电机停转)
-    } else if (statusByte == 0x0303) { // 00000011 00000011
+    } else if (statusByte == 257) { // 01 01
         status = 1; // 电机堵转
-    } else if (statusByte == 0x0C0C) { // 00000012 00000012  (十六进制 0x0C = 十进制 12)
+    } else if (statusByte == 514) { // 02 02
         status = 2; // 电流保护
     }
-    
+
     jsonResponse["status"] = status;
     //ztl
     

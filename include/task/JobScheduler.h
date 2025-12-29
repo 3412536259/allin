@@ -28,6 +28,8 @@ public:
     int submit(std::shared_ptr<ITask> task, const std::string& source = "mqtt");
     // void setPublisher(ITaskResultPublisher* publisher);
     TaskStatus getTaskStatus(int taskId);
+    // request device-level cancellation for a car control operation
+    void cancelCarControl(const std::string& carId);
 private:
     void dispatchLoop();
 
@@ -47,6 +49,9 @@ private:
     IDeviceManager* devMgr_;
     ITaskResultPublisher* mqttPublisher_;
     ITaskResultPublisher* httpPublisher_;
+
+    std::mutex carControlMtx_;
+    std::unordered_map<std::string, std::weak_ptr<TaskControlBlock>> latestCarControlTask_; // 按小车ID存储最新任务
 };
 
 

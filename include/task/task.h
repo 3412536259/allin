@@ -70,13 +70,17 @@ class CarControlTask : public ITask
 {
 public:
     CarControlTask(const nlohmann::json& payload)
-        : payload_(payload) {}
+        : payload_(payload) {
+            carId_ = payload_.value("carcontrolId", std::string("carcontrol001"));
+        }
     std::string name() const override { return "CarControlTask"; }
     void run(TaskContext& ctx) override;
-
+    std::string getCarId() const { return carId_; }
+    int getMotor1() const { return payload_.value("motor1", 0); }
+    int getMotor2() const { return payload_.value("motor2", 0); }
 private:
     nlohmann::json payload_;
-    
+    std::string carId_; // 添加carId成员变量
     // 添加辅助方法
     bool validatePayload(const nlohmann::json& payload);
     void publishResult(ITaskResultPublisher* publisher, const nlohmann::json& result);
