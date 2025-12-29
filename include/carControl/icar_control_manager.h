@@ -13,6 +13,11 @@ public:
     virtual bool initWithConfig(const CarControlConfig& cc) = 0;
     // operate a specific car control device synchronously
     virtual CarControlResult operate(const std::string& id, int motor1, int motor2) = 0;
+
+    // query last observed status; returns -1 if no reply observed
+    virtual int getLastStatus(const std::string& id) = 0;
+    
+    virtual void interrupt(const std::string& id) = 0;
     // shutdown manager and close devices
     virtual void shutdown() = 0;
 };

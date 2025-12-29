@@ -27,6 +27,13 @@ public:
     PLCDeviceState getPLCDeviceStatus(const std::string& deviceId) override;
     RealSensorData getSensorData(const std::string& sensorId) override;
     CarControlResult operateCarControl(const std::string& carControlId, int motor1, int motor2) override;
+
+    // request cancellation/interruption of any currently running car control operation for the given id
+    void cancelCarControl(const std::string& carControlId);
+
+    // query last observed status for car control device; returns -1 if no reply observed
+    int getCarControlLastStatus(const std::string& carControlId);
+
     UpdateConfigResult configUpdate(const std::string& JsonStr) override;
 
 private:

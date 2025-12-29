@@ -20,6 +20,10 @@ public:
     virtual PLCDeviceState getPLCDeviceStatus(const std::string& deviceId) = 0;
     virtual RealSensorData getSensorData(const std::string& sensorId) = 0;
     virtual CarControlResult operateCarControl(const std::string& carControlId, int motor1, int motor2) = 0;
+    // request interruption/cancellation of any currently running car control operation for the given id
+    virtual void cancelCarControl(const std::string& carControlId) = 0;
+    // query last observed status for car control device; returns -1 if no reply observed
+    virtual int getCarControlLastStatus(const std::string& carControlId) = 0;
     virtual UpdateConfigResult configUpdate(const std::string& JsonStr) = 0;
 
 };
