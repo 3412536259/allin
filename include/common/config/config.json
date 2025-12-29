@@ -37,7 +37,7 @@
           "connection_type": "gateway",
           "gateway": {
             "gateway_id": "gw_001",
-            "gateway_ip": "192.168.10.253",
+            "gateway_ip": "10.9.255.23",
             "gateway_port": 31001
           }
         }
@@ -118,7 +118,7 @@
         {
           "id": "gw_001",
           "name": "工业智能网关",
-          "ip": "192.168.10.253",
+          "ip": "10.9.255.23",
           "protocol": "Modbus TCP", 
           "status": "online" 
         }
