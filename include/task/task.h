@@ -104,16 +104,16 @@ private:
     std::string JsonStr_;
 };
 
-class DownloadVideoTask : public ITask
-{
-public:
-    DownloadVideoTask(std::string channel, std::string date, std::string time)
-        : channel_(channel), date_(date), time_(time) {}
-    std::string name() const override { return "DownloadVideoTask"; }
-    void run(TaskContext& ctx) override;
-private:
-    std::string channel_;
-    std::string date_;
-    std::string time_;
-};
+// class DownloadVideoTask : public ITask
+// {
+// public:
+//     DownloadVideoTask(std::string channel, std::string date, std::string time)
+//         : channel_(channel), date_(date), time_(time) {}
+//     std::string name() const override { return "DownloadVideoTask"; }
+//     void run(TaskContext& ctx) override;
+// private:
+//     std::string channel_;
+//     std::string date_;
+//     std::string time_;
+// };
 #endif

@@ -3,6 +3,7 @@
 #include "image_processor.h"
 #include "task.h"
 #include "task_result_publisher.h"
+#include "find_video_url.h"
 #include <sys/stat.h>
 
 const std::string STATIC_FILE_ROOT = "/home/ztl/workspace/allin/videos";
@@ -127,10 +128,18 @@ json WebController::handleHttp(const std::string& path, const json& payload)
             return resp;
         }
 
-        auto task = std::make_shared<DownloadVideoTask>(channel, date, timeStr);
-        int id = scheduler_->submit(task, "http");
+        // auto task = std::make_shared<DownloadVideoTask>(channel, date, timeStr);
+        // int id = scheduler_->submit(task, "http");
+        // resp["success"] = true;
+        // resp["task_id"] = id;
+        std::string videoPath = findVideoUrl(channel, date, timeStr);
+        if(videoPath.empty()){
+            resp["success"] = false;
+            resp["error"] = "video file not found";
+            return resp;
+        }
         resp["success"] = true;
-        resp["task_id"] = id;
+        resp["videoPath"] = videoPath;
         return resp;
     }
 

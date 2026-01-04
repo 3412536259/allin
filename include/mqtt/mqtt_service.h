@@ -4,6 +4,7 @@
 #include <mqtt/async_client.h>
 #include "JobScheduler.h"
 #include "mqtt_command_dispatcher.h"
+#include <atomic>
 
 class MqttService : public virtual mqtt::callback
 {
@@ -21,5 +22,8 @@ public:
 private:
     mqtt::async_client client_;
     ICommandDispatcher* dispatcher_;
+
+    // 新增：用于避免重复启动后台重连线程
+    std::atomic<bool> reconnecting_{false};
 };
 #endif
